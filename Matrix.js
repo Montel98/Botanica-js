@@ -71,6 +71,13 @@ function translate(dx, dy, dz) {
 	return translationMatrix;
 }
 
+function scale(x, y, z) {
+	let scalingMatrix = new Matrix(
+		[[x, 0, 0, 0], [0, y, 0, 0], [0, 0, z, 0], [0, 0, 0, 1]]);
+
+	return scalingMatrix;
+}
+
 function rotateX(angle) {
 	let rotationXMatrix = new Matrix(
 		[[1, 0, 0], [0, Math.cos(angle), Math.sin(angle)], [0, -1 * Math.sin(angle), Math.cos(angle)]]);
@@ -82,7 +89,6 @@ function rotateY(angle) {
 
 	return rotationYMatrix;
 }
-
 
 function rotateZ(angle) {
 	let rotationZMatrix = new Matrix(

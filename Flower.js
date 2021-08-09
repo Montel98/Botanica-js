@@ -148,8 +148,11 @@ class Flower {
 
 // Experimental
 
-class Flowers {
+class Flowers extends Entity {
 	constructor() {
+
+		super();
+
 		const geometry = flowerGeometry;
 		const material = new Material(flowerTexture);
 

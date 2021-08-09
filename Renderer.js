@@ -108,7 +108,13 @@ class Renderer {
 		const mesh = entity.mesh;
 
 		if (!mesh.isInstanced) {
-			const worldMatrix = entity.worldMatrix;
+
+			let worldMatrix = entity.worldMatrix;
+
+			if (entity.parent !== null) {
+				worldMatrix = multiply(worldMatrix, entity.parent.worldMatrix);
+			}
+
 			const worldLoc = gl.getUniformLocation(program, 'world');
 			gl.uniformMatrix4fv(worldLoc, false, worldMatrix.components.flat());
 		}

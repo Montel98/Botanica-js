@@ -30,8 +30,7 @@ const testEntity = {
 
 scene.addEntity(testEntity);*/
 
-/*const leaf = new Leaf();
-scene.addEntity(leaf);*/
+const leaf = new Leaf();
 
 /*const leaves = new Leaves();
 scene.addEntity(leaves);*/
@@ -39,6 +38,7 @@ scene.addEntity(leaves);*/
 const flowers = new Flowers();
 scene.addEntity(stem);
 scene.addEntity(flowers);
+scene.addEntity(leaf);
 //scene.addEntity(stem);
 
 let prevX = canvas.scrollWidth / 2.0;

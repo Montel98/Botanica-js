@@ -1,5 +1,6 @@
 class Entity {
 	constructor() {
+		this.parent = null;
 		this.children = [];
 		this.worldMatrix = identityMatrix;
 	}

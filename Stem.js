@@ -1,7 +1,7 @@
 const bezier = new BezierCubic(new Vector([0.0, 0.0, 0.0]), 
-					new Vector([0.0, 0.0, 1.0]), 
-					new Vector([0.0, 0.0, 2.0]), 
-					new Vector([0.0, 0.0, 3.0]));
+					new Vector([0.0, 0.0, 0.2]), 
+					new Vector([0.0, 0.0, 0.4]), 
+					new Vector([0.0, 0.0, 0.6]));
 
 /*const bezier = new BezierCubic(new Vector([0.0, 0.0, 0.0]), 
 					new Vector([1.0, 1.0, 1.0]), 
@@ -65,15 +65,13 @@ var stemFunc = (path, radius) => {
 	}
 }
 
-class Stem {
+class Stem extends Entity {
 
 	constructor(surface) {
 
-		//const textureTest = new Texture('flower_stem1.png');
-		//const textureTest = new Texture('https://1.bp.blogspot.com/-GGitkLBsnsQ/WOvE3VpBODI/AAAAAAAAEEY/iy7SedxxjDszylYIkAEiPC_Neu384FongCLcB/s1600/BS_Flower_Stems_512_15.png');
+		super();
+
 		const textureTest = new Texture('https://64.media.tumblr.com/458dd49feded9a00cc1f6e9f6664c1bc/ad9a34ac4fa33c3f-69/s540x810/aea77a994bf1bddbb3c6c04401c609c694ceac6d.jpg');
-		//const textureTest = new Texture('https://i.imgur.com/yLGmqUK.jpg');
-		//const textureTest = new Texture('https://www.filterforge.com/filters/2674-normal.jpg');
 		const materialTest = new Material(textureTest);
 
 		let stMapping = {
@@ -87,7 +85,7 @@ class Stem {
 
 		this.mesh = new Mesh(materialTest, geometry);
 
-		this.worldMatrix = identityMatrix;
+		this.worldMatrix = translate(-0.2, -0.2, 0);
 	}
 
 	act() {
@@ -95,4 +93,4 @@ class Stem {
 	}
 }
 
-const stemSurface = new ParametricSurface(stemFunc(bezier, 0.02), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+const stemSurface = new ParametricSurface(stemFunc(bezier, 0.005), 0.0, 1.0, 0.0, 2.0 * Math.PI);
