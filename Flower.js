@@ -2,26 +2,19 @@ const flowerVertexShader =
 `
 precision mediump float;
 attribute vec3 aVertexPosition;
-//attribute vec3 aNormal;
+attribute mat4 offset;
 
 uniform mat4 camera;
 uniform mat4 perspective;
 
-//uniform vec2 a[4];
-//uniform vec2 b[4];
-
-//varying vec3 vNormal;
 varying vec3 vVertexPosition;
 
-attribute vec3 offset;
-varying vec3 vOffset;
 uniform float t;
 
 void main() {
 
 	float r = length(aVertexPosition.xy);
 
-	//vec2 a[4] = vec2[4](vec2(0.0, 0.0), vec2(1.0, 1.0), vec2(1.0, 0.0), vec2(2.0, 1.0));
 	vec2 p4 = vec2(0.0, 0.0);
 	vec2 p5 = vec2(1.0, 1.0);
 	vec2 p6 = vec2(1.0, 0.0);
@@ -35,20 +28,14 @@ void main() {
 	vec2 startPos = (1.0-r)*(1.0-r)*(1.0-r)*p0 + 3.0*(1.0-r)*(1.0-r)*r*p1 + 3.0*(1.0-r)*r*r*p2 + r*r*r*p3;
 	vec2 endPos = (1.0-r)*(1.0-r)*(1.0-r)*p4 + 3.0*(1.0-r)*(1.0-r)*r*p5 + 3.0*(1.0-r)*r*r*p6 + r*r*r*p7;
 
-	float dt = t + offset.x;
-
-	vec2 currentPos = startPos + (sin(dt) * sin(dt) * (endPos - startPos));
-
-	//vec3 newPos = vec3(normalize(aVertexPosition.xy) * currentPos.x, currentPos.y);
+	vec2 currentPos = startPos + (sin(t) * sin(t) * (endPos - startPos));
 
 	vec2 normPos = (r == 0.0) ? vec2(0.0) : normalize(aVertexPosition.xy);
 	vec3 newPos = vec3(normPos * currentPos.x, currentPos.y);
 
-	gl_Position = perspective * camera * vec4(0.1 * (newPos + offset), 1.0);
+	gl_Position = perspective * camera * offset * vec4(newPos, 1.0);
 
-	//vNormal = aNormal;
-	vVertexPosition = 0.1 * (newPos + offset);
-	vOffset = offset;
+	vVertexPosition = vec3(offset * vec4(newPos, 1.0));
 }
 `
 
@@ -56,7 +43,7 @@ const flowerFragmentShader =
 `
 precision mediump float;
 varying vec3 vVertexPosition;
-varying vec3 vOffset;
+//varying vec3 vOffset;
 
 uniform float t;
 
@@ -74,12 +61,10 @@ void main() {
 
 	float r = length(vVertexPosition.xy);
 
-	float dt = t + vOffset.x;
-
 	vec2 dStartPos = 3.0*(1.0-r)*(1.0-r)*(p1-p0) + 6.0*(1.0-r)*r*(p2-p1) + 3.0*r*r*(p3-p2);
 	vec2 dEndPos = 3.0*(1.0-r)*(1.0-r)*(p5-p4) + 6.0*(1.0-r)*r*(p6-p5) + 3.0*r*r*(p7-p6);
 
-	vec2 dCurrentPos = dStartPos + (sin(dt) * sin(dt) * (dEndPos - dStartPos));
+	vec2 dCurrentPos = dStartPos + (sin(t) * sin(t) * (dEndPos - dStartPos));
 	vec2 normPos = (r == 0.0) ? vec2(0.0) : normalize(vVertexPosition.xy);
 	vec3 dNewPos = vec3(normPos * dCurrentPos.x, dCurrentPos.y);
 	vec3 dTheta = vec3(-vVertexPosition.y, vVertexPosition.x, 0.0);
@@ -105,21 +90,18 @@ var f = new FourierSeries(0.2, [termA]);
 
 const flowerFunc = {
 	aux(u, v) {
-		this.xy = v * f.sum(u);
+		this.r = v * f.sum(u);
 	},
 
 	x(u, v) {
-		return this.xy * Math.cos(u);
+		return this.r * Math.cos(u);
 	},
 
 	y(u, v) {
-		return this.xy * Math.sin(u);
+		return this.r * Math.sin(u);
 	},
 
 	z(u, v) {
-		//return Math.sqrt(this.x(u, v) ** 2.0 + this.y(u, v) ** 2.0) ** 2.0;
-		//return (v * f.sum(u)) ** 2.0;
-		//return Math.log(this.xy + 0.5);
 		return 1.0;
 	}
 }
@@ -157,7 +139,7 @@ class Flowers extends Entity {
 		const material = new Material(flowerTexture);
 
 		geometry.bufferAttributes.bufferLength = 3;
-		geometry.bufferAttributes.attributes = {'aVertexPosition': {attribLength: 3, offset: 0}};
+		geometry.bufferAttributes.attributes = {'aVertexPosition': [{attribLength: 3, offset: 0}]};
 
 		//this.mesh = new Mesh(material, geometry);
 		this.mesh = new InstancedMesh(material, geometry);
@@ -169,11 +151,12 @@ class Flowers extends Entity {
 		this.shaderUniforms = this.mesh.shaders.uniforms;
 		//this.t = this.start
 		this.shaderUniforms['t'] = this.start;
-		//this.mesh.addInstanceBufferAttribute('t', 1, 3);
+		//this.mesh.addInstanceBufferAttribute('age', 1, 16);
 
-		this.mesh.addInstance(new Vector([3, 3, 3]));
-		this.mesh.addInstance(new Vector([2, 2, 2]));
-		this.mesh.addInstance(new Vector([1, 1, 1]));
+		const factor = 0.1;
+		this.mesh.addInstance(multiply(translate(0.6, 0.6, 0.6), scale(factor, factor, factor)));
+		this.mesh.addInstance(multiply(translate(0.4, 0.4, 0.4), scale(factor, factor, factor)));
+		this.mesh.addInstance(multiply(translate(0.2, 0.2, 0.2), scale(factor, factor, factor)));
 	}
 
 	act() {
@@ -181,9 +164,3 @@ class Flowers extends Entity {
 		this.shaderUniforms['t'] = 0.1 * ((Date.now() / 1000) - this.start);
 	}
 }
-
-/*testGeometryModifier(geometry) {
-	for (let i = 0; i < geometry.vertices.length; i++) {
-
-	}
-}*/

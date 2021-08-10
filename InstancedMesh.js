@@ -7,7 +7,11 @@ class InstancedMesh extends Mesh {
 		this.poseMatrices = [];
 		this.isInstanced = true;
 		this.instanceBufferID = -1;
-		this.instanceBufferAttributes = {bufferLength: 3, attributes: {'offset': {attribLength: 3, offset: 0}}};
+		this.instanceBufferAttributes = {bufferLength: 16, attributes: {'offset': [{attribLength: 4, offset: 0},
+																					{attribLength: 4, offset: 4},
+																					{attribLength: 4, offset: 8},
+																					{attribLength: 4, offset: 12}
+																					]}};
 
 		this.shaders = shaderBuilder.getShader(material.maps, this.isInstanced);
 	}
@@ -18,9 +22,9 @@ class InstancedMesh extends Mesh {
 	}
 
 	addInstanceBufferAttribute(name, length, attribOffset) {
-		this.bufferAttributes.attributes[name] = {attribLength: length,
-												offset: attribOffset};
+		this.instanceBufferAttributes.attributes[name] = [{attribLength: length,
+												offset: attribOffset}];
 
-		this.bufferAttributes.bufferLength += length;
+		this.instanceBufferAttributes.bufferLength += length;
 	}
 }

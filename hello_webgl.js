@@ -39,7 +39,6 @@ const flowers = new Flowers();
 scene.addEntity(stem);
 scene.addEntity(flowers);
 scene.addEntity(leaf);
-//scene.addEntity(stem);
 
 let prevX = canvas.scrollWidth / 2.0;
 let prevY = canvas.scrollHeight / 2.0;

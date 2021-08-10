@@ -12,8 +12,8 @@ class Geometry {
 		this.bufferAttributes = {
 			bufferLength: 6,
 			attributes: {
-				'aVertexPosition': {attribLength: 3, offset: 0},
-				'aNormal': {attribLength: 3, offset: 3}
+				'aVertexPosition': [{attribLength: 3, offset: 0}],
+				'aNormal': [{attribLength: 3, offset: 3}]
 			}
 		};
 
@@ -34,8 +34,8 @@ class Geometry {
 	}
 
 	addBufferAttribute(name, length, attribOffset) {
-		this.bufferAttributes.attributes[name] = {attribLength: length,
-												offset: attribOffset};
+		this.bufferAttributes.attributes[name] = [{attribLength: length,
+												offset: attribOffset}];
 
 		this.bufferAttributes.bufferLength += length;
 	}

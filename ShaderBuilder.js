@@ -21,16 +21,13 @@ function shaderProgramDefault1(useInstancing) {
 						varying vec3 vNormal;
 						varying vec3 vVertexPosition;
 
-						${useInstancing ? `attribute vec3 offset;` : ``}`;
+						${useInstancing ? `attribute mat4 offset;` : ``}`;
 
 	const vertexMain = 	`
 						void main() {
-							vec3 finalPosition;
 
-						${useInstancing ? `	finalPosition = aVertexPosition + offset;
-											gl_Position = perspective * camera * vec4(finalPosition, 1.0);` :
-										`	finalPosition = aVertexPosition;
-							gl_Position = perspective * camera * world * vec4(finalPosition, 1.0);`}
+						${useInstancing ? `	gl_Position = perspective * camera * offset * vec4(aVertexPosition, 1.0);` :
+										`	gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);`}
 							vNormal = aNormal;
 							vVertexPosition = aVertexPosition;
 						}

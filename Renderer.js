@@ -18,6 +18,7 @@ class Renderer {
 		oes_vao_ext = gl.getExtension('OES_vertex_array_object'); // Get extension for VAOs
 
     	if (gl == null) {
+
         	alert('Unable to initialiaze WebGL. Your browser or machine may not support it.');
     	}
 	}
@@ -51,6 +52,7 @@ class Renderer {
 			let instanceBufferLoc = mesh.instanceBufferID;
 
 			if (instanceBufferLoc == -1) {
+
 				instanceBufferLoc = this.initInstanceBuffer(mesh, programLoc);
 			}
 
@@ -112,6 +114,7 @@ class Renderer {
 			let worldMatrix = entity.worldMatrix;
 
 			if (entity.parent !== null) {
+
 				worldMatrix = multiply(worldMatrix, entity.parent.worldMatrix);
 			}
 
@@ -157,8 +160,6 @@ class Renderer {
 
 	initBuffer(geometry, program) {
 
-		//Experimental
-
 		// Create handle to vertex array object
 		const VAO = oes_vao_ext.createVertexArrayOES();
 		oes_vao_ext.bindVertexArrayOES(VAO);
@@ -167,6 +168,7 @@ class Renderer {
 	    const VBO = gl.createBuffer();
 
 	    if (!VBO) {
+
 	        alert('Failed to create vertex buffer');
 	    }
 
@@ -193,6 +195,7 @@ class Renderer {
 	   	geometry.setBufferLocation(bufferLocations);
 
 	    if (!IBO) {
+
 	        alert('Failed to create index buffer');
 	    }
 
@@ -207,6 +210,7 @@ class Renderer {
 		const instanceVBO = gl.createBuffer();
 
 		if (!instanceVBO) {
+
 			alert('Failed to create instanced vertex buffer');
 		}
 
@@ -214,8 +218,10 @@ class Renderer {
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, instanceVBO);
 
-		let matrixBuffer = instancedMesh.poseMatrices.map(matrices => matrices.components)
-							.flat()
+		let matrixBuffer = instancedMesh.poseMatrices.map(matrices => matrices.components.flat())
+							.flat();
+
+		console.log('Matrix Buffer:', matrixBuffer);
 
 		gl.bufferData(gl.ARRAY_BUFFER, 
 						new Float32Array(matrixBuffer),
@@ -230,20 +236,27 @@ class Renderer {
 	    for (let attribName in bufferAttributes.attributes) {
 
 	    	let attrib = bufferAttributes.attributes[attribName];
-	    	let attribLocation = gl.getAttribLocation(program, attribName);
+	    	let baseAttribLocation = gl.getAttribLocation(program, attribName);
 
-	    	gl.vertexAttribPointer(attribLocation, 
-	    							attrib.attribLength, 
-	    							gl.FLOAT, 
-	    							false, 
-	    							bufferAttributes.bufferLength * GL_FLOAT_SIZE, 
-	    							attrib.offset * GL_FLOAT_SIZE);
+	    	for (let i = 0; i < attrib.length; i++) {
 
-	    	gl.enableVertexAttribArray(attribLocation);
+	    		const attribLocation = baseAttribLocation + i;
+	    		console.log(attribName);
+	    		console.log(attrib[i].attribLength);
 
-	    	if (isInstanceBuffer) {
-	    		ext.vertexAttribDivisorANGLE(attribLocation, 1);
-	    	}
+		    	gl.vertexAttribPointer(attribLocation, 
+		    							attrib[i].attribLength, 
+		    							gl.FLOAT, 
+		    							false, 
+		    							bufferAttributes.bufferLength * GL_FLOAT_SIZE, 
+		    							attrib[i].offset * GL_FLOAT_SIZE);
+
+		    	gl.enableVertexAttribArray(attribLocation);
+
+		    	if (isInstanceBuffer) {
+		    		ext.vertexAttribDivisorANGLE(attribLocation, 1);
+		    	}
+		    }
 	    }
 	}
 
@@ -287,7 +300,6 @@ class Renderer {
 	    const vertexShader = this.loadShader(gl.VERTEX_SHADER, vsSource);
 	    const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fsSource);
 
-
 	    // Create program and attach shaders
 	    const shaderProgram = gl.createProgram();
 	    gl.attachShader(shaderProgram, vertexShader);
@@ -297,6 +309,7 @@ class Renderer {
 
 	    // Alert if shader program failed
 	    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+
 	        alert('Unable to initialise shader program:' + gl.getProgramInfoLog(shaderProgram));
 	        return null;
 	    }
@@ -314,6 +327,7 @@ class Renderer {
 	    gl.compileShader(shader);
 
 	    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+
 	        alert('An error occured compiling the shaders:' + gl.getShaderInfoLog(shader));
 	        gl.deleteShader(shader);
 	        return null;
