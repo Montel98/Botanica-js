@@ -20,7 +20,6 @@ class ParametricGeometry extends Geometry {
 		this.stMapping = mapping;
 
 		this.vertexBuffer = this.generateBuffers();
-		console.log('vertex buffer: ', this.vertexBuffer);
 	}
 
 	isValidTriangle(indices) {

@@ -13,16 +13,7 @@ class Camera {
 
 	rotateHorizontal(angle) {
 
-		/*
-		let f = this.direction.scale(Math.cos(angle));
-		let l = this.left.scale(Math.sin(angle));
-
-		this.direction = add(f, l).normalize();
-
-		this.left = cross(this.vertical, this.direction).normalize();
-		*/
-
-		let rot = rotateZ(angle);
+		let rot = rotate3Z(angle);
 
 		this.direction = transform(this.direction, rot).normalize();
 		this.left = transform(this.left, rot).normalize();

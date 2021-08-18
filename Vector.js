@@ -70,6 +70,10 @@ class Vector {
 			this.components[i] -= vectorB.components[i];
 		}
 	}
+
+	copy() {
+		return new Vector([...this.components]);
+	}
 }
 
 function add(vectorA, vectorB) {

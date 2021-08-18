@@ -4,7 +4,8 @@ class InstancedMesh extends Mesh {
 		super(material, geometry);
 
 		this.instanceCount = 0;
-		this.poseMatrices = [];
+		this.localMatrices = [];
+		this.worldMatrices = [];
 		this.isInstanced = true;
 		this.instanceBufferID = -1;
 		this.instanceBufferAttributes = {bufferLength: 16, attributes: {'offset': [{attribLength: 4, offset: 0},
@@ -17,7 +18,8 @@ class InstancedMesh extends Mesh {
 	}
 
 	addInstance(poseMatrix) {
-		this.poseMatrices.push(poseMatrix);
+		this.localMatrices.push(poseMatrix);
+		this.worldMatrices.push(poseMatrix);
 		this.instanceCount += 1;
 	}
 
@@ -26,5 +28,9 @@ class InstancedMesh extends Mesh {
 												offset: attribOffset}];
 
 		this.instanceBufferAttributes.bufferLength += length;
+	}
+
+	setPoseMatrix(index, newMatrix) {
+		this.localMatrices[i] = newMatrix;
 	}
 }

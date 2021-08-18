@@ -15,30 +15,80 @@ const controller = new Controller(scene, renderer);
 
 const stem = new Stem(stemSurface);
 
-/*//const s = buildString('[0]0', 4);
-const s = buildString('0', 6);
-//const s = buildString('0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[0[', 0);
-const l = new LSystem(new Vector([0, 0, 0]), new Vector([0, 0, 0.1]));
+const s = buildString([ newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []),  
+                        newSymbol('[', []),
+                        newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
+                        newSymbol('0', []), 
+                        newSymbol(']', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('[', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
+                        newSymbol('0', []), 
+                        newSymbol(']', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('1', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
+                        newSymbol('0', []), 
+                        newSymbol(']', []), 
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []) ], 5);
+
+//const s = buildString('0*0*0*0*0*0[+0+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]*0*0*0*0*0*0[+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]*0*0*0*0*0*0*[+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]0*0', 0);
+//const s = buildString('+1+1+1+1+1[0][0]+1+1+1+1+1+1[0][0]+1+1+1+1+1+1[0][0]+1+1+1+1+1+1', 2);
+//const s = buildString('0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0+0]+0+0+0+0+0]+0+0+0]+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0', 0);
+/*const l = new LSystem(new Vector([0, 0, 0]), new Vector([0, 0, 0.1]));
 let items = l.generateStems(s);
 let g = generateMesh(items);
-console.log(g);
-const textureTest = new Texture('s');
+const textureTest = new Texture('s');*/
 
-const testEntity = {
-    mesh: new Mesh(new Material(textureTest), g)
-}
+/*const testEntity = new Entity();
+testEntity.mesh = new Mesh(new Material(textureTest), g);
+//testEntity.setPosition(4, 4, 4);
 
 scene.addEntity(testEntity);*/
 
-const leaf = new Leaf();
+//const leaves = new Leaves();
+//scene.addEntity(leaves);
+//testEntity.addChild(leaves);
 
-/*const leaves = new Leaves();
-scene.addEntity(leaves);*/
+//const flowers = new Flowers();
+//scene.addEntity(stem);
+//scene.addEntity(flowers);
+//stem.addChild(leaves);
 
-const flowers = new Flowers();
-scene.addEntity(stem);
-scene.addEntity(flowers);
-scene.addEntity(leaf);
+const treeTest = generateTree(s);
+treeTest.setPosition(0.0, 0.0, 0.5);
+scene.addEntity(treeTest);
 
 let prevX = canvas.scrollWidth / 2.0;
 let prevY = canvas.scrollHeight / 2.0;

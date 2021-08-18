@@ -18,6 +18,7 @@ class Controller {
 			stack.push(...entity.getChildren());
 
 			entity.act();
+			entity.updatePose();
 			this.renderer.render(entity, this.scene.camera);
 		}
 	}

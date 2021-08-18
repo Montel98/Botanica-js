@@ -26,10 +26,11 @@ function shaderProgramDefault1(useInstancing) {
 	const vertexMain = 	`
 						void main() {
 
-						${useInstancing ? `	gl_Position = perspective * camera * offset * vec4(aVertexPosition, 1.0);` :
-										`	gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);`}
+						${useInstancing ? `	gl_Position = perspective * camera * offset * vec4(aVertexPosition, 1.0);
+											vVertexPosition = vec3(offset * vec4(aVertexPosition, 1.0));` :
+										`	gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);
+											vVertexPosition = vec3(world * vec4(aVertexPosition, 1.0));`}
 							vNormal = aNormal;
-							vVertexPosition = aVertexPosition;
 						}
 						`;
 
@@ -50,7 +51,7 @@ function shaderProgramDefault1(useInstancing) {
 							float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
 							float light = ambient + diffuse;
 
-							gl_FragColor = vec4(light * vec3(0.2, 0.4, 0.0), 1.0);
+							gl_FragColor = vec4(light * vec3(0.6, 0.4, 0.0), 1.0); //0.2
 						}
 						`;
 

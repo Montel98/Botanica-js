@@ -15,15 +15,25 @@ void main() {
 
 	float r = length(aVertexPosition.xy);
 
-	vec2 p4 = vec2(0.0, 0.0);
+	/*vec2 p4 = vec2(0.0, 0.0);
 	vec2 p5 = vec2(1.0, 1.0);
 	vec2 p6 = vec2(1.0, 0.0);
-	vec2 p7 = vec2(2.0, 0.0);
+	vec2 p7 = vec2(2.0, 0.0);*/
 
-	vec2 p0 = vec2(0.0, 0.0);
+	/*vec2 p0 = vec2(0.0, 0.0);
 	vec2 p1 = vec2(1.0, 1.0);
 	vec2 p2 = vec2(1.0, 1.0);
-	vec2 p3 = vec2(0.0, 2.0);
+	vec2 p3 = vec2(0.0, 2.0);*/
+
+	vec2 p0 = vec2(0.0, 0.0);
+	vec2 p1 = vec2(0.0, 1.0);
+	vec2 p2 = vec2(0.5, 1.5);
+	vec2 p3 = vec2(1.0, 2.0);
+
+	vec2 p4 = vec2(0.0, 0.0);
+	vec2 p5 = vec2(0.5, 0.5);
+	vec2 p6 = vec2(1.5, 0.0);
+	vec2 p7 = vec2(2.0, -0.5);
 
 	vec2 startPos = (1.0-r)*(1.0-r)*(1.0-r)*p0 + 3.0*(1.0-r)*(1.0-r)*r*p1 + 3.0*(1.0-r)*r*r*p2 + r*r*r*p3;
 	vec2 endPos = (1.0-r)*(1.0-r)*(1.0-r)*p4 + 3.0*(1.0-r)*(1.0-r)*r*p5 + 3.0*(1.0-r)*r*r*p6 + r*r*r*p7;
@@ -33,7 +43,7 @@ void main() {
 	vec2 normPos = (r == 0.0) ? vec2(0.0) : normalize(aVertexPosition.xy);
 	vec3 newPos = vec3(normPos * currentPos.x, currentPos.y);
 
-	gl_Position = perspective * camera * offset * vec4(newPos, 1.0);
+	gl_Position = perspective * camera * offset * vec4((abs(sin(t))+0.1) * newPos, 1.0);
 
 	vVertexPosition = vec3(offset * vec4(newPos, 1.0));
 }

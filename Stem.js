@@ -85,7 +85,13 @@ class Stem extends Entity {
 
 		this.mesh = new Mesh(materialTest, geometry);
 
-		this.worldMatrix = translate(-0.2, -0.2, 0);
+		//this.worldMatrix = translate(-0.2, -0.2, 0);
+		this.worldMatrix = identityMatrix;
+
+		// Experimental
+
+		this.isTerminal = false;
+
 	}
 
 	act() {

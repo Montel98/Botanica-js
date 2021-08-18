@@ -111,16 +111,14 @@ class Renderer {
 
 		if (!mesh.isInstanced) {
 
-			let worldMatrix = entity.worldMatrix;
-
-			if (entity.parent !== null) {
-
-				worldMatrix = multiply(worldMatrix, entity.parent.worldMatrix);
-			}
-
+			const worldMatrix = entity.worldMatrix;
+			
 			const worldLoc = gl.getUniformLocation(program, 'world');
+
 			gl.uniformMatrix4fv(worldLoc, false, worldMatrix.components.flat());
 		}
+
+
 
 		// Update camera matrix
 		const cameraLoc = gl.getUniformLocation(program, 'camera');
@@ -218,14 +216,12 @@ class Renderer {
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, instanceVBO);
 
-		let matrixBuffer = instancedMesh.poseMatrices.map(matrices => matrices.components.flat())
+		let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
 							.flat();
-
-		console.log('Matrix Buffer:', matrixBuffer);
 
 		gl.bufferData(gl.ARRAY_BUFFER, 
 						new Float32Array(matrixBuffer),
-						gl.STATIC_DRAW);
+						gl.DYNAMIC_DRAW);
 
 		this.initBufferAttributes(program, instancedMesh.instanceBufferAttributes, true);
 
@@ -241,8 +237,6 @@ class Renderer {
 	    	for (let i = 0; i < attrib.length; i++) {
 
 	    		const attribLocation = baseAttribLocation + i;
-	    		console.log(attribName);
-	    		console.log(attrib[i].attribLength);
 
 		    	gl.vertexAttribPointer(attribLocation, 
 		    							attrib[i].attribLength, 

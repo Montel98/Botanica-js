@@ -11,6 +11,8 @@ class Matrix {
 	}
 }
 
+// Convert to normal nested loop
+
 function multiplyAux(matrixA, matrixB) {
 
 	const reducer = (total, val) => total + val;
@@ -22,6 +24,17 @@ function multiplyAux(matrixA, matrixB) {
 						});
 						return newColVector;
 					});
+
+	/*for (let i = 0; i < matrixB.length; i++) {
+
+		for (let j = 0; i < matrixA[0].length; j++) {
+
+			for (let k = 0; k < matrixA.length; k++) {
+
+
+			}
+		}
+	}*/
 
 	return newCols;
 }
@@ -78,33 +91,87 @@ function scale(x, y, z) {
 	return scalingMatrix;
 }
 
-function rotateX(angle) {
+function rotate3X(angle) {
 	let rotationXMatrix = new Matrix(
 		[[1, 0, 0], [0, Math.cos(angle), Math.sin(angle)], [0, -1 * Math.sin(angle), Math.cos(angle)]]);
+
+	return rotationXMatrix;
 }
 
-function rotateY(angle) {
+function rotate4X(angle) {
+	let rotationXMatrix = new Matrix(
+		[[1, 0, 0, 0], [0, Math.cos(angle), Math.sin(angle), 0], [0, -1 * Math.sin(angle), Math.cos(angle), 0], [0, 0, 0, 1]]);
+
+	return rotationXMatrix;
+}
+
+function rotate3Y(angle) {
 	let rotationYMatrix = new Matrix(
 		[[Math.cos(angle), 0, -1 * Math.sin(angle)], [0, 1, 0], [Math.sin(angle), 0, Math.cos(angle)]]);
 
 	return rotationYMatrix;
 }
 
-function rotateZ(angle) {
+function rotate4Y(angle) {
+	let rotationYMatrix = new Matrix(
+		[[Math.cos(angle), 0, -1 * Math.sin(angle), 0], [0, 1, 0, 0], [Math.sin(angle), 0, Math.cos(angle), 0], [0, 0, 0, 1]]);
+
+	return rotationYMatrix;
+}
+
+function rotate3Z(angle) {
 	let rotationZMatrix = new Matrix(
 				[[Math.cos(angle), Math.sin(angle), 0], [-1 * Math.sin(angle), Math.cos(angle), 0], [0, 0, 1]]);
 
 	return rotationZMatrix;
 }
 
-function rotateInPlane(forward, dir, angle) {
+function rotate4Z(angle) {
+	let rotationZMatrix = new Matrix(
+				[[Math.cos(angle), Math.sin(angle), 0, 0], [-1 * Math.sin(angle), Math.cos(angle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+
+	return rotationZMatrix;
+}
+
+function rotateVectorHorizontal(dir, angle) {
+
+	let left = cross(dir, upVector);
+
+	if (left.equals(zeroVector)) {
+		left = cross(dir, leftVector);
+	}
+
+	left = left.normalize();
+	dir = dir.normalize();
 
 	let rotationMatrix = new Matrix(
 		[
 		[Math.cos(angle), 0, 0, 0], 
 		[0, Math.cos(angle), 0, 0], 
 		[0, 0, Math.cos(angle), 0], 
-		[dir.components[0] * Math.sin(angle), dir.components[1] * Math.sin(angle), dir.components[2] * Math.sin(angle), 1]
+		[left.components[0] * Math.sin(angle), left.components[1] * Math.sin(angle), left.components[2] * Math.sin(angle), 1]
+		]);
+
+	return rotationMatrix;
+}
+
+function rotateVectorVertical(dir, angle) {
+
+	let up = cross(dir, leftVector);
+
+	if (up.equals(zeroVector)) {
+		up = cross(dir, upVector);
+	} 
+
+	up = up.normalize();
+	dir = dir.normalize();
+
+	let rotationMatrix = new Matrix(
+		[
+		[Math.cos(angle), 0, 0, 0], 
+		[0, Math.cos(angle), 0, 0], 
+		[0, 0, Math.cos(angle), 0], 
+		[up.components[0] * Math.sin(angle), up.components[1] * Math.sin(angle), up.components[2] * Math.sin(angle), 1]
 		]);
 
 	return rotationMatrix;
