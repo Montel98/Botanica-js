@@ -177,6 +177,45 @@ function rotateVectorVertical(dir, angle) {
 	return rotationMatrix;
 }
 
+function rotateFrameHorizontal(axis, angle) {
+
+	let forwardTemp = axis.forward.copy();
+
+	axis.forward = add(forwardTemp.scale(Math.cos(angle)), axis.left.scale(Math.sin(angle))).normalize();
+	axis.left = add(forwardTemp.scale(Math.cos(angle + 0.5 * Math.PI)), axis.left.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
+
+}
+
+function rotateFrameVertical(axis, angle) {
+
+	let forwardTemp = axis.forward.copy();
+
+	axis.forward = add(forwardTemp.scale(Math.cos(angle)), axis.up.scale(Math.sin(angle))).normalize();
+	axis.up = add(forwardTemp.scale(Math.cos(angle + 0.5 * Math.PI)), axis.up.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
+}
+
+function rotateFrameRoll(axis, angle) {
+
+	let upTemp = axis.up.copy();
+
+	axis.up = add(axis.left.scale(Math.cos(angle)), upTemp.scale(Math.sin(angle))).normalize();
+	axis.left = add(axis.left.scale(Math.cos(angle + 0.5 * Math.PI)), upTemp.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
+}
+
+function projectToNewAxis(axis, position) {
+
+	const newLeft = new Vector([axis.left.components[0], axis.left.components[1], 0]).normalize();
+	const newUp = upVector.copy();
+	const newForward = cross(newLeft, newUp).normalize();
+
+	return new Matrix([
+		[newLeft.components[0], newForward.components[0], newUp.components[0], 0],
+		[newLeft.components[1], newForward.components[1], newUp.components[1], 0],
+		[newLeft.components[2], newForward.components[2], newUp.components[2], 0],
+		[position.components[0], position.components[1], position.components[2], 1],
+		]);
+}
+
 const identityMatrix = new Matrix(
 	[[1,0,0,0],
 	[0,1,0,0],

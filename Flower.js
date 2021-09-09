@@ -15,25 +15,25 @@ void main() {
 
 	float r = length(aVertexPosition.xy);
 
-	/*vec2 p4 = vec2(0.0, 0.0);
+	vec2 p4 = vec2(0.0, 0.0);
 	vec2 p5 = vec2(1.0, 1.0);
 	vec2 p6 = vec2(1.0, 0.0);
-	vec2 p7 = vec2(2.0, 0.0);*/
-
-	/*vec2 p0 = vec2(0.0, 0.0);
-	vec2 p1 = vec2(1.0, 1.0);
-	vec2 p2 = vec2(1.0, 1.0);
-	vec2 p3 = vec2(0.0, 2.0);*/
+	vec2 p7 = vec2(2.0, 0.0);
 
 	vec2 p0 = vec2(0.0, 0.0);
+	vec2 p1 = vec2(1.0, 1.0);
+	vec2 p2 = vec2(1.0, 1.0);
+	vec2 p3 = vec2(0.0, 2.0);
+
+	/*vec2 p0 = vec2(0.0, 0.0);
 	vec2 p1 = vec2(0.0, 1.0);
 	vec2 p2 = vec2(0.5, 1.5);
-	vec2 p3 = vec2(1.0, 2.0);
+	vec2 p3 = vec2(1.0, 2.0);*/
 
-	vec2 p4 = vec2(0.0, 0.0);
+	/*vec2 p4 = vec2(0.0, 0.0);
 	vec2 p5 = vec2(0.5, 0.5);
 	vec2 p6 = vec2(1.5, 0.0);
-	vec2 p7 = vec2(2.0, -0.5);
+	vec2 p7 = vec2(2.0, -0.5);*/
 
 	vec2 startPos = (1.0-r)*(1.0-r)*(1.0-r)*p0 + 3.0*(1.0-r)*(1.0-r)*r*p1 + 3.0*(1.0-r)*r*r*p2 + r*r*r*p3;
 	vec2 endPos = (1.0-r)*(1.0-r)*(1.0-r)*p4 + 3.0*(1.0-r)*(1.0-r)*r*p5 + 3.0*(1.0-r)*r*r*p6 + r*r*r*p7;
@@ -148,8 +148,8 @@ class Flowers extends Entity {
 		const geometry = flowerGeometry;
 		const material = new Material(flowerTexture);
 
-		geometry.bufferAttributes.bufferLength = 3;
-		geometry.bufferAttributes.attributes = {'aVertexPosition': [{attribLength: 3, offset: 0}]};
+		/*geometry.bufferAttributes.bufferLength = 3;
+		geometry.bufferAttributes.attributes = {'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: geometry.vertices}]};*/
 
 		//this.mesh = new Mesh(material, geometry);
 		this.mesh = new InstancedMesh(material, geometry);
@@ -160,8 +160,8 @@ class Flowers extends Entity {
 
 		this.shaderUniforms = this.mesh.shaders.uniforms;
 		//this.t = this.start
-		this.shaderUniforms['t'] = this.start;
-		//this.mesh.addInstanceBufferAttribute('age', 1, 16);
+		this.shaderUniforms['t'] = new Vector([this.start]);
+
 
 		const factor = 0.1;
 		this.mesh.addInstance(multiply(translate(0.6, 0.6, 0.6), scale(factor, factor, factor)));
@@ -171,6 +171,6 @@ class Flowers extends Entity {
 
 	act() {
 		//this.t = (this.d.getTime()) - this.start;
-		this.shaderUniforms['t'] = 0.1 * ((Date.now() / 1000) - this.start);
+		this.shaderUniforms['t'] = new Vector([0.1 * ((Date.now() / 1000) - this.start)]);
 	}
 }

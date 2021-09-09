@@ -15,6 +15,7 @@ class Controller {
 		while (stack.length != 0) {
 			
 			entity = stack.pop();
+			//console.log('entity:', entity);
 			stack.push(...entity.getChildren());
 
 			entity.act();

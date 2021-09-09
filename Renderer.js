@@ -36,24 +36,27 @@ class Renderer {
 		this.updateUniforms(camera, programLoc, entity);
 		this.bindTextures(material);
 
-		let bufferLoc = geometry.bufferID;
+		//let bufferLoc = geometry.bufferAttributes.bufferID;
 
-		if (!bufferLoc) {
-			bufferLoc = this.initBuffer(geometry, programLoc);
+		if (!geometry.bufferAttributes.bufferID) {
+			geometry.bufferAttributes.bufferID = this.initBuffer(geometry, programLoc);
 		}
 
 		// Bind mesh's vertex array object
-		oes_vao_ext.bindVertexArrayOES(bufferLoc.VertexArrayLoc);
+		oes_vao_ext.bindVertexArrayOES(geometry.bufferAttributes.bufferID.VertexArrayLoc);
 
-		const bufferSize = gl.getBufferParameter(gl.ELEMENT_ARRAY_BUFFER, gl.BUFFER_SIZE) / GL_UNSIGNED_SHORT_SIZE;
+		if (geometry.modifiedGeometryEvents.length > 0) {
+			this.updateBuffers(geometry);
+		}
+
+		//const bufferSize = gl.getBufferParameter(gl.ELEMENT_ARRAY_BUFFER, gl.BUFFER_SIZE) / GL_UNSIGNED_SHORT_SIZE;
+		const bufferSize = geometry.indexBuffer.length;
 
 		if (mesh.isInstanced) {
 
-			let instanceBufferLoc = mesh.instanceBufferID;
+			if (mesh.instanceBufferAttributes.bufferID == -1) {
 
-			if (instanceBufferLoc == -1) {
-
-				instanceBufferLoc = this.initInstanceBuffer(mesh, programLoc);
+				mesh.instanceBufferAttributes.bufferID = this.initInstanceBuffer(mesh, programLoc);
 			}
 
 			ext.drawElementsInstancedANGLE(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, 0, mesh.instanceCount);
@@ -96,7 +99,7 @@ class Renderer {
 
 		if (programLoc == -1) {
 
-			console.log(shaders.shaderSource.vertexShaderSrc);
+			//console.log(shaders.shaderSource.vertexShaderSrc);
 			programLoc = this.initShaderProgram(shaders.shaderSource.vertexShaderSrc, shaders.shaderSource.fragmentShaderSrc);
 
 			shaders.programID = programLoc;
@@ -141,8 +144,29 @@ class Renderer {
 			const uniformLoc = gl.getUniformLocation(program, uniformName);
 			const uniformData = meshShaderUniforms[uniformName];
 
-			gl.uniform1f(uniformLoc, uniformData);
+			const uniformSize = uniformData.noRows;
+
+			gl['uniform' + uniformSize + 'f'](uniformLoc, ...uniformData.components);
 		}
+	}
+
+	updateBuffers(geometry) {
+
+		let geometryEvent = geometry.modifiedGeometryEvents.pop();
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, geometry.bufferAttributes.bufferID.vertexBufferLoc);
+
+		gl.bufferSubData(gl.ARRAY_BUFFER, 
+							geometryEvent.vertexBufferIndex * GL_FLOAT_SIZE, 
+							new Float32Array(geometry.vertexBuffer.slice(geometryEvent.vertexBufferIndex))
+							);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.bufferAttributes.bufferID.indexBufferLoc);
+
+		gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER,
+							geometryEvent.indexBufferIndex * GL_UNSIGNED_SHORT_SIZE,
+							new Uint16Array(geometry.indexBuffer.slice(geometryEvent.indexBufferIndex))
+							);
 	}
 
 	clear() {
@@ -158,6 +182,8 @@ class Renderer {
 
 	initBuffer(geometry, program) {
 
+		let bufferOffset = 0;
+
 		// Create handle to vertex array object
 		const VAO = oes_vao_ext.createVertexArrayOES();
 		oes_vao_ext.bindVertexArrayOES(VAO);
@@ -172,17 +198,53 @@ class Renderer {
 
 	    gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
 
-	    let vertexBuffer = geometry.vertexBuffer;
+	    //let vertexBuffer = geometry.vertexBuffer;
 
 	    // Pass positions to WebGL to create buffer object's data store
-	    gl.bufferData(gl.ARRAY_BUFFER,
-	                new Float32Array(vertexBuffer),
-	                gl.STATIC_DRAW);
+
+	    var vertexBuffer, vertexBufferSize;
+
+	    if (geometry.bufferAttributes.vertexBufferSize <= 0) {
+	    	vertexBufferSize = geometry.vertexBuffer.length * GL_FLOAT_SIZE;
+	    	vertexBuffer = geometry.vertexBuffer;
+	    }
+	    else {
+	    	vertexBufferSize = geometry.bufferAttributes.vertexBufferSize * GL_FLOAT_SIZE;
+	    	vertexBuffer = geometry.vertexBuffer.slice(0, geometry.bufferAttributes.vertexBufferSize);
+	    }
+
+	    gl.bufferData(gl.ARRAY_BUFFER, vertexBufferSize, gl.STATIC_DRAW);
+
+	    gl.bufferSubData(gl.ARRAY_BUFFER, bufferOffset, new Float32Array(vertexBuffer));
 
 	    this.initBufferAttributes(program, geometry.bufferAttributes, false);
 
 	    // Index Buffer
 	    const IBO = gl.createBuffer();
+
+	    if (!IBO) {
+
+	        alert('Failed to create index buffer');
+	    }
+
+	    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IBO);
+
+	    //let indexBuffer = geometry.indexBuffer;
+	    var indexBuffer, indexBufferSize;
+
+
+	    if (geometry.bufferAttributes.indexBufferSize <= 0) {
+	    	indexBufferSize = geometry.indexBuffer.length * GL_UNSIGNED_SHORT_SIZE;
+	    	indexBuffer = geometry.indexBuffer;
+	    }
+	    else {
+	    	indexBufferSize = geometry.bufferAttributes.indexBufferSize * GL_UNSIGNED_SHORT_SIZE;
+	    	indexBuffer = geometry.indexBuffer.slice(0, geometry.bufferAttributes.indexBufferSize);
+	    }
+
+	    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexBufferSize, gl.STATIC_DRAW);
+
+	    gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, bufferOffset, new Uint16Array(indexBuffer));
 
 	    const bufferLocations = {
 	    	VertexArrayLoc: VAO,
@@ -191,15 +253,6 @@ class Renderer {
 	    };
 
 	   	geometry.setBufferLocation(bufferLocations);
-
-	    if (!IBO) {
-
-	        alert('Failed to create index buffer');
-	    }
-
-	    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IBO);
-	    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-	        new Uint16Array(geometry.indexBuffer), gl.STATIC_DRAW);
 
 	    return bufferLocations;
 	}
@@ -212,14 +265,14 @@ class Renderer {
 			alert('Failed to create instanced vertex buffer');
 		}
 
-		instancedMesh.instanceBufferID = instanceVBO;
+		instancedMesh.instanceBufferAttributes.bufferID = instanceVBO;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, instanceVBO);
 
 		let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
 							.flat();
 
-		gl.bufferData(gl.ARRAY_BUFFER, 
+		gl.bufferData(gl.ARRAY_BUFFER,
 						new Float32Array(matrixBuffer),
 						gl.DYNAMIC_DRAW);
 
@@ -232,11 +285,15 @@ class Renderer {
 	    for (let attribName in bufferAttributes.attributes) {
 
 	    	let attrib = bufferAttributes.attributes[attribName];
+	    	//console.log(attribName);
 	    	let baseAttribLocation = gl.getAttribLocation(program, attribName);
+	    	//console.log(baseAttribLocation);
 
 	    	for (let i = 0; i < attrib.length; i++) {
 
 	    		const attribLocation = baseAttribLocation + i;
+
+	    		//console.log(attribLocation, attrib[i].attribLength, bufferAttributes.bufferLength * GL_FLOAT_SIZE, attrib[i].offset * GL_FLOAT_SIZE);
 
 		    	gl.vertexAttribPointer(attribLocation, 
 		    							attrib[i].attribLength, 
@@ -293,6 +350,8 @@ class Renderer {
 	    // Create handles to shader objects
 	    const vertexShader = this.loadShader(gl.VERTEX_SHADER, vsSource);
 	    const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fsSource);
+
+	    console.log(vsSource);
 
 	    // Create program and attach shaders
 	    const shaderProgram = gl.createProgram();

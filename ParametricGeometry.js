@@ -2,18 +2,14 @@
 
 class ParametricGeometry extends Geometry {
 	
-	constructor(surface, mapping, uStep, vStep, invertedNormals, useST, useNormals) {
+	constructor(surface, mapping, uSteps, vSteps, invertedNormals, useST, useNormals) {
 
-		super(invertedNormals, useST);
+		super(invertedNormals, useNormals, useST);
 
 		this.surface = surface;
-		this.uSteps = uStep;
-		this.vSteps = vStep;
-		this.useNormals = useNormals;
-
-		this.normalTable = [];
-		this.binormalTable = [];
-		this.tangentTable = [];
+		this.uSteps = uSteps;
+		this.vSteps = vSteps;
+		//this.useNormals = useNormals;
 
 		this.stBuffer = [];
 
@@ -94,6 +90,7 @@ class ParametricGeometry extends Geometry {
         		let du = subtract(this.surface.eval((u + eps), v), vertex);
         		let dv = subtract(this.surface.eval(u, (v + eps)), vertex);
 
+
         		if (this.useNormals) {
 
 	        		var normal;
@@ -109,7 +106,7 @@ class ParametricGeometry extends Geometry {
 	        			normal = normal.normalize();
 	        		}
 
-	        		this.normalTable.push(normal);
+	        		this.normals.push(normal);
 	        		//this.binormalTable.push(du.normalize());
 	        		//this.tangentTable.push(dv.normalize());
 	        	}
@@ -126,28 +123,7 @@ class ParametricGeometry extends Geometry {
     generateBuffers() {
 
     	this.generateMeshVertices();
-
-    	let buffer = this.vertices.map((vertex, i) => 
-    	{	
-    		// Vertices
-    		let vComponents = vertex.components;
-    		let entry = [vComponents[0], vComponents[1], vComponents[2]];
-    		
-    		// Normals
-    		if (this.useNormals) {
-	    		let normal = this.normalTable[i];
-	    		let nComponents = normal.components;
-	    		entry.push(nComponents[0], nComponents[1], nComponents[2]);
-	    	}
-
-    		// Texture Maps
-    		if(this.useST) {
-    			entry.push(this.stBuffer[2 * i], this.stBuffer[(2 * i) + 1]);
-    		}
-
-    		return entry;
-    	});
-
-    	return buffer.flat();
+    	
+    	return this.mergeAttributes();
     }
 }

@@ -1,26 +1,39 @@
 class Geometry {
-	constructor(invertedNormals, useST) {
+	constructor(invertedNormals, useNormals, useST) {
 		this.vertices = [];
+
+		this.normals = [];
+		this.binormals = [];
+		this.tangents = [];
 
 		this.vertexBuffer = [];
 		this.indexBuffer = [];
 
 		this.useST = useST;
 
+		this.useNormals = useNormals;
 		this.invertedNormals = invertedNormals;
 
+		this.modifiedGeometryEvents = []
+
 		this.bufferAttributes = {
-			bufferLength: 6,
+			bufferID: null,
+			bufferName: "",
+			vertexBufferSize: -1,
+			indexBufferSize: -1,
+			bufferLength: 3,
 			attributes: {
-				'aVertexPosition': [{attribLength: 3, offset: 0}],
-				'aNormal': [{attribLength: 3, offset: 3}]
+				'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: this.vertices}]
+				/*'aNormal': [{attribLength: 3, offset: 3, bufferData: this.normals}]*/
 			}
 		};
 
-		this.bufferID = null;
+		if (useNormals) {
+			this.addBufferAttribute('aNormal', 3, this.bufferAttributes.bufferLength, this.normals);
+		}
 
 		if (useST) {
-			this.addBufferAttribute('aTexCoord', 2, 6);
+			this.addBufferAttribute('aTexCoord', 2, this.bufferAttributes.bufferLength);
 		}
 
 	}
@@ -30,14 +43,70 @@ class Geometry {
 	}
 
 	setBufferLocation(location) {
-		this.bufferID = location;
+		this.bufferAttributes.bufferID = location;
 	}
 
-	addBufferAttribute(name, length, attribOffset) {
+	setVertexBufferSize(vertexBufferSize) {
+		this.bufferAttributes.vertexBufferSize = vertexBufferSize;
+	}
+
+	setIndexBufferSize(indexBufferSize) {
+		this.bufferAttributes.indexBufferSize = indexBufferSize;
+	}
+
+	addBufferAttribute(name, length, attribOffset, data) {
 		this.bufferAttributes.attributes[name] = [{attribLength: length,
-												offset: attribOffset}];
+												offset: attribOffset,
+												bufferData: data}];
 
 		this.bufferAttributes.bufferLength += length;
+
+		this.vertexBuffer = this.mergeAttributes();
+	}
+
+	removeBufferAttribute(name) {
+
+		this.bufferAttributes.bufferLength -= this.bufferAttributes.attributes[name][0].attribLength;
+
+		delete this.bufferAttributes.attributes[name];
+
+		this.vertexBuffer = this.mergeAttributes();
+
+	}
+
+    mergeAttributes() {
+
+	    let buffer = [];
+
+	    for (let i = 0; i < this.vertices.length; i++) {
+
+	    	for (let attribName in this.bufferAttributes.attributes) {
+
+	    		let attrib = this.bufferAttributes.attributes[attribName][0].bufferData[i];
+	    		buffer.push(...attrib.components);
+	    	}
+
+	    }
+
+	    return buffer.flat();
+	}
+
+	addGeometry(newGeometry) {
+
+		let oldVertexBufferLength = this.vertexBuffer.length;
+		let oldIndexBufferLength = this.vertices.length;
+
+		for (let i = 0; i < newGeometry.indexBuffer.length; i++) {
+			newGeometry.indexBuffer[i] += oldIndexBufferLength;
+		}
+
+
+		this.vertices.push(...newGeometry.vertices);
+		this.vertexBuffer.push(...newGeometry.vertexBuffer);
+		this.indexBuffer.push(...newGeometry.indexBuffer);
+
+		this.modifiedGeometryEvents.push({vertexBufferIndex: oldVertexBufferLength, 
+											indexBufferIndex: oldIndexBufferLength});
 	}
 }
 
@@ -58,9 +127,10 @@ function mergeGeometry(geometries) {
 		mergedVertexBuffer.push(...vertexBuffer);
 	}
 
-	let mergedGeometry = new Geometry(geometries[0].invertedNormals, geometries[0].useST);
+	let mergedGeometry = new Geometry(geometries[0].invertedNormals, geometries[0].useNormals, geometries[0].useST);
 	mergedGeometry.vertexBuffer = mergedVertexBuffer;
 	mergedGeometry.indexBuffer = mergedIndexBuffer;
 
 	return mergedGeometry;
 }
+

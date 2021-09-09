@@ -1,54 +1,85 @@
+const stemVertexShader = 
+`
+precision mediump float;
+attribute vec3 aVertexPosition;
+attribute vec3 aNormal;
+attribute vec3 aMorphTarget;
+
+varying vec3 vVertexPosition;
+varying vec3 vNormal;
+
+uniform mat4 world;
+uniform mat4 camera;
+uniform mat4 perspective;
+
+uniform float du;
+uniform float t;
+
+//uniform vec3 direction;
+
+void main() {
+	//vec3 currentPos = aVertexPosition - (aMorphTarget * (1.0 - sin(2.0 * t)) * direction);
+	//vec3 currentPos = aMorphTarget + sin(5.0 * t) * sin(5.0 * t) * (aVertexPosition - aMorphTarget);
+	vec3 currentPos = aMorphTarget + du * (aVertexPosition - aMorphTarget);
+
+	gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
+
+	vVertexPosition = vec3(world * vec4(currentPos, 1.0));
+	vNormal = aNormal;
+}
+`;
+
+const stemFragmentShader = 
+`
+precision mediump float;
+varying vec3 vNormal;
+varying vec3 vVertexPosition;
+
+uniform vec3 ambientColour;
+
+void main() {
+	vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
+	vec3 lightPos = normalize(vec3(1.0, 1.0, 1.0) - vVertexPosition);
+
+							float ambient = 0.2;
+							float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
+							float light = ambient + diffuse;
+
+							gl_FragColor = vec4(light * ambientColour, 1.0); //0.2	
+}
+
+`;
+
+
 const bezier = new BezierCubic(new Vector([0.0, 0.0, 0.0]), 
 					new Vector([0.0, 0.0, 0.2]), 
 					new Vector([0.0, 0.0, 0.4]), 
 					new Vector([0.0, 0.0, 0.6]));
 
-/*const bezier = new BezierCubic(new Vector([0.0, 0.0, 0.0]), 
-					new Vector([1.0, 1.0, 1.0]), 
-					new Vector([2.0, 2.0, 2.0]), 
-					new Vector([3.0, 3.0, 3.0]));*/
+const crossSection = (radius, v, axis) => {
 
-const crossSection = (radius, v, gradient) => {
+	let position = add(axis.left.scale(radius * Math.cos(v)), axis.up.scale(radius * Math.sin(v)));
 
-	var left;
-	var up;
-
-	let gradientNorm = gradient.normalize();
-
-
-	left = cross(gradientNorm, upVector);
-
-	if (/*!(Math.abs(dot(gradientNorm, upVector)) == 1)*/ !(left.equals(zeroVector))) {
-
-		left = left.normalize();
-		up = cross(left, gradientNorm).normalize();
-	}
-	else {
-		left = cross(gradientNorm, leftVector).normalize();
-		up = cross(left, gradientNorm).normalize();
-	}
-
-	let position = add(left.scale(radius * Math.cos(v)), up.scale(radius * Math.sin(v)));
+	position = position.scale(0.9 + 0.1 * Math.cos(3 * v) ** 2.0);
 
 	return position;
 }
 
-var stemFunc = (path, radius) => {
+var stemFunc = (axis, path, radius, radiusProperties) => {
 	return {
-		r(u) {
-			//return 0.2 + (0.3 * Math.exp(-5.0 * u));
-			return radius;
-		},
 
-		bla(u) {
-			return path;
+		path: path,
+
+		r(u) {
+			return radius(radiusProperties.radiusStart, radiusProperties.radiusEnd, radiusProperties.shift, u);
 		},
 
 		aux(u, v) {
+
 			this.bezierPoint = path.eval(u);
 			this.bezierGradient = path.derivative(u);
 
-			this.crossSectionPoint = crossSection(this.r(u), v, this.bezierGradient);
+			this.crossSectionPoint = crossSection(this.r(u), v, axis);
 		},
 
 		x(u, v) {
@@ -67,36 +98,78 @@ var stemFunc = (path, radius) => {
 
 class Stem extends Entity {
 
-	constructor(surface) {
+	static terminalLength = 1.0;
+
+	constructor(geometry) {
 
 		super();
 
 		const textureTest = new Texture('https://64.media.tumblr.com/458dd49feded9a00cc1f6e9f6664c1bc/ad9a34ac4fa33c3f-69/s540x810/aea77a994bf1bddbb3c6c04401c609c694ceac6d.jpg');
 		const materialTest = new Material(textureTest);
 
-		let stMapping = {
-							vMin: surface.vMin, 
-							vMax: surface.vMax,
-							uMin: surface.uMin, 
-							uMax: surface.uMax
-						};
-
-		const geometry = new ParametricGeometry(surface, stMapping, 2, 16, true, false, true);
-
 		this.mesh = new Mesh(materialTest, geometry);
 
 		//this.worldMatrix = translate(-0.2, -0.2, 0);
 		this.worldMatrix = identityMatrix;
 
+		//this.colour = new Vector([0.25, 0.18, 0.12]);
+		this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
+		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+
 		// Experimental
 
-		this.isTerminal = false;
+		//this.mesh.shaders.uniforms['du'] = 0.5;
 
+		this.stringLoc = 0; // Corresponding location in L-String this stem corresponds to
+
+		this.stemLength = 0.0;
+		this.growthRate = 0.02; // Growth Rate in units/second
+
+		this.morphTargets = [];
+
+		for (let i = 0; i < geometry.vertices.length; i++) {
+			this.morphTargets.push(new Vector([0, 0, 0]));
+		}
+		
+		this.timeNow = Date.now() / 1000;
+		this.timePrev = this.timeNow;
+
+		geometry.addBufferAttribute('aMorphTarget', 3, geometry.bufferAttributes.bufferLength, this.morphTargets);
+		this.mesh.shaders = shaderBuilder.customShader('meristem_shader', 
+														stemVertexShader, 
+														stemFragmentShader, {'du': new Vector([0.0])}
+														);
 	}
 
 	act() {
+		//this.timeElapsed = (Date.now() / 1000) - this.start;
+		this.timeNow = Date.now() / 1000;
 
+		this.grow();
+
+		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+		//this.mesh.shaders.uniforms['t'].components[0] = 0.1 * this.timeElapsed;
+		this.mesh.shaders.uniforms['du'].components[0] = this.stemLength;
+
+		this.timePrev = this.timeNow;
+	}
+
+	grow(/*worldTime*/) {
+
+		let du = this.timeNow - this.timePrev;
+
+		let newLength = this.stemLength + this.growthRate * du;
+
+		if (newLength >= Stem.terminalLength) {
+			newLength = Stem.terminalLength;
+		}
+
+		this.stemLength = newLength;
+	}
+
+	isMaxHeight() {
+		return this.stemLength == Stem.terminalLength;
 	}
 }
 
-const stemSurface = new ParametricSurface(stemFunc(bezier, 0.005), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+//const stemSurface = new ParametricSurface(stemFunc(bezier, 0.005), 0.0, 1.0, 0.0, 2.0 * Math.PI);

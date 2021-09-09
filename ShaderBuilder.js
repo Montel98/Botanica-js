@@ -1,3 +1,5 @@
+//vec3(0.6, 0.4, 0.0) <- Gold Colour
+
 const _NORMAL_MAP = 1;
 const _TEXTURE_MAP = 2;
 const _INSTANCING = 4;
@@ -7,7 +9,7 @@ const mapIndex = {
 	'normalMap': _NORMAL_MAP
 }
 
-function shaderProgramDefault1(useInstancing) {
+function shaderProgramDefault(useInstancing) {
 
 	const vertexInit = 	`
 						//precision mediump float;
@@ -38,20 +40,20 @@ function shaderProgramDefault1(useInstancing) {
 						precision mediump float;
 						varying vec3 vNormal;
 						varying vec3 vVertexPosition;
+
+						uniform vec3 ambientColour;
 						`;
 
 	const fragmentMain = `
 						void main() {
 							vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-							//vec3 norm = normalize(vNormal);
 							vec3 lightPos = normalize(vec3(1.0, 1.0, 1.0) - vVertexPosition);
 
 							float ambient = 0.2;
-							//float ambient = 0.15;
 							float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
 							float light = ambient + diffuse;
 
-							gl_FragColor = vec4(light * vec3(0.6, 0.4, 0.0), 1.0); //0.2
+							gl_FragColor = vec4(light * ambientColour, 1.0); //0.2
 						}
 						`;
 
@@ -86,6 +88,8 @@ const codeLines = {
 
 	_NORMAL_MAP: {vertexShader: {init: ``, main: ``}, fragmentShader: {init: ``, main: ``}}
 };
+
+var customShaders = {}
 
 class ShaderBuilder {
 	constructor() {
@@ -126,7 +130,7 @@ class ShaderBuilder {
 							let index = mapIndex[TextureMap];
 							return index ? str + codeLines[index][shaderType][bodyType] : str;
 
-						}, shaderProgramDefault1(useInstancing)[shaderType][bodyType]);
+						}, shaderProgramDefault(useInstancing)[shaderType][bodyType]);
 					;
 
 				}, ``);
@@ -143,12 +147,21 @@ class ShaderBuilder {
 		}
 	}
 
-	customShader(vertexShaderSource, fragmentShaderSource, uniformsInfo) {
+	customShader(name, vertexShaderSource, fragmentShaderSource, uniformsInfo) {
+
+		if (name in customShaders) {
+			return customShaders[name];
+		}
+
 		const newShader = {
 			shaderSource: {vertexShaderSrc: vertexShaderSource, fragmentShaderSrc: fragmentShaderSource},
 			programID: -1,
 			uniforms: uniformsInfo
 		}
+
+		customShaders[name] = newShader;
+
+		//console.log(customShaders);
 
 		return newShader;
 	}

@@ -13,7 +13,7 @@ const controller = new Controller(scene, renderer);
 //const surface = new ParametricSurface(flowerFunc, 0.0, 2.0 * Math.PI, 0.0, 0.2);
 //const flower = new Flower(surface);
 
-const stem = new Stem(stemSurface);
+//const stem = new Stem(stemSurface);
 
 const s = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
@@ -61,12 +61,9 @@ const s = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
                         newSymbol('*', []),
-                        newSymbol('1', []) ], 5);
+                        newSymbol('1', []) ], 0);
 
-//const s = buildString('0*0*0*0*0*0[+0+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]*0*0*0*0*0*0[+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]*0*0*0*0*0*0*[+0+0+0+0+0+0+0+0+0+0-0-0-0-0-0-0-0]0*0', 0);
-//const s = buildString('+1+1+1+1+1[0][0]+1+1+1+1+1+1[0][0]+1+1+1+1+1+1[0][0]+1+1+1+1+1+1', 2);
-//const s = buildString('0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0+0[+0+0+0+0+0+0+0+0+0]+0+0+0+0+0]+0+0+0]+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0+0', 0);
-/*const l = new LSystem(new Vector([0, 0, 0]), new Vector([0, 0, 0.1]));
+/*
 let items = l.generateStems(s);
 let g = generateMesh(items);
 const textureTest = new Texture('s');*/
@@ -86,9 +83,16 @@ scene.addEntity(testEntity);*/
 //scene.addEntity(flowers);
 //stem.addChild(leaves);
 
-const treeTest = generateTree(s);
-treeTest.setPosition(0.0, 0.0, 0.5);
-scene.addEntity(treeTest);
+/*const treeTest = generateTree(s);
+treeTest.setPosition(-0.5, 0.0, 0.7);
+scene.addEntity(treeTest);*/
+
+const potTest = new Pot();
+potTest.setPosition(-0.5, 0.0, 0.35);
+scene.addEntity(potTest);
+
+newTree.setPosition(-0.5, 0.0, 0.7);
+scene.addEntity(newTree);
 
 let prevX = canvas.scrollWidth / 2.0;
 let prevY = canvas.scrollHeight / 2.0;

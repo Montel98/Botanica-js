@@ -15,6 +15,14 @@ class Entity {
 		childEntity.parent = this;
 	}
 
+	removeChild(childEntity) {
+		for (let i = 0; i < this.children.length; i++) {
+			if (this.children[i] == childEntity) {
+				this.children.splice(i, 1);
+			}
+		}
+	}
+
 	act() {
 
 	}

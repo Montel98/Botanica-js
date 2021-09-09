@@ -6,22 +6,23 @@
 // ] pop from stack
 
 class LSystem {
-	constructor(startPos, startDir) {
-		this.startPos = startPos;
-		this.startDir = startDir;
+	constructor(inputStr) {
+		//this.startPos = startPos;
+		//this.startDir = startDir;
+		this.LString = inputStr;
 
 		this.rules = {
-			'0': (pos, axis, r, level) => {
-				return this.generateBranch(pos, axis, r, level);
+			'0': (pos, axis, r, level, prevStem) => {
+				return this.generateBranch(pos, axis, r, level, prevStem);
 			},
 
-			'1': (pos, axis, r, level) => {
-				return this.generateBranch(pos, axis, r, level);
+			'1': (pos, axis, r, level, prevStem) => {
+				return this.generateBranch(pos, axis, r, level, prevStem);
 			}
 		}
 	}
 
-	generateStem(pos, axis, r, level) {
+	generateStem(pos, axis, r, level, prevStem) {
 		let normDir = axis.forward.normalize();
 
 		let tempFactor = 0.1;
@@ -31,25 +32,36 @@ class LSystem {
 		let p2 = add(pos, normDir.scale(0.2 * tempFactor));
 		let p3 = add(pos, normDir.scale(0.3 * tempFactor));
 
-		let stemPath = new BezierCubic(p0, p1, p2, p3);
-
-		let sSurface = new ParametricSurface(stemFunc(stemPath, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
-
 		pos.add(normDir.scale(0.3 * tempFactor));
 
-		let newStem = new Stem(sSurface);
+		let stemPath = new BezierCubic(p0, p1, p2, p3);
 
-		/*var leafMatrix = null;
+		let surface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		if (level > 1) {
-			leafMatrix = projectToNewAxis(axis, add(pos, normDir.scale(0.15 * tempFactor)));
-		}*/
+		let stMapping = {
+							vMin: surface.vMin, 
+							vMax: surface.vMax,
+							uMin: surface.uMin, 
+							uMax: surface.uMax
+						};
 
-		/*return {stem: newStem,
-				leafPose: leafMatrix
-				};*/
+		let stemGeometry = new ParametricGeometry(surface, stMapping, 2, 20, true, false, true);
 
-		return newStem;
+		if (prevStem) {
+
+			//let prevStemGeometry = prevStem.mesh.geometry;
+			let prevStemGeometry = prevStem.stemGeometry;
+
+			for (let i = 0; i < stemGeometry.vSteps; i++) {
+
+				stemGeometry.vertices[(2 * i)] = prevStemGeometry.vertices[(2 * i) + 1].copy();
+				stemGeometry.normals[(2 * i)] = prevStemGeometry.normals[(2 * i) + 1].copy();
+			}
+		}
+
+		stemGeometry.vertexBuffer = stemGeometry.mergeAttributes();
+
+		return stemGeometry;
 	}
 
 	generateLeaves(pos, axis, r, level) {
@@ -58,132 +70,153 @@ class LSystem {
 
 		if (level > 2) {
 			leafMatrix = projectToNewAxis(axis, pos);
-			console.log(leafMatrix.components);
 		}
 
 		return leafMatrix;
 	}
 
-	generateBranch(pos, axis, r, level) {
-		let newStem = this.generateStem(pos, axis, r, level);
+	generateBranch(pos, axis, r, level, prevStem) {
+		let newStemGeometry = this.generateStem(pos, axis, r, level, prevStem);
 		let leafMatrix = this.generateLeaves(pos, axis, r, level);
 
 		return {
-			stem: newStem,
+			stemGeometry: newStemGeometry,
 			leafPose: leafMatrix
 		}
 	}
 
-	generateStems(inputStr) {
+	generateStems(startIndex, stackFrame) {
 		let stack = [];
-		let pos = new Vector(this.startPos.components);
 
-		//let dir = new Vector(this.startDir.components);
-		//let up = new Vector([0, -1, 0]);
-		//let left = new Vector([-1, 0, 0]);
-
-		let axis = {
-			//forward: new Vector([...this.startDir.components]),
-			forward: new Vector([0, 0, 1]),
-			up: new Vector([0, -1, 0]),
-			left: new Vector([-1, 0, 0])
-		}
-
-		let r = 0.03;
-		let l = 0;
-
-		let items = [];
 		let leafMatrices = [];
 
-		for (let i = 0; i < inputStr.length; i++) {
+		//let terminalStems = [];
+		let terminalStem = {};
+		terminalStem['childStems'] = [];
 
-			var symbol = inputStr[i].symbol;
-			var params = inputStr[i].params;
+		let newSegments = false;
+		let i = startIndex;
+
+		let symbol = this.LString[i].symbol;
+
+		while (newSegments == false && i < this.LString.length && symbol !== ']') {
+
+			//console.log(this.LString[i]);
+
+			symbol = this.LString[i].symbol;
+			var params = this.LString[i].params;
 
 			if (symbol === '+') {
-				rotateFrameVertical(axis, params[1]);
-				rotateFrameHorizontal(axis, params[0]);
+
+				rotateFrameVertical(stackFrame.axis, params[1]);
+				rotateFrameHorizontal(stackFrame.axis, params[0]);
 
 			}
 
 			else if (symbol === '*') {
 
-				//rotateFrameRoll(axis, 2.0 * Math.PI * Math.random());
-				//rotateFrameRoll(axis, Math.PI / 2.0);
-
-				rotateFrameVertical(axis, randomNormal(0, Math.PI / 32));
-				rotateFrameHorizontal(axis, randomNormal(0, Math.PI / 32));
+				rotateFrameVertical(stackFrame.axis, randomNormal(0, Math.PI / 16));
+				rotateFrameHorizontal(stackFrame.axis, randomNormal(0, Math.PI / 16));
 			}
 
 			else if (symbol === '[') {
 
-				//rotateFrameRoll(axis, 2.0 * Math.PI * Math.random());
+				let stackFrameCopy = copyStack(stackFrame);
 
-				stack.push({pos: new Vector([...pos.components]), 
-							axis: {forward: new Vector([...axis.forward.components]), 
-									up: new Vector([...axis.up.components]), 
-									left: new Vector([...axis.left.components])}, 
-									radius: r,
-									level: l});
+				let r = radiusFunc(stackFrame.radius.radiusStart, stackFrame.radius.radiusEnd, stackFrame.count, 0);
 
-				if (r > 0.002) {
-					r *= 0.6;
-				}
+				stackFrame.radius = radiusProperties(0.7 * r, 0.4 * r, 0);
 
-				l++
-			}
+				stackFrame.level++
 
-			else if (symbol === ']') {
+				stackFrame.prevStem = null;
 
-				let prevParams = stack.pop();
+				stackFrame.count = 0;
 
-				pos = prevParams.pos;
-				axis = prevParams.axis;
-				r = prevParams.radius;
-				l = prevParams.level;
+				terminalStem['childStems'].push(stackFrame); 
+				i = this.skipBranch(i);
+				stackFrame = stackFrameCopy;
+
 			}
 
 			else {
-				items.push(this.rules[symbol](pos, axis, r, l));
+
+				let stemParts = this.rules[symbol](stackFrame.pos, 
+													stackFrame.axis, 
+													stackFrame.radius, 
+													stackFrame.level, 
+													stackFrame.prevStem);
+				stackFrame.prevStem = stemParts;
+
+
+				let meristem = new Stem(stemParts.stemGeometry);
+
+				//terminalStems.push({stem: meristem, stackFrame: stackFrame});
+				terminalStem['stem'] = meristem;
+				terminalStem['stackFrame'] = stackFrame;
+
+				for (let i = 0; i < meristem.mesh.geometry.vertices.length; i++) {
+
+					meristem.morphTargets[i] = meristem.mesh.geometry.vertices[(2 * (Math.floor(i / 2)))];
+				}
+
+				meristem.mesh.geometry.vertexBuffer = meristem.mesh.geometry.mergeAttributes();
+
+				newSegments = true;
 			}
+
+			i++;
+			stackFrame.stringIndex = i;
+			stackFrame.count++;
 		}
 
-		return items;
+		//return {stem: terminalStems, stackFrame: stackFrame};
+		return terminalStem;
+	}
+
+	skipBranch(index) {
+		let parenthesisCount = 1;
+
+		while (parenthesisCount != 0) {
+			index++;
+
+			if (this.LString[index].symbol === '[') {
+				parenthesisCount++;
+			}
+
+			else if (this.LString[index].symbol === ']') {
+				parenthesisCount--;
+			}
+			else continue;
+		}
+
+		return index + 1;
 	}
 }
 
-function generateMesh(items) {
+function copyStack(stackFrame) {
+	stackFrameCopy = {};
 
-	let geometries = items.map(item => item.mesh.geometry);
-	return mergeGeometry(geometries);
-}
+	for (let param in stackFrame) {
 
-function generateTree(inputStr) {
-	let tempLSystem = new LSystem(zeroVector.copy(), upVector.copy());
-
-	let items = tempLSystem.generateStems(inputStr);
-
-	let stems = items.map(item => item.stem);
-	let geometry = generateMesh(stems);
-
-	const textureTest = new Texture('s');
-	const testEntity = new Entity();
-	testEntity.mesh = new Mesh(new Material(textureTest), geometry);
-
-	let leafPoses = items.map(item => item.leafPose).filter(i => i);
-
-	const leaves = new Leaves();
-
-	const leafCount = 2;
-
-	for (let leafIndex = 0; leafIndex < leafPoses.length; leafIndex++) {
-
-		leaves.addLeaves(leafCount, leafPoses[leafIndex]);
+		if (param == 'axis') {
+			stackFrameCopy['axis'] = copyAxis(stackFrame.axis);
+		}
+		else if (param == 'pos') {
+			stackFrameCopy['pos'] = stackFrame.pos.copy();
+		}
+		else {
+			stackFrameCopy[param] = stackFrame[param];
+		}
 	}
 
-	testEntity.addChild(leaves);
+	return stackFrameCopy;
+}
 
-	return testEntity;
+function copyAxis(axis) {
+	return {forward: axis.forward.copy(),
+			up: axis.up.copy(),
+			left: axis.left.copy()}
 }
 
 const rules = {};
@@ -221,6 +254,13 @@ function newSymbol(symbolString, parameters) {
 	}
 }
 
+function newBranch(terminalStemPos, currentLength) {
+	return {
+		index: terminalStemPos,
+		terminalStemLength: currentLength
+	}
+}
+
 function buildString(start, depth) {
 	let inputStr = start;
 	let outputStr = start;
@@ -243,8 +283,6 @@ function buildString(start, depth) {
 
 		inputStr = outputStr;
 	}
-
-	console.log('output:', outputStr);
 
 	return outputStr;
 }
@@ -276,52 +314,14 @@ function randomNormal(mean, variance) {
 	return mean + (variance * (Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)));
 }
 
-function rotateFrameHorizontal(axis, angle) {
-
-	let forwardTemp = axis.forward.copy();
-
-	axis.forward = add(forwardTemp.scale(Math.cos(angle)), axis.left.scale(Math.sin(angle))).normalize();
-	axis.left = add(forwardTemp.scale(Math.cos(angle + 0.5 * Math.PI)), axis.left.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
-
+function radiusProperties(rStart, rEnd, shift) {
+	return {
+		radiusStart: rStart,
+		radiusEnd: rEnd,
+		shift: shift
+	}
 }
 
-function rotateFrameVertical(axis, angle) {
-
-	let forwardTemp = axis.forward.copy();
-
-	axis.forward = add(forwardTemp.scale(Math.cos(angle)), axis.up.scale(Math.sin(angle))).normalize();
-	axis.up = add(forwardTemp.scale(Math.cos(angle + 0.5 * Math.PI)), axis.up.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
-}
-
-function rotateFrameRoll(axis, angle) {
-
-	let upTemp = axis.up.copy();
-
-	axis.up = add(axis.left.scale(Math.cos(angle)), upTemp.scale(Math.sin(angle))).normalize();
-	axis.left = add(axis.left.scale(Math.cos(angle + 0.5 * Math.PI)), upTemp.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
-}
-
-function projectToNewAxis(axis, position) {
-
-	/*const leftNorm = axis.left.normalize().components;
-	const forwardNorm = axis.forward.normalize().components;
-	const upNorm = axis.up.normalize().components;*/
-
-	const newLeft = new Vector([axis.left.components[0], axis.left.components[1], 0]).normalize();
-	const newUp = upVector.copy();
-	const newForward = cross(newLeft, newUp).normalize();
-
-	/*return new Matrix([
-		[leftNorm[0], forwardNorm[0], upNorm[0], 0],
-		[leftNorm[1], forwardNorm[1], upNorm[1], 0],
-		[leftNorm[2], forwardNorm[2], upNorm[2], 0],
-		[position.components[0], position.components[1], position.components[2], 1],
-		]);*/
-
-	return new Matrix([
-		[newLeft.components[0], newForward.components[0], newUp.components[0], 0],
-		[newLeft.components[1], newForward.components[1], newUp.components[1], 0],
-		[newLeft.components[2], newForward.components[2], newUp.components[2], 0],
-		[position.components[0], position.components[1], position.components[2], 1],
-		]);
+function radiusFunc(rStart, rEnd, shift, u) {
+	return rEnd + (rStart - rEnd) * Math.exp(-1.0 * (u + shift + 1.0));
 }

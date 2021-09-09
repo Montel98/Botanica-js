@@ -1,10 +1,10 @@
-var termC = new FourierTerm(0.0, 1.0, 0.5, 2.0);
-var termD = new FourierTerm(0.0, 0.3, 6.0, 2.0);
-var termE  = new FourierTerm(0.0, 0.1, 18.0, 2.0);
-
 /*var termC = new FourierTerm(0.0, 1.0, 0.5, 2.0);
-var termD = new FourierTerm(0.0, 0.7, 2.0, 2.0);
-var termE  = new FourierTerm(0.0, 0.3, 10.0, 2.0); // 16 should be max*/
+var termD = new FourierTerm(0.0, 0.3, 6.0, 2.0);
+var termE  = new FourierTerm(0.0, 0.1, 18.0, 2.0);*/
+
+var termC = new FourierTerm(0.0, 1.0, 0.5, 2.0);
+var termD = new FourierTerm(0.0, 0.7, 4.0, 2.0);
+var termE  = new FourierTerm(0.0, 0.3, 12.0, 2.0); // 12 should be max
 
 var fourier = new FourierSeries(0.0, [termC, termD, termE]);
 
@@ -23,7 +23,7 @@ const leafFunc = {
 
 	z(u, v) {
 		//return Math.log(Math.abs(0.3 * this.r * Math.sin(u)) + 1.0);
-		return Math.abs(0.02 * Math.sin(10.0 * this.r * Math.sin(u))) - ((this.r * Math.cos(u)) ** 2.0);
+		return Math.abs(0.02 * Math.sin(10.0 * this.r * Math.sin(u))) - ((1.2 * this.r * Math.cos(u)) ** 2.0);
 		//return 0.0;
 	}
 }
@@ -70,14 +70,14 @@ class Leaves extends Entity {
 
 		this.mesh = new InstancedMesh(material, geometry);
 
-		this.offset = leafGeometry.surface.eval(Math.PI, leafGeometry.surface.vMax);
+		let offset = leafGeometry.surface.eval(Math.PI, leafGeometry.surface.vMax);
 
 		this.xScale = 0.1;
 		this.yScale = 0.06;
 		this.zScale = 0.1;
 
-		this.dx = -this.xScale * this.offset.components[0];
-		this.dy = -this.yScale * this.offset.components[1];
+		this.dx = -this.xScale * offset.components[0];
+		this.dy = -this.yScale * offset.components[1];
 
 		///this.mesh.addInstance(multiply(translate(x, y, 0.2), scale(0.5, 0.3, 0.5)));
 
@@ -93,6 +93,13 @@ class Leaves extends Entity {
 				this.mesh.addInstance(multiply(rotate4Z((j * 2.0 * Math.PI) / noLeaves), multiply(translate(dx, dy, height), multiply(rotate4X(randomAngle), scale(xScale, yScale, zScale)))));
 			}
 		}*/
+
+
+		//this.colour = new Vector([0.2, 0.7, 0.0]);
+		//this.colour = new Vector([0.6, 0.2, 0.0]);
+		this.colour = new Vector([0.4, 0.7, 0.7]);
+		this.shaderUniforms = this.mesh.shaders.uniforms;
+		this.shaderUniforms['ambientColour'] = this.colour;
 	}
 
 	addLeaves(noLeaves, poseMatrix) {
@@ -113,6 +120,6 @@ class Leaves extends Entity {
 	}
 
 	act() {
-
+		this.shaderUniforms['ambientColour'] = this.colour;
 	}
 }

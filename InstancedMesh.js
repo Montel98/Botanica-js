@@ -7,8 +7,9 @@ class InstancedMesh extends Mesh {
 		this.localMatrices = [];
 		this.worldMatrices = [];
 		this.isInstanced = true;
-		this.instanceBufferID = -1;
-		this.instanceBufferAttributes = {bufferLength: 16, attributes: {'offset': [{attribLength: 4, offset: 0},
+		//this.instanceBufferID = -1;
+		this.instanceBufferAttributes = {bufferID: -1, 
+										bufferLength: 16, attributes: {'offset': [{attribLength: 4, offset: 0},
 																					{attribLength: 4, offset: 4},
 																					{attribLength: 4, offset: 8},
 																					{attribLength: 4, offset: 12}
