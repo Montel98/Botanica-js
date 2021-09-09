@@ -112,8 +112,8 @@ class Stem extends Entity {
 		//this.worldMatrix = translate(-0.2, -0.2, 0);
 		this.worldMatrix = identityMatrix;
 
-		//this.colour = new Vector([0.25, 0.18, 0.12]);
-		this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
+		this.colour = new Vector([0.25, 0.18, 0.12]);
+		//this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 
 		// Experimental
@@ -123,7 +123,7 @@ class Stem extends Entity {
 		this.stringLoc = 0; // Corresponding location in L-String this stem corresponds to
 
 		this.stemLength = 0.0;
-		this.growthRate = 0.02; // Growth Rate in units/second
+		this.growthRate = 0.5; // Growth Rate in units/second
 
 		this.morphTargets = [];
 
