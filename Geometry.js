@@ -21,6 +21,8 @@ class Geometry {
 			bufferName: "",
 			vertexBufferSize: -1,
 			indexBufferSize: -1,
+			vertexBufferOffet: 0,
+			indexBufferOffset: 0,
 			bufferLength: 3,
 			attributes: {
 				'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: this.vertices}]
@@ -100,8 +102,14 @@ class Geometry {
 			newGeometry.indexBuffer[i] += oldIndexBufferLength;
 		}
 
+		// ONLY COPIED THE REFERENCES SO FAR!!! MIGHT CAUSE PROBLEMS IN THE FUTURE
 
-		this.vertices.push(...newGeometry.vertices);
+		for (let attribName in this.bufferAttributes.attributes) {
+			let newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName][0].bufferData;
+			this.bufferAttributes.attributes[attribName][0].bufferData.push(...newGeometryAttribData);
+		}
+
+		//this.vertices.push(...newGeometry.vertices);
 		this.vertexBuffer.push(...newGeometry.vertexBuffer);
 		this.indexBuffer.push(...newGeometry.indexBuffer);
 

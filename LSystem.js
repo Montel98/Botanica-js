@@ -7,8 +7,7 @@
 
 class LSystem {
 	constructor(inputStr) {
-		//this.startPos = startPos;
-		//this.startDir = startDir;
+
 		this.LString = inputStr;
 
 		this.rules = {
@@ -36,7 +35,10 @@ class LSystem {
 
 		let stemPath = new BezierCubic(p0, p1, p2, p3);
 
+		let babyR = radiusProperties(0.005, 0.005, 0);
+
 		let surface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		let babySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, babyR), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 
 		let stMapping = {
 							vMin: surface.vMin, 
@@ -45,23 +47,32 @@ class LSystem {
 							uMax: surface.uMax
 						};
 
-		let stemGeometry = new ParametricGeometry(surface, stMapping, 2, 20, true, false, true);
+		let resolution = 32;
+
+		if (level > 2) {
+			resolution = 8;
+		}
+
+		let stemGeometry = new ParametricGeometry(surface, stMapping, 2, resolution, false, false, true);
+		let babyStemGeometry = new ParametricGeometry(babySurface, stMapping, 2, resolution, false, false, false);
 
 		if (prevStem) {
 
-			//let prevStemGeometry = prevStem.mesh.geometry;
 			let prevStemGeometry = prevStem.stemGeometry;
 
 			for (let i = 0; i < stemGeometry.vSteps; i++) {
 
-				stemGeometry.vertices[(2 * i)] = prevStemGeometry.vertices[(2 * i) + 1].copy();
-				stemGeometry.normals[(2 * i)] = prevStemGeometry.normals[(2 * i) + 1].copy();
+				stemGeometry.vertices[(2 * i)] = prevStemGeometry.stemEnd.vertices[(2 * i) + 1].copy();
+				stemGeometry.normals[(2 * i)] = prevStemGeometry.stemEnd.normals[(2 * i) + 1].copy();
+
+				babyStemGeometry.vertices[(2 * i)] = prevStemGeometry.stemStart.vertices[(2 * i) + 1].copy();
 			}
 		}
 
 		stemGeometry.vertexBuffer = stemGeometry.mergeAttributes();
+		babyStemGeometry.vertexBuffer = babyStemGeometry.mergeAttributes();
 
-		return stemGeometry;
+		return {stemEnd: stemGeometry, stemStart: babyStemGeometry};
 	}
 
 	generateLeaves(pos, axis, r, level) {
@@ -90,7 +101,6 @@ class LSystem {
 
 		let leafMatrices = [];
 
-		//let terminalStems = [];
 		let terminalStem = {};
 		terminalStem['childStems'] = [];
 
@@ -101,8 +111,6 @@ class LSystem {
 
 		while (newSegments == false && i < this.LString.length && symbol !== ']') {
 
-			//console.log(this.LString[i]);
-
 			symbol = this.LString[i].symbol;
 			var params = this.LString[i].params;
 
@@ -110,7 +118,6 @@ class LSystem {
 
 				rotateFrameVertical(stackFrame.axis, params[1]);
 				rotateFrameHorizontal(stackFrame.axis, params[0]);
-
 			}
 
 			else if (symbol === '*') {
@@ -136,7 +143,6 @@ class LSystem {
 				terminalStem['childStems'].push(stackFrame); 
 				i = this.skipBranch(i);
 				stackFrame = stackFrameCopy;
-
 			}
 
 			else {
@@ -146,21 +152,21 @@ class LSystem {
 													stackFrame.radius, 
 													stackFrame.level, 
 													stackFrame.prevStem);
+
 				stackFrame.prevStem = stemParts;
 
 
-				let meristem = new Stem(stemParts.stemGeometry);
+				let meristem = new Stem(stemParts.stemGeometry.stemEnd, stemParts.stemGeometry.stemStart);
 
-				//terminalStems.push({stem: meristem, stackFrame: stackFrame});
 				terminalStem['stem'] = meristem;
 				terminalStem['stackFrame'] = stackFrame;
 
-				for (let i = 0; i < meristem.mesh.geometry.vertices.length; i++) {
+				/*for (let i = 0; i < meristem.mesh.geometry.vertices.length; i++) {
 
 					meristem.morphTargets[i] = meristem.mesh.geometry.vertices[(2 * (Math.floor(i / 2)))];
 				}
 
-				meristem.mesh.geometry.vertexBuffer = meristem.mesh.geometry.mergeAttributes();
+				meristem.mesh.geometry.vertexBuffer = meristem.mesh.geometry.mergeAttributes();*/
 
 				newSegments = true;
 			}
@@ -170,7 +176,6 @@ class LSystem {
 			stackFrame.count++;
 		}
 
-		//return {stem: terminalStems, stackFrame: stackFrame};
 		return terminalStem;
 	}
 

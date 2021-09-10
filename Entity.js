@@ -23,7 +23,7 @@ class Entity {
 		}
 	}
 
-	act() {
+	act(worldTime) {
 
 	}
 

@@ -59,7 +59,7 @@ class Pot extends Entity {
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 	}
 
-	act() {
+	act(worldTime) {
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 	}
 }

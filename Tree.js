@@ -1,4 +1,57 @@
-class NewTree extends Entity {
+const treeVertexShader = 
+`
+precision mediump float;
+attribute vec3 aVertexPosition;
+attribute vec3 aNormal;
+attribute vec3 aMorphTarget2;
+
+varying vec3 vVertexPosition;
+varying vec3 vNormal;
+
+uniform mat4 world;
+uniform mat4 camera;
+uniform mat4 perspective;
+
+uniform float age;
+
+//uniform vec3 direction;
+
+void main() {
+
+    vec3 currentPos = aMorphTarget2 + age * (aVertexPosition - aMorphTarget2);
+
+    gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
+
+    vVertexPosition = vec3(world * vec4(currentPos, 1.0));
+    vNormal = aNormal;
+}
+`;
+
+const treeFragmentShader = 
+`
+precision mediump float;
+varying vec3 vNormal;
+varying vec3 vVertexPosition;
+
+uniform vec3 ambientColour;
+
+void main() {
+    vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
+    vec3 lightPos = normalize(vec3(1.0, 1.0, 1.0) - vVertexPosition);
+
+                            float ambient = 0.2;
+                            float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
+                            float light = ambient + diffuse;
+
+                            gl_FragColor = vec4(light * ambientColour, 1.0); //0.2  
+}
+
+`;
+
+class Tree extends Entity {
+
+    static maxAge = 1.0;
+
 	constructor(LString) {
 
 		super();
@@ -27,7 +80,10 @@ class NewTree extends Entity {
 		this.terminalStems = [];
 		this.LSystem = new LSystem(LString);
 
-		this.terminalStems.push(this.LSystem.generateStems(startIndex, stackFrame));
+        let newStem = this.LSystem.generateStems(startIndex, stackFrame);
+        newStem.stem.tree = this;
+
+		this.terminalStems.push(newStem);
 
 		for (let i = 0; i < this.terminalStems.length; i++) {
 			this.addChild(this.terminalStems[i].stem);
@@ -38,22 +94,48 @@ class NewTree extends Entity {
 		geometry.setVertexBufferSize(10800 * 40);
 		geometry.setIndexBufferSize(3480 * 40);
 
+        this.girthMorphTargets = [];
+
+        geometry.addBufferAttribute('aMorphTarget2', 3, geometry.bufferAttributes.bufferLength, this.girthMorphTargets);
+
+
+
 		this.mesh = new Mesh(new Material(textureTest), geometry);
+
+        this.mesh.shaders = shaderBuilder.customShader('tree_shader', 
+                                                        treeVertexShader, 
+                                                        treeFragmentShader, {'age': new Vector([0.0])}
+                                                        );
 
 		this.colour = new Vector([0.25, 0.18, 0.12]);
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 
+        this.age = 0.0;
+        this.growthRate = 0.003;
+
 	}
 
-	act() {
+	act(WorldTime) {
 
-		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+        this.grow(worldTime);
 
-        //console.log('terminalStems:', this.terminalStems);
+        this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+        this.mesh.shaders.uniforms['age'].components[0] = this.age;
+	}
+
+    grow(worldTime) {
+
+        let newAge = this.age + worldTime.dt * this.growthRate;
+
+        if (newAge >= Tree.maxAge) {
+            newAge = Tree.maxAge;
+        }
+
+        this.age = newAge;
 
         for (let i = 0; i < this.terminalStems.length; i++) {
 
-    		if (this.terminalStems[i].stem.isMaxHeight() && this.terminalStems[i].stackFrame.stringIndex < this.LSystem.LString.length) {
+            if (this.terminalStems[i].stem.isMaxHeight() && this.terminalStems[i].stackFrame.stringIndex < this.LSystem.LString.length) {
 
                 let currentTerminalStem = this.terminalStems[i];
 
@@ -61,17 +143,14 @@ class NewTree extends Entity {
                 this.removeChild(currentTerminalStem.stem);
 
                 let currentFrame = currentTerminalStem.stackFrame;
-    			let currentPos = currentFrame.stringIndex;
+                let currentPos = currentFrame.stringIndex;
 
-                console.log('pos', currentPos);
-                console.log('frame', currentFrame);
+                let newStem = this.LSystem.generateStems(currentPos, currentFrame);
 
-    			let newStem = this.LSystem.generateStems(currentPos, currentFrame);
-
-                //this.terminalStems.pop();
                 this.terminalStems.splice(i, 1);
 
                 if (newStem.stem) {
+                    newStem.stem.tree = this;
                     this.terminalStems.push(newStem);
                     this.addChild(newStem.stem);
                 }
@@ -80,18 +159,20 @@ class NewTree extends Entity {
 
                     let frame = newStem.childStems[i];
                     let newChildStem = this.LSystem.generateStems(frame.stringIndex + 1, frame);
+                    newChildStem.stem.tree = this;
                     
                     this.terminalStems.push(newChildStem);
                     this.addChild(newChildStem.stem);
                 }
-
-                //console.log('frame after: ', copyStack(newStem.stackFrame));
-    		}
+            }
         }
-	}
+    }
 
 	mergeToGeometry(terminalStem) {
+        
 		terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget');
+        //terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget2');
+        terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget3');
         this.mesh.geometry.addGeometry(terminalStem.mesh.geometry);
 	}
 
@@ -171,4 +252,4 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []) ], 4);
 
-const newTree = new NewTree(testString);
+const newTree = new Tree(testString);

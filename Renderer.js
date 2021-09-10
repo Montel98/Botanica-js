@@ -8,6 +8,8 @@ const textureUnitMap = {
 	'normalMap' : 1
 }
 
+var namedBuffers = {};
+
 class Renderer {
 	constructor(canvas) {
 		this.canvas = canvas;
@@ -36,9 +38,16 @@ class Renderer {
 		this.updateUniforms(camera, programLoc, entity);
 		this.bindTextures(material);
 
-		//let bufferLoc = geometry.bufferAttributes.bufferID;
+		let bufferName = geometry.bufferAttributes.bufferName;
+
+		if (bufferName != "" && !(bufferName in namedBuffers)) {
+
+			namedBuffers[bufferName] = this.initBuffer(geometry, programLoc);
+			geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
+		}
 
 		if (!geometry.bufferAttributes.bufferID) {
+
 			geometry.bufferAttributes.bufferID = this.initBuffer(geometry, programLoc);
 		}
 
@@ -49,7 +58,6 @@ class Renderer {
 			this.updateBuffers(geometry);
 		}
 
-		//const bufferSize = gl.getBufferParameter(gl.ELEMENT_ARRAY_BUFFER, gl.BUFFER_SIZE) / GL_UNSIGNED_SHORT_SIZE;
 		const bufferSize = geometry.indexBuffer.length;
 
 		if (mesh.isInstanced) {
@@ -182,8 +190,6 @@ class Renderer {
 
 	initBuffer(geometry, program) {
 
-		let bufferOffset = 0;
-
 		// Create handle to vertex array object
 		const VAO = oes_vao_ext.createVertexArrayOES();
 		oes_vao_ext.bindVertexArrayOES(VAO);
@@ -197,8 +203,6 @@ class Renderer {
 	    }
 
 	    gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-
-	    //let vertexBuffer = geometry.vertexBuffer;
 
 	    // Pass positions to WebGL to create buffer object's data store
 
@@ -215,7 +219,7 @@ class Renderer {
 
 	    gl.bufferData(gl.ARRAY_BUFFER, vertexBufferSize, gl.STATIC_DRAW);
 
-	    gl.bufferSubData(gl.ARRAY_BUFFER, bufferOffset, new Float32Array(vertexBuffer));
+	    gl.bufferSubData(gl.ARRAY_BUFFER, geometry.bufferAttributes.vertexBufferOffset, new Float32Array(vertexBuffer));
 
 	    this.initBufferAttributes(program, geometry.bufferAttributes, false);
 
@@ -244,7 +248,7 @@ class Renderer {
 
 	    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexBufferSize, gl.STATIC_DRAW);
 
-	    gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, bufferOffset, new Uint16Array(indexBuffer));
+	    gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, geometry.bufferAttributes.indexBufferOffset, new Uint16Array(indexBuffer));
 
 	    const bufferLocations = {
 	    	VertexArrayLoc: VAO,
@@ -292,8 +296,6 @@ class Renderer {
 	    	for (let i = 0; i < attrib.length; i++) {
 
 	    		const attribLocation = baseAttribLocation + i;
-
-	    		//console.log(attribLocation, attrib[i].attribLength, bufferAttributes.bufferLength * GL_FLOAT_SIZE, attrib[i].offset * GL_FLOAT_SIZE);
 
 		    	gl.vertexAttribPointer(attribLocation, 
 		    							attrib[i].attribLength, 

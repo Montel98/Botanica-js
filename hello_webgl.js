@@ -87,6 +87,9 @@ scene.addEntity(testEntity);*/
 treeTest.setPosition(-0.5, 0.0, 0.7);
 scene.addEntity(treeTest);*/
 
+
+const worldTime = new WorldTime();
+
 const potTest = new Pot();
 potTest.setPosition(-0.5, 0.0, 0.35);
 scene.addEntity(potTest);
@@ -155,5 +158,5 @@ function handleInput() {
 }
 
 function drawScene() {
-    controller.updateStates();
+    controller.updateStates(worldTime);
 }

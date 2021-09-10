@@ -4,6 +4,8 @@ precision mediump float;
 attribute vec3 aVertexPosition;
 attribute vec3 aNormal;
 attribute vec3 aMorphTarget;
+attribute vec3 aMorphTarget2;
+attribute vec3 aMorphTarget3;
 
 varying vec3 vVertexPosition;
 varying vec3 vNormal;
@@ -13,14 +15,17 @@ uniform mat4 camera;
 uniform mat4 perspective;
 
 uniform float du;
-uniform float t;
+uniform float age;
 
 //uniform vec3 direction;
 
 void main() {
-	//vec3 currentPos = aVertexPosition - (aMorphTarget * (1.0 - sin(2.0 * t)) * direction);
-	//vec3 currentPos = aMorphTarget + sin(5.0 * t) * sin(5.0 * t) * (aVertexPosition - aMorphTarget);
-	vec3 currentPos = aMorphTarget + du * (aVertexPosition - aMorphTarget);
+
+	vec3 currentGirthPos = aMorphTarget2 + age * (aVertexPosition - aMorphTarget2);
+	vec3 currentGirthPos2 = aMorphTarget3 + age * (aMorphTarget - aMorphTarget3);
+
+	//vec3 currentPos = aMorphTarget + du * (aVertexPosition - aMorphTarget);
+	vec3 currentPos = currentGirthPos2 + du * (currentGirthPos - currentGirthPos2);
 
 	gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
 
@@ -100,7 +105,7 @@ class Stem extends Entity {
 
 	static terminalLength = 1.0;
 
-	constructor(geometry) {
+	constructor(geometry, babyGeometry) {
 
 		super();
 
@@ -118,47 +123,51 @@ class Stem extends Entity {
 
 		// Experimental
 
-		//this.mesh.shaders.uniforms['du'] = 0.5;
+		this.tree = null;
 
 		this.stringLoc = 0; // Corresponding location in L-String this stem corresponds to
 
 		this.stemLength = 0.0;
-		this.growthRate = 0.5; // Growth Rate in units/second
+		//this.growthRate = 0.05; // Growth Rate in units/second
+		this.growthRate = 0.2;
 
 		this.morphTargets = [];
+		this.girthMorphTargets = babyGeometry.vertices;
+		this.girthMorphTargets2 = [];
+
+		/*for (let i = 0; i < geometry.vertices.length; i++) {
+			this.morphTargets.push(new Vector([0, 0, 0]));
+		}*/
 
 		for (let i = 0; i < geometry.vertices.length; i++) {
-			this.morphTargets.push(new Vector([0, 0, 0]));
+
+			this.morphTargets[i] = geometry.vertices[(2 * (Math.floor(i / 2)))];
+			this.girthMorphTargets2[i] = babyGeometry.vertices[(2 * (Math.floor(i / 2)))];
 		}
-		
-		this.timeNow = Date.now() / 1000;
-		this.timePrev = this.timeNow;
 
 		geometry.addBufferAttribute('aMorphTarget', 3, geometry.bufferAttributes.bufferLength, this.morphTargets);
+		geometry.addBufferAttribute('aMorphTarget2', 3, geometry.bufferAttributes.bufferLength, this.girthMorphTargets);
+		geometry.addBufferAttribute('aMorphTarget3', 3 , geometry.bufferAttributes.bufferLength, this.girthMorphTargets2);
+
 		this.mesh.shaders = shaderBuilder.customShader('meristem_shader', 
 														stemVertexShader, 
-														stemFragmentShader, {'du': new Vector([0.0])}
+														stemFragmentShader, {'du': new Vector([0.0]), 'age': new Vector([0.0])}
 														);
 	}
 
-	act() {
-		//this.timeElapsed = (Date.now() / 1000) - this.start;
-		this.timeNow = Date.now() / 1000;
+	act(worldTime) {
 
-		this.grow();
+		this.grow(worldTime);
 
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
-		//this.mesh.shaders.uniforms['t'].components[0] = 0.1 * this.timeElapsed;
 		this.mesh.shaders.uniforms['du'].components[0] = this.stemLength;
+		this.mesh.shaders.uniforms['age'].components[0] = this.tree.age;
 
-		this.timePrev = this.timeNow;
 	}
 
-	grow(/*worldTime*/) {
+	grow(worldTime) {
 
-		let du = this.timeNow - this.timePrev;
-
-		let newLength = this.stemLength + this.growthRate * du;
+		let newLength = this.stemLength + this.growthRate * worldTime.dt;
 
 		if (newLength >= Stem.terminalLength) {
 			newLength = Stem.terminalLength;
