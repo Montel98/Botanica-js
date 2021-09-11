@@ -118,7 +118,6 @@ class Stem extends Entity {
 		this.worldMatrix = identityMatrix;
 
 		this.colour = new Vector([0.25, 0.18, 0.12]);
-		//this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
 		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 
 		// Experimental
@@ -159,7 +158,7 @@ class Stem extends Entity {
 
 		this.grow(worldTime);
 
-		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+		this.mesh.shaders.uniforms['ambientColour'] = this.tree.currentColour;
 		this.mesh.shaders.uniforms['du'].components[0] = this.stemLength;
 		this.mesh.shaders.uniforms['age'].components[0] = this.tree.age;
 

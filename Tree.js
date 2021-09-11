@@ -107,11 +107,14 @@ class Tree extends Entity {
                                                         treeFragmentShader, {'age': new Vector([0.0])}
                                                         );
 
-		this.colour = new Vector([0.25, 0.18, 0.12]);
-		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+		this.colourEnd = new Vector([0.25, 0.18, 0.12]);
+        this.colourStart = new Vector([0.3, 0.6, 0.1]);
+        this.currentColour = this.colourStart;
+        this.mesh.shaders.uniforms['ambientColour'] = this.currentColour;
 
         this.age = 0.0;
         this.growthRate = 0.003;
+        this.leaves = [];
 
 	}
 
@@ -119,7 +122,8 @@ class Tree extends Entity {
 
         this.grow(worldTime);
 
-        this.mesh.shaders.uniforms['ambientColour'] = this.colour;
+        this.currentColour = add(this.colourStart.scale(1.0 - this.age**0.2), this.colourEnd.scale(this.age**0.2));
+        this.mesh.shaders.uniforms['ambientColour'] = this.currentColour;
         this.mesh.shaders.uniforms['age'].components[0] = this.age;
 	}
 
@@ -187,6 +191,30 @@ class Tree extends Entity {
                         newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [Math.PI / 2, -Math.PI / 2]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol(']', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [-Math.PI / 2, -Math.PI / 2]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol(']', []),
                         newSymbol('*', []), 
                         newSymbol('1', []),
                         newSymbol('*', []), 
@@ -224,9 +252,9 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
                         newSymbol('[', []),
-                        newSymbol('*', []),
+                        /*newSymbol('*', []),
                         newSymbol('1', []),
-                        newSymbol('*', []),
+                        newSymbol('*', []),*/
                         newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
                         newSymbol('0', []), 
                         newSymbol(']', []),

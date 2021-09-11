@@ -35,7 +35,7 @@ class LSystem {
 
 		let stemPath = new BezierCubic(p0, p1, p2, p3);
 
-		let babyR = radiusProperties(0.005, 0.005, 0);
+		let babyR = radiusProperties(0.002, 0.002, 0);
 
 		let surface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		let babySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, babyR), 0.0, 1.0, 0.0, 2.0 * Math.PI);
@@ -161,13 +161,6 @@ class LSystem {
 				terminalStem['stem'] = meristem;
 				terminalStem['stackFrame'] = stackFrame;
 
-				/*for (let i = 0; i < meristem.mesh.geometry.vertices.length; i++) {
-
-					meristem.morphTargets[i] = meristem.mesh.geometry.vertices[(2 * (Math.floor(i / 2)))];
-				}
-
-				meristem.mesh.geometry.vertexBuffer = meristem.mesh.geometry.mergeAttributes();*/
-
 				newSegments = true;
 			}
 
@@ -195,7 +188,7 @@ class LSystem {
 			else continue;
 		}
 
-		return index + 1;
+		return index;
 	}
 }
 
@@ -209,6 +202,12 @@ function copyStack(stackFrame) {
 		}
 		else if (param == 'pos') {
 			stackFrameCopy['pos'] = stackFrame.pos.copy();
+		}
+		else if (param == 'radius') {
+			let r = stackFrame.radius;
+			stackFrameCopy['radius'] = radiusProperties(r.radiusStart, 
+														r.radiusEnd, 
+														r.shift);
 		}
 		else {
 			stackFrameCopy[param] = stackFrame[param];
