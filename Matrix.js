@@ -9,6 +9,16 @@ class Matrix {
 	getComponents() {
 		return this.components;
 	}
+
+	copy() {
+		let newComponents = [];
+
+		for (let col = 0; col < this.components.length; col++) {
+			newComponents.push([...this.components[col]]);
+		}
+
+		return new Matrix(newComponents);
+	}
 }
 
 // Convert to normal nested loop

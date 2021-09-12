@@ -1,14 +1,26 @@
 class InstancedMesh extends Mesh {
-	constructor(material, geometry) {
+	constructor(material, geometry, count) {
 
 		super(material, geometry);
 
-		this.instanceCount = 0;
+		this.instanceCount = count;
+
 		this.localMatrices = [];
 		this.worldMatrices = [];
+
+		for (let i = 0; i < count; i++) {
+			this.localMatrices.push(identityMatrix.copy());
+		}
+
+		for (let i = 0; i < count; i++) {
+			this.worldMatrices.push(identityMatrix.copy());
+		}
+
 		this.isInstanced = true;
-		//this.instanceBufferID = -1;
-		this.instanceBufferAttributes = {bufferID: -1, 
+		this.modifiedInstanceEvents = [];
+
+		this.instanceBufferAttributes = {bufferID: -1,
+										buffers: {'instanceBuffer': {size: -1, offset: 0, elementSize: 4, isIndexBuffer: false}},
 										bufferLength: 16, attributes: {'offset': [{attribLength: 4, offset: 0},
 																					{attribLength: 4, offset: 4},
 																					{attribLength: 4, offset: 8},
@@ -21,7 +33,14 @@ class InstancedMesh extends Mesh {
 	addInstance(poseMatrix) {
 		this.localMatrices.push(poseMatrix);
 		this.worldMatrices.push(poseMatrix);
+
+		const oldInstanceCount = this.instanceCount;
 		this.instanceCount += 1;
+
+		const index = this.instanceBufferAttributes.bufferLength * oldInstanceCount;
+		//const flatMatrix = poseMatrix.components.flat();
+
+		this.modifiedInstanceEvents.push({instanceBufferIndex: index, bufferDataIndex: this.instanceCount - 1});
 	}
 
 	addInstanceBufferAttribute(name, length, attribOffset) {
@@ -33,5 +52,9 @@ class InstancedMesh extends Mesh {
 
 	setPoseMatrix(index, newMatrix) {
 		this.localMatrices[i] = newMatrix;
+	}
+
+	setInstanceBufferSize(bufferSize) {
+		this.instanceBufferAttributes.buffers['instanceBuffer'].size = bufferSize;
 	}
 }

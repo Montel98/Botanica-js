@@ -114,7 +114,9 @@ class Tree extends Entity {
 
         this.age = 0.0;
         this.growthRate = 0.003;
-        this.leaves = [];
+
+        this.leaves = new Leaves();
+        this.addChild(this.leaves);
 
 	}
 
@@ -157,6 +159,11 @@ class Tree extends Entity {
                     newStem.stem.tree = this;
                     this.terminalStems.push(newStem);
                     this.addChild(newStem.stem);
+
+                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.01 * Math.random()));
+
+                    let leafPose = projectToNewAxis(newStem.stackFrame.axis, /*newStem.stackFrame.pos*/leafPosition);
+                    this.leaves.addLeaves(2, leafPose);
                 }
 
                 for (let i = 0; i < newStem.childStems.length; i++) {
@@ -167,6 +174,11 @@ class Tree extends Entity {
                     
                     this.terminalStems.push(newChildStem);
                     this.addChild(newChildStem.stem);
+
+                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.01 * Math.random()));
+
+                    let leafPose = projectToNewAxis(newChildStem.stackFrame.axis, leafPosition);
+                    this.leaves.addLeaves(2, leafPose);
                 }
             }
         }
@@ -237,6 +249,18 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('1', []),
                         newSymbol('*', []), 
                         newSymbol('1', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [Math.PI / 2, -Math.PI / 2]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol(']', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [-Math.PI / 2, -Math.PI / 2]),
+                        newSymbol('1', []),
+                        newSymbol('+', [0, -Math.PI / 8]),
+                        newSymbol('1', []),
+                        newSymbol(']', []),
                         newSymbol('*', []), 
                         newSymbol('1', []),  
                         newSymbol('[', []),

@@ -134,10 +134,6 @@ class Stem extends Entity {
 		this.girthMorphTargets = babyGeometry.vertices;
 		this.girthMorphTargets2 = [];
 
-		/*for (let i = 0; i < geometry.vertices.length; i++) {
-			this.morphTargets.push(new Vector([0, 0, 0]));
-		}*/
-
 		for (let i = 0; i < geometry.vertices.length; i++) {
 
 			this.morphTargets[i] = geometry.vertices[(2 * (Math.floor(i / 2)))];

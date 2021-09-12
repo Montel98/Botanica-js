@@ -19,10 +19,8 @@ class Geometry {
 		this.bufferAttributes = {
 			bufferID: null,
 			bufferName: "",
-			vertexBufferSize: -1,
-			indexBufferSize: -1,
-			vertexBufferOffet: 0,
-			indexBufferOffset: 0,
+			buffers: {'vertexBuffer': {size: -1, offset: 0, elementSize: 4, isIndexBuffer: false, bufferData: this.vertexBuffer}, 
+						'indexBuffer': {size: -1, offset: 0, elementSize: 2, isIndexBuffer: true, bufferData: this.indexBuffer}},
 			bufferLength: 3,
 			attributes: {
 				'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: this.vertices}]
@@ -49,11 +47,11 @@ class Geometry {
 	}
 
 	setVertexBufferSize(vertexBufferSize) {
-		this.bufferAttributes.vertexBufferSize = vertexBufferSize;
+		this.bufferAttributes.buffers['vertexBuffer'].size = vertexBufferSize;
 	}
 
 	setIndexBufferSize(indexBufferSize) {
-		this.bufferAttributes.indexBufferSize = indexBufferSize;
+		this.bufferAttributes.buffers['indexBuffer'].size = indexBufferSize;
 	}
 
 	addBufferAttribute(name, length, attribOffset, data) {
@@ -92,6 +90,11 @@ class Geometry {
 
 	    return buffer.flat();
 	}
+
+	/*setBufferData(bufferName, newBufferData) {
+
+		let buffer = this.bufferAttributes.buffers[bufferName];
+	}*/
 
 	addGeometry(newGeometry) {
 

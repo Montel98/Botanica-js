@@ -39,7 +39,7 @@ const potMapping = {
 					};
 
 const potTexture = new Texture('flower_stem1.png');
-const potGeometry = new ParametricGeometry(potSurface, potMapping, 16, 16, false, false, true);
+const potGeometry = new ParametricGeometry(potSurface, potMapping, 16, 32, false, false, true);
 
 class Pot extends Entity {
 	constructor() {

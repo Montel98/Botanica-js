@@ -42,13 +42,13 @@ class Renderer {
 
 		if (bufferName != "" && !(bufferName in namedBuffers)) {
 
-			namedBuffers[bufferName] = this.initBuffer(geometry, programLoc);
+			namedBuffers[bufferName] = this.initBuffers(geometry, programLoc);
 			geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
 		}
 
 		if (!geometry.bufferAttributes.bufferID) {
 
-			geometry.bufferAttributes.bufferID = this.initBuffer(geometry, programLoc);
+			geometry.bufferAttributes.bufferID = this.initBuffers(geometry, programLoc);
 		}
 
 		// Bind mesh's vertex array object
@@ -65,6 +65,10 @@ class Renderer {
 			if (mesh.instanceBufferAttributes.bufferID == -1) {
 
 				mesh.instanceBufferAttributes.bufferID = this.initInstanceBuffer(mesh, programLoc);
+			}
+
+			if (mesh.modifiedInstanceEvents.length > 0) {
+				this.updateInstanceBuffer(mesh);
 			}
 
 			ext.drawElementsInstancedANGLE(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, 0, mesh.instanceCount);
@@ -107,7 +111,6 @@ class Renderer {
 
 		if (programLoc == -1) {
 
-			//console.log(shaders.shaderSource.vertexShaderSrc);
 			programLoc = this.initShaderProgram(shaders.shaderSource.vertexShaderSrc, shaders.shaderSource.fragmentShaderSrc);
 
 			shaders.programID = programLoc;
@@ -128,8 +131,6 @@ class Renderer {
 
 			gl.uniformMatrix4fv(worldLoc, false, worldMatrix.components.flat());
 		}
-
-
 
 		// Update camera matrix
 		const cameraLoc = gl.getUniformLocation(program, 'camera');
@@ -177,6 +178,18 @@ class Renderer {
 							);
 	}
 
+	updateInstanceBuffer(instancedMesh) {
+
+		let instanceEvent = instancedMesh.modifiedInstanceEvents.pop();
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, instancedMesh.instanceBufferAttributes.bufferID);
+
+		gl.bufferSubData(gl.ARRAY_BUFFER,
+						instanceEvent.instanceBufferIndex * GL_FLOAT_SIZE,
+						new Float32Array(instancedMesh.worldMatrices[instanceEvent.bufferDataIndex].components.flat())
+						);
+	}
+
 	clear() {
 		gl.clearColor(0.0, 0.0, 0.0, 1.0); // Set clear colour to black, fully opaque
         gl.clearDepth(1.0); // Clear all depth
@@ -188,67 +201,58 @@ class Renderer {
         //gl.enable(gl.CULL_FACE); // Discard back facing triangles
 	}
 
-	initBuffer(geometry, program) {
+	initBuffer(buffer, bufferData) {
+
+		// Create handle to buffer object
+	    const bufferObject = gl.createBuffer();
+
+	    if (!bufferObject) {
+
+	        alert('Failed to create buffer');
+	    }
+
+	    let bufferTarget = gl.ARRAY_BUFFER;
+
+	    if (buffer.isIndexBuffer) {
+	    	bufferTarget = gl.ELEMENT_ARRAY_BUFFER;
+	    }
+
+	    gl.bindBuffer(bufferTarget, bufferObject);
+
+	    // Pass positions to WebGL to create buffer object's data store
+
+	    var newBufferData, bufferSize;
+
+	    if (buffer.size <= 0) {
+	    	bufferSize = bufferData.length * buffer.elementSize;
+	    	newBufferData = bufferData;
+	    }
+	    else {
+	    	bufferSize = buffer.size * buffer.elementSize;
+	    	newBufferData = bufferData.slice(0, buffer.size);
+	    }
+
+	    gl.bufferData(bufferTarget, bufferSize, gl.STATIC_DRAW);
+
+	    gl.bufferSubData(bufferTarget, 
+	    				buffer.offset,
+	    				(buffer.isIndexBuffer ? new Uint16Array(newBufferData) : new Float32Array(newBufferData))
+	    				);
+
+	    return bufferObject;
+	}
+
+	initBuffers(geometry, program) {
 
 		// Create handle to vertex array object
 		const VAO = oes_vao_ext.createVertexArrayOES();
 		oes_vao_ext.bindVertexArrayOES(VAO);
 
-	    // Create handle to buffer object
-	    const VBO = gl.createBuffer();
-
-	    if (!VBO) {
-
-	        alert('Failed to create vertex buffer');
-	    }
-
-	    gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-
-	    // Pass positions to WebGL to create buffer object's data store
-
-	    var vertexBuffer, vertexBufferSize;
-
-	    if (geometry.bufferAttributes.vertexBufferSize <= 0) {
-	    	vertexBufferSize = geometry.vertexBuffer.length * GL_FLOAT_SIZE;
-	    	vertexBuffer = geometry.vertexBuffer;
-	    }
-	    else {
-	    	vertexBufferSize = geometry.bufferAttributes.vertexBufferSize * GL_FLOAT_SIZE;
-	    	vertexBuffer = geometry.vertexBuffer.slice(0, geometry.bufferAttributes.vertexBufferSize);
-	    }
-
-	    gl.bufferData(gl.ARRAY_BUFFER, vertexBufferSize, gl.STATIC_DRAW);
-
-	    gl.bufferSubData(gl.ARRAY_BUFFER, geometry.bufferAttributes.vertexBufferOffset, new Float32Array(vertexBuffer));
+	    const VBO = this.initBuffer(geometry.bufferAttributes.buffers['vertexBuffer'], geometry.vertexBuffer);
 
 	    this.initBufferAttributes(program, geometry.bufferAttributes, false);
 
-	    // Index Buffer
-	    const IBO = gl.createBuffer();
-
-	    if (!IBO) {
-
-	        alert('Failed to create index buffer');
-	    }
-
-	    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IBO);
-
-	    //let indexBuffer = geometry.indexBuffer;
-	    var indexBuffer, indexBufferSize;
-
-
-	    if (geometry.bufferAttributes.indexBufferSize <= 0) {
-	    	indexBufferSize = geometry.indexBuffer.length * GL_UNSIGNED_SHORT_SIZE;
-	    	indexBuffer = geometry.indexBuffer;
-	    }
-	    else {
-	    	indexBufferSize = geometry.bufferAttributes.indexBufferSize * GL_UNSIGNED_SHORT_SIZE;
-	    	indexBuffer = geometry.indexBuffer.slice(0, geometry.bufferAttributes.indexBufferSize);
-	    }
-
-	    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexBufferSize, gl.STATIC_DRAW);
-
-	    gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, geometry.bufferAttributes.indexBufferOffset, new Uint16Array(indexBuffer));
+	    const IBO = this.initBuffer(geometry.bufferAttributes.buffers['indexBuffer'], geometry.indexBuffer);
 
 	    const bufferLocations = {
 	    	VertexArrayLoc: VAO,
@@ -262,23 +266,12 @@ class Renderer {
 	}
 
 	initInstanceBuffer(instancedMesh, program) {
-		const instanceVBO = gl.createBuffer();
-
-		if (!instanceVBO) {
-
-			alert('Failed to create instanced vertex buffer');
-		}
-
-		instancedMesh.instanceBufferAttributes.bufferID = instanceVBO;
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, instanceVBO);
-
 		let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
 							.flat();
 
-		gl.bufferData(gl.ARRAY_BUFFER,
-						new Float32Array(matrixBuffer),
-						gl.DYNAMIC_DRAW);
+		let bufferInfo = instancedMesh.instanceBufferAttributes.buffers['instanceBuffer'];
+
+		const instanceVBO = this.initBuffer(bufferInfo, matrixBuffer);
 
 		this.initBufferAttributes(program, instancedMesh.instanceBufferAttributes, true);
 
