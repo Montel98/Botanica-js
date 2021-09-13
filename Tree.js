@@ -160,10 +160,10 @@ class Tree extends Entity {
                     this.terminalStems.push(newStem);
                     this.addChild(newStem.stem);
 
-                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.01 * Math.random()));
+                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.03));
 
                     let leafPose = projectToNewAxis(newStem.stackFrame.axis, /*newStem.stackFrame.pos*/leafPosition);
-                    this.leaves.addLeaves(2, leafPose);
+                    this.leaves.addLeaves(2, leafPose, newStem.stem);
                 }
 
                 for (let i = 0; i < newStem.childStems.length; i++) {
@@ -175,10 +175,10 @@ class Tree extends Entity {
                     this.terminalStems.push(newChildStem);
                     this.addChild(newChildStem.stem);
 
-                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.01 * Math.random()));
+                    /*let leafPosition = add(newChildStem.stackFrame.pos, newChildStem.stackFrame.axis.forward.scale(-0.03))
 
                     let leafPose = projectToNewAxis(newChildStem.stackFrame.axis, leafPosition);
-                    this.leaves.addLeaves(2, leafPose);
+                    this.leaves.addLeaves(2, leafPose, newChildStem.stem);*/
                 }
             }
         }
@@ -249,18 +249,6 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('1', []),
                         newSymbol('*', []), 
                         newSymbol('1', []),
-                        newSymbol('[', []),
-                        newSymbol('+', [Math.PI / 2, -Math.PI / 2]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol(']', []),
-                        newSymbol('[', []),
-                        newSymbol('+', [-Math.PI / 2, -Math.PI / 2]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol(']', []),
                         newSymbol('*', []), 
                         newSymbol('1', []),  
                         newSymbol('[', []),
@@ -276,9 +264,6 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
                         newSymbol('[', []),
-                        /*newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('*', []),*/
                         newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
                         newSymbol('0', []), 
                         newSymbol(']', []),

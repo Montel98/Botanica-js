@@ -23,7 +23,7 @@ class Geometry {
 						'indexBuffer': {size: -1, offset: 0, elementSize: 2, isIndexBuffer: true, bufferData: this.indexBuffer}},
 			bufferLength: 3,
 			attributes: {
-				'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: this.vertices}]
+				'aVertexPosition': {meta: [{attribLength: 3, offset: 0}], bufferData: this.vertices}
 				/*'aNormal': [{attribLength: 3, offset: 3, bufferData: this.normals}]*/
 			}
 		};
@@ -55,9 +55,12 @@ class Geometry {
 	}
 
 	addBufferAttribute(name, length, attribOffset, data) {
-		this.bufferAttributes.attributes[name] = [{attribLength: length,
-												offset: attribOffset,
-												bufferData: data}];
+		this.bufferAttributes.attributes[name] = {meta: 
+													[{attribLength: length,
+														offset: attribOffset
+													}],
+													bufferData: data
+												};
 
 		this.bufferAttributes.bufferLength += length;
 
@@ -66,7 +69,7 @@ class Geometry {
 
 	removeBufferAttribute(name) {
 
-		this.bufferAttributes.bufferLength -= this.bufferAttributes.attributes[name][0].attribLength;
+		this.bufferAttributes.bufferLength -= this.bufferAttributes.attributes[name].meta[0].attribLength;
 
 		delete this.bufferAttributes.attributes[name];
 
@@ -82,7 +85,7 @@ class Geometry {
 
 	    	for (let attribName in this.bufferAttributes.attributes) {
 
-	    		let attrib = this.bufferAttributes.attributes[attribName][0].bufferData[i];
+	    		let attrib = this.bufferAttributes.attributes[attribName].bufferData[i];
 	    		buffer.push(...attrib.components);
 	    	}
 
@@ -90,11 +93,6 @@ class Geometry {
 
 	    return buffer.flat();
 	}
-
-	/*setBufferData(bufferName, newBufferData) {
-
-		let buffer = this.bufferAttributes.buffers[bufferName];
-	}*/
 
 	addGeometry(newGeometry) {
 
@@ -108,8 +106,8 @@ class Geometry {
 		// ONLY COPIED THE REFERENCES SO FAR!!! MIGHT CAUSE PROBLEMS IN THE FUTURE
 
 		for (let attribName in this.bufferAttributes.attributes) {
-			let newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName][0].bufferData;
-			this.bufferAttributes.attributes[attribName][0].bufferData.push(...newGeometryAttribData);
+			let newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName].bufferData;
+			this.bufferAttributes.attributes[attribName].bufferData.push(...newGeometryAttribData);
 		}
 
 		//this.vertices.push(...newGeometry.vertices);

@@ -67,9 +67,11 @@ class Renderer {
 				mesh.instanceBufferAttributes.bufferID = this.initInstanceBuffer(mesh, programLoc);
 			}
 
-			if (mesh.modifiedInstanceEvents.length > 0) {
+			this.updateInstanceBuffer(mesh);
+
+			/*if (mesh.modifiedInstanceEvents.length > 0) {
 				this.updateInstanceBuffer(mesh);
-			}
+			}*/
 
 			ext.drawElementsInstancedANGLE(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, 0, mesh.instanceCount);
 		}
@@ -180,13 +182,17 @@ class Renderer {
 
 	updateInstanceBuffer(instancedMesh) {
 
-		let instanceEvent = instancedMesh.modifiedInstanceEvents.pop();
+		//let instanceEvent = instancedMesh.modifiedInstanceEvents.pop();
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, instancedMesh.instanceBufferAttributes.bufferID);
 
-		gl.bufferSubData(gl.ARRAY_BUFFER,
+		/*gl.bufferSubData(gl.ARRAY_BUFFER,
 						instanceEvent.instanceBufferIndex * GL_FLOAT_SIZE,
 						new Float32Array(instancedMesh.worldMatrices[instanceEvent.bufferDataIndex].components.flat())
+						);*/
+		gl.bufferSubData(gl.ARRAY_BUFFER,
+						0,
+						new Float32Array(instancedMesh.mergeAttributes())
 						);
 	}
 
@@ -266,12 +272,14 @@ class Renderer {
 	}
 
 	initInstanceBuffer(instancedMesh, program) {
-		let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
-							.flat();
+		/*let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
+							.flat();*/
+
+		let instanceBuffer = instancedMesh.mergeAttributes();
 
 		let bufferInfo = instancedMesh.instanceBufferAttributes.buffers['instanceBuffer'];
 
-		const instanceVBO = this.initBuffer(bufferInfo, matrixBuffer);
+		const instanceVBO = this.initBuffer(bufferInfo, instanceBuffer);
 
 		this.initBufferAttributes(program, instancedMesh.instanceBufferAttributes, true);
 
@@ -286,16 +294,16 @@ class Renderer {
 	    	let baseAttribLocation = gl.getAttribLocation(program, attribName);
 	    	//console.log(baseAttribLocation);
 
-	    	for (let i = 0; i < attrib.length; i++) {
+	    	for (let i = 0; i < attrib.meta.length; i++) {
 
 	    		const attribLocation = baseAttribLocation + i;
 
 		    	gl.vertexAttribPointer(attribLocation, 
-		    							attrib[i].attribLength, 
+		    							attrib.meta[i].attribLength, 
 		    							gl.FLOAT, 
 		    							false, 
 		    							bufferAttributes.bufferLength * GL_FLOAT_SIZE, 
-		    							attrib[i].offset * GL_FLOAT_SIZE);
+		    							attrib.meta[i].offset * GL_FLOAT_SIZE);
 
 		    	gl.enableVertexAttribArray(attribLocation);
 
