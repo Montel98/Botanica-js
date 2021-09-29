@@ -31,12 +31,12 @@ class Renderer {
 		const geometry = mesh.geometry;
 		const material = mesh.material;
 
-		let programLoc = this.bindShaderProgram(mesh);
+		let programLoc = this.bindShaderProgram(mesh, camera);
 
 		gl.useProgram(programLoc);
 
 		this.updateUniforms(camera, programLoc, entity);
-		this.bindTextures(material);
+		this.bindTextures(programLoc, material);
 
 		let bufferName = geometry.bufferAttributes.bufferName;
 
@@ -81,29 +81,26 @@ class Renderer {
 		}
 	}
 
-	bindTextures(material) {
+	bindTextures(programLoc, material) {
 
 		for (let mapping in material.maps) {
 
-			if (material[mapping]) {
+			let textureLoc = material.maps[mapping].textureID;
 
-				let textureLoc = material.maps[mapping].textureID;
-
-				if (textureLoc == -1) {
-					textureLoc = this.initTexture(material.maps[mapping]);
-				}
-
-				// Bind entity's texture(s) for drawing
-				gl.bindTexture(gl.TEXTURE_2D, textureLoc);
-
-				let unit = textureUnitMap[mapping];
-
-				// Affect given unit
-				gl.activeTexture(gl['TEXTURE' + unit]);
-
-				// Tell shader we bound texture to unit
-				gl.uniform1i(gl.getUniformLocation(programLoc, 'uSampler'), unit);
+			if (textureLoc == -1) {
+				material.maps[mapping].textureID = this.initTexture(material.maps[mapping]);
 			}
+
+			// Bind entity's texture(s) for drawing
+			gl.bindTexture(gl.TEXTURE_2D, material.maps[mapping].textureID);
+
+			let unit = textureUnitMap[mapping];
+
+			// Affect given unit
+			gl.activeTexture(gl['TEXTURE' + unit]);
+
+			// Tell shader we bound texture to unit
+			gl.uniform1i(gl.getUniformLocation(programLoc, 'uSampler'), unit);
 		}
 	}
 
@@ -114,6 +111,7 @@ class Renderer {
 		if (programLoc == -1) {
 
 			programLoc = this.initShaderProgram(shaders.shaderSource.vertexShaderSrc, shaders.shaderSource.fragmentShaderSrc);
+			shaders.uniforms['eye'] = camera.getCameraPosition();
 
 			shaders.programID = programLoc;
 		}
@@ -201,6 +199,9 @@ class Renderer {
         gl.clearDepth(1.0); // Clear all depth
         gl.enable(gl.DEPTH_TEST); // Enable depth testing
         gl.depthFunc(gl.LEQUAL); // Objects closer obscure those further away
+
+        //gl.enable(gl.BLEND); // Enable alpha blending
+        //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -290,9 +291,9 @@ class Renderer {
 	    for (let attribName in bufferAttributes.attributes) {
 
 	    	let attrib = bufferAttributes.attributes[attribName];
-	    	//console.log(attribName);
+	    	console.log(attribName);
 	    	let baseAttribLocation = gl.getAttribLocation(program, attribName);
-	    	//console.log(baseAttribLocation);
+	    	console.log(baseAttribLocation);
 
 	    	for (let i = 0; i < attrib.meta.length; i++) {
 
@@ -320,9 +321,8 @@ class Renderer {
 
 		gl.bindTexture(gl.TEXTURE_2D, textureID);
 
-
 		// Create temporary texture while real texture is loading
-		const tempTexture = new Uint8Array([0, 255, 255, 255]);
+		const tempTexture = new Uint8Array([0, 255, 255, 255, 0, 255, 255, 255,0, 255, 255, 255,0, 255, 255, 255]);
 		const width = 1;
 		const height = 1;
 		const border = 0;
@@ -330,20 +330,37 @@ class Renderer {
 		const srcFormat = gl.RGBA;
 		const internalFormat = gl.RGBA;
 
-		gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, gl.UNSIGNED_BYTE, tempTexture);
+		//gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, gl.UNSIGNED_BYTE, tempTexture);
+		//console.log('textureBuffer:', texture.textureBuffer);
+		//console.log('tempTexture:', tempTexture);
+		gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.textureBuffer);
 
-		const image = new Image();
-		image.src = texture.imgSrc;
-		image.crossOrigin = '';
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 
-		image.addEventListener('load', function() {
-			console.log('Done!');
-			gl.bindTexture(gl.TEXTURE_2D, textureID);
-			gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, gl.UNSIGNED_BYTE, image);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-		});
+		/*if (texture.imgSrc != "") {
+
+			const image = new Image();
+			image.src = texture.imgSrc;
+			image.crossOrigin = '';
+
+			image.addEventListener('load', function() {
+				console.log('Done!');
+				gl.bindTexture(gl.TEXTURE_2D, textureID);
+				gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, gl.UNSIGNED_BYTE, image);
+				gl.generateMipmap(gl.TEXTURE_2D);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+			});
+		}*/
+		/*else {
+				gl.bindTexture(gl.TEXTURE_2D, textureID);
+				gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.bufferData);
+				gl.generateMipmap(gl.TEXTURE_2D);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		}*/
 
 		return textureID;
 	}

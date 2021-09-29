@@ -33,14 +33,24 @@ class Camera {
 
 	movePosition(x, y, z) {
 
-		this.origin = add(this.origin, this.left.scale(x));
-		this.origin = add(this.origin, this.vertical.scale(y));
-		this.origin = subtract(this.origin, this.direction.scale(z));
+		this.origin.add(this.left.scale(x));
+		this.origin.add(this.vertical.scale(y));
+		this.origin.subtract(this.direction.scale(z));
 	}
 
 	getCameraMatrices(canvas) {
+
 		return {camera: lookAt(this.origin, this.direction, this.left, this.vertical),
 				perspective: perspective(Math.PI * 0.25, this.zNear, this.zFar, canvas.scrollWidth / canvas.scrollHeight)
 			}
+	}
+
+	getCameraPosition() {
+		
+		return this.origin;
+	}
+
+	setMode(mode) {
+		
 	}
 }

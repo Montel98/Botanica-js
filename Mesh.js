@@ -5,7 +5,7 @@ class Mesh {
 		this.geometry = geometry;
 		this.isInstanced = false;
 
-		this.shaders = shaderBuilder.getShader(material.maps, this.isInstanced);
+		this.shaders = shaderBuilder.getShader(/*material.maps*/ {}, this.isInstanced);
 		//this.shaders = null;
 	}
 }

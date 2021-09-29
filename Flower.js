@@ -93,48 +93,83 @@ void main() {
 //var termA = new FourierTerm(0.0, 2.0, 2.5, 2.0);
 //var termB = new FourierTerm(0.0, 1.0, 4.5, 2.0);
 
-var termA = new FourierTerm(0.0, 0.8, 2.5, 2.0);
-//var termB = new FourierTerm(0.0, 0.4, 5.0, 2.0);
+var termA = new FourierTerm(0.0, 0.6, 4.5, 2.0);
+var termB = new FourierTerm(0.0, 0.3, 8.0, 2.0);
 
-var f = new FourierSeries(0.2, [termA]);
+var f = new FourierSeries(0.1, [termA, termB]);
 
-const flowerFunc = {
-	aux(u, v) {
-		this.r = v * f.sum(u);
-	},
+const openPos = new BezierCubic(new Vector([0.0, 0.0]), 
+								new Vector([1.0, 1.0]), 
+								new Vector([1.0, 0.0]), 
+								new Vector([2.0, 0.0]));
 
-	x(u, v) {
-		return this.r * Math.cos(u);
-	},
+const openPos2 = new BezierCubic(new Vector([0.0, 0.0]), 
+								new Vector([1.0, 1.0]), 
+								new Vector([1.0, 1.0]), 
+								new Vector([0.0, 2.0]));
 
-	y(u, v) {
-		return this.r * Math.sin(u);
-	},
 
-	z(u, v) {
-		return 1.0;
+const flowerFunc = (dTheta, petalProfile) => {
+	return {
+		aux(u, v) {
+
+			let theta = u + dTheta;
+
+			this.r = v * f.sum(theta);
+			//this.r = v;
+			this.profile = petalProfile.eval(this.r);
+			let pos = new Vector([this.r * Math.cos(u), this.r * Math.sin(u)]);
+
+			//console.log(this.profile.components);
+
+			this.normPos = pos.equals(zeroVector2D) ? pos : pos.normalize();
+		},
+
+		x(u, v) {
+			//return this.r * Math.cos(u);
+			return this.normPos.components[0] * this.profile.components[0];
+		},
+
+		y(u, v) {
+			//return this.r * Math.sin(u);
+			return this.normPos.components[1] * this.profile.components[0];
+		},
+
+		z(u, v) {
+			//return 1.0;
+			return this.profile.components[1] + 0.05 * Math.cos(10 * u);
+		}
 	}
 }
 
-const flowerSurface = new ParametricSurface(flowerFunc, 0.0, 2.0 * Math.PI, 0.0, 1.0);
+/*const flowerSurface = new ParametricSurface(flowerFunc(0, openPos), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 
-const flowerMapping = {
-					vMin: flowerSurface.vMin, 
-					vMax: flowerSurface.vMax,
-					uMin: flowerSurface.uMin, 
-					uMax: flowerSurface.uMax
-				};
+const flowerGeometry = new ParametricGeometry(flowerSurface, 256, 8, false, false, false);
+const flowerTexture = new Texture('flower_stem1.png');*/
 
-const flowerGeometry = new ParametricGeometry(flowerSurface, flowerMapping, 256, 8, false, false, false);
-const flowerTexture = new Texture('flower_stem1.png');
+class Flower extends Entity {
+	constructor(/*surface*/) {
 
-class Flower {
-	constructor(surface) {
+		super();
+
 		const textureTest = new Texture('https://www.filterforge.com/filters/2674-normal.jpg');
 
-		const geometry = new ParametricGeometry(surface, flowerMapping, 64, 12, false, false, true);
+		const surface = new ParametricSurface(flowerFunc(0, openPos), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+		//const surface2 = new ParametricSurface(flowerFunc((2.0 * Math.PI) / 6, openPos2), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+
+		const geometry = new ParametricGeometry(surface, 256, 8, false, false, true);
+		//const geometry2 = new ParametricGeometry(surface2, 256, 8, false, false, true);
+
+		//const mergedGeometry = mergeGeometry([geometry, geometry2]);
 
 		this.mesh = new Mesh(textureTest, geometry);
+
+		//this.colour = new Vector([1.0, 1.0, 1.0]);
+		this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
+	}
+
+	act(worldTime) {
+		this.mesh.shaders.uniforms['ambientColour'] = this.colour;
 	}
 }
 
@@ -148,28 +183,27 @@ class Flowers extends Entity {
 		const geometry = flowerGeometry;
 		const material = new Material(flowerTexture);
 
-		/*geometry.bufferAttributes.bufferLength = 3;
-		geometry.bufferAttributes.attributes = {'aVertexPosition': [{attribLength: 3, offset: 0, bufferData: geometry.vertices}]};*/
-
-		//this.mesh = new Mesh(material, geometry);
-		this.mesh = new InstancedMesh(material, geometry);
-		this.mesh.shaders = shaderBuilder.customShader(flowerVertexShader, flowerFragmentShader, {'t': 0.0});
+		this.mesh = new InstancedMesh(material, geometry, 3);
+		this.mesh.shaders = shaderBuilder.customShader('flowerShader', flowerVertexShader, flowerFragmentShader, {'t': 0.0});
 
 		this.d = new Date();
 		this.start = this.d.getTime() / 1000;
 
 		this.shaderUniforms = this.mesh.shaders.uniforms;
-		//this.t = this.start
 		this.shaderUniforms['t'] = new Vector([this.start]);
 
-
 		const factor = 0.1;
-		this.mesh.addInstance(multiply(translate(0.6, 0.6, 0.6), scale(factor, factor, factor)));
+		/*this.mesh.addInstance(multiply(translate(0.6, 0.6, 0.6), scale(factor, factor, factor)));
 		this.mesh.addInstance(multiply(translate(0.4, 0.4, 0.4), scale(factor, factor, factor)));
 		this.mesh.addInstance(multiply(translate(0.2, 0.2, 0.2), scale(factor, factor, factor)));
+		*/
+
+		this.mesh.setPoseMatrix(0, multiply(translate(0.6, 0.6, 0.6), scale(factor, factor, factor)));
+		this.mesh.setPoseMatrix(1, multiply(translate(0.4, 0.4, 0.4), scale(factor, factor, factor)));
+		this.mesh.setPoseMatrix(2, multiply(translate(0.2, 0.2, 0.2), scale(factor, factor, factor)));
 	}
 
-	act() {
+	act(worldTime) {
 		//this.t = (this.d.getTime()) - this.start;
 		this.shaderUniforms['t'] = new Vector([0.1 * ((Date.now() / 1000) - this.start)]);
 	}

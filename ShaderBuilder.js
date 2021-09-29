@@ -42,16 +42,25 @@ function shaderProgramDefault(useInstancing) {
 						varying vec3 vVertexPosition;
 
 						uniform vec3 ambientColour;
+						uniform vec3 eye;
 						`;
 
 	const fragmentMain = `
 						void main() {
 							vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-							vec3 lightPos = normalize(vec3(1.0, 1.0, 1.0) - vVertexPosition);
+
+							vec3 lightPos = vec3(0.0, -10.0, 10.0);
+							vec3 lightDir = normalize(lightPos - vVertexPosition);
 
 							float ambient = 0.2;
-							float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
-							float light = ambient + diffuse;
+							float diffuse = 0.6 * clamp(dot(norm, lightDir), 0.0, 1.0);
+
+							vec3 reflected = lightDir - 2.0 * dot(norm, lightDir) * norm;
+							vec3 viewDirection = normalize(vVertexPosition - eye);
+
+							float specular = 0.6 * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0);
+
+							float light = ambient + diffuse + specular;
 
 							gl_FragColor = vec4(light * ambientColour, 1.0); //0.2
 						}

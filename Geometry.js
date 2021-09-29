@@ -6,6 +6,8 @@ class Geometry {
 		this.binormals = [];
 		this.tangents = [];
 
+		this.STs = [];
+
 		this.vertexBuffer = [];
 		this.indexBuffer = [];
 
@@ -33,7 +35,7 @@ class Geometry {
 		}
 
 		if (useST) {
-			this.addBufferAttribute('aTexCoord', 2, this.bufferAttributes.bufferLength);
+			this.addBufferAttribute('aTexCoord', 2, this.bufferAttributes.bufferLength, this.STs);
 		}
 
 	}

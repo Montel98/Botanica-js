@@ -84,7 +84,7 @@ class InstancedMesh extends Mesh {
 	}
 
 	setPoseMatrix(index, newMatrix) {
-		this.localMatrices[i] = newMatrix;
+		this.localMatrices[index] = newMatrix;
 	}
 
 	setInstanceBufferSize(bufferSize) {

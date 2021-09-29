@@ -34,18 +34,26 @@ varying vec3 vNormal;
 varying vec3 vVertexPosition;
 
 uniform vec3 ambientColour;
+uniform vec3 eye;
 
 void main() {
     vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-    vec3 lightPos = normalize(vec3(1.0, 1.0, 1.0) - vVertexPosition);
 
-                            float ambient = 0.2;
-                            float diffuse = clamp(dot(norm, lightPos), 0.0, 1.0);
-                            float light = ambient + diffuse;
+    vec3 lightPos = vec3(0.0, -10.0, 10.0);
+    vec3 lightDir = normalize(lightPos - vVertexPosition);
 
-                            gl_FragColor = vec4(light * ambientColour, 1.0); //0.2  
+    float ambient = 0.2;
+    float diffuse = 0.5 * clamp(dot(norm, lightDir), 0.0, 1.0);
+
+    vec3 reflected = lightDir - 2.0 * dot(norm, lightDir) * norm;
+    vec3 viewDirection = normalize(vVertexPosition - eye);
+
+    float specular = 0.5 * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 16.0);
+
+    float light = ambient + diffuse + specular;
+
+    gl_FragColor = vec4(light * ambientColour, 1.0); //0.2
 }
-
 `;
 
 class Tree extends Entity {
@@ -71,7 +79,7 @@ class Tree extends Entity {
 			pos: new Vector(startPos.components),
 			axis: startAxis,
 			count: 0,
-			radius: radiusProperties(0.1, 0.03, 0),
+			radius: radiusProperties(0.15, 0.03, 0),
 			level: 0,
 			previousStem: null,
 			stringIndex: startIndex
@@ -91,6 +99,7 @@ class Tree extends Entity {
 
 		const textureTest = new Texture('s');
 		const geometry = new Geometry(false, true, false);
+
 		geometry.setVertexBufferSize(10800 * 40);
 		geometry.setIndexBufferSize(3480 * 40);
 
@@ -115,7 +124,12 @@ class Tree extends Entity {
         this.age = 0.0;
         this.growthRate = 0.003;
 
-        this.leaves = new Leaves();
+        // Leaves
+
+        const sequence = Math.floor(Math.random() * 255);
+        const leafGeometry = 
+
+        this.leaves = new Leaves(sequence);
         this.addChild(this.leaves);
 
 	}
@@ -127,6 +141,7 @@ class Tree extends Entity {
         this.currentColour = add(this.colourStart.scale(1.0 - this.age**0.2), this.colourEnd.scale(this.age**0.2));
         this.mesh.shaders.uniforms['ambientColour'] = this.currentColour;
         this.mesh.shaders.uniforms['age'].components[0] = this.age;
+
 	}
 
     grow(worldTime) {
@@ -139,6 +154,29 @@ class Tree extends Entity {
 
         this.age = newAge;
 
+        this.generateNewStems();
+    }
+
+	mergeToGeometry(terminalStem) {
+        
+		terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget');
+        terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget3');
+        this.mesh.geometry.addGeometry(terminalStem.mesh.geometry);
+	}
+
+    /*decode(sequence) {
+
+        sequenceA = sequence & 15;
+        sequenceB = (sequence & (15 << 4)) >> 4;
+        sequenceC = (sequence & (15 << 8)) >> 8;
+
+        return {termA: sequenceA, termB: sequenceB, termC: sequenceC};
+    }*/
+
+    generateNewStems() {
+
+        let newStems = [];
+
         for (let i = 0; i < this.terminalStems.length; i++) {
 
             if (this.terminalStems[i].stem.isMaxHeight() && this.terminalStems[i].stackFrame.stringIndex < this.LSystem.LString.length) {
@@ -148,101 +186,61 @@ class Tree extends Entity {
                 this.mergeToGeometry(currentTerminalStem.stem);
                 this.removeChild(currentTerminalStem.stem);
 
-                let currentFrame = currentTerminalStem.stackFrame;
-                let currentPos = currentFrame.stringIndex;
-
-                let newStem = this.LSystem.generateStems(currentPos, currentFrame);
+                let newStem = this.generateNewStem(currentTerminalStem.stackFrame);
+                newStems.push(newStem);
 
                 this.terminalStems.splice(i, 1);
-
-                if (newStem.stem) {
-                    newStem.stem.tree = this;
-                    this.terminalStems.push(newStem);
-                    this.addChild(newStem.stem);
-
-                    let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.03));
-
-                    let leafPose = projectToNewAxis(newStem.stackFrame.axis, /*newStem.stackFrame.pos*/leafPosition);
-                    this.leaves.addLeaves(2, leafPose, newStem.stem);
-                }
 
                 for (let i = 0; i < newStem.childStems.length; i++) {
 
                     let frame = newStem.childStems[i];
-                    let newChildStem = this.LSystem.generateStems(frame.stringIndex + 1, frame);
-                    newChildStem.stem.tree = this;
+                    let newChildStem = this.generateNewStem(frame);
+                    newStems.push(newChildStem);
                     
-                    this.terminalStems.push(newChildStem);
-                    this.addChild(newChildStem.stem);
-
-                    /*let leafPosition = add(newChildStem.stackFrame.pos, newChildStem.stackFrame.axis.forward.scale(-0.03))
-
-                    let leafPose = projectToNewAxis(newChildStem.stackFrame.axis, leafPosition);
-                    this.leaves.addLeaves(2, leafPose, newChildStem.stem);*/
                 }
             }
         }
+
+        for (let i = 0; i < newStems.length; i++) {
+
+            if (newStems[i].stem) {
+                this.terminalStems.push(newStems[i]);
+                this.addChild(newStems[i].stem);
+            }
+        }
+
+        return newStems;
     }
 
-	mergeToGeometry(terminalStem) {
-        
-		terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget');
-        //terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget2');
-        terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget3');
-        this.mesh.geometry.addGeometry(terminalStem.mesh.geometry);
-	}
+    generateNewStem(currentFrame) {
+
+        let currentPos = currentFrame.stringIndex;
+
+        let newStem = this.LSystem.generateStems(currentPos, currentFrame);
+
+        if (newStem.stem) {
+
+            newStem.stem.tree = this;
+
+            let leafPosition = add(newStem.stackFrame.pos, newStem.stackFrame.axis.forward.scale(-0.03));
+
+            let leafAxis = newStem.stackFrame.axis;
+
+            /*if (newStem.stackFrame.count % 2 == 0) {
+                leafAxis = copyAxis(newStem.stackFrame.axis);
+                leafAxis.left = leafAxis.left.scale(-1.0);
+            }*/
+
+            let leafPose = projectToNewAxis(/*newStem.stackFrame.axis*/leafAxis, leafPosition);
+            let leafCount = 2;
+
+            this.leaves.addLeaves(leafCount, leafPose, newStem);
+        }
+
+        return newStem;
+    }
 
 }
-
-/*const testString = buildString([ newSymbol('1', []),
-                        newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('[', []),
-                        newSymbol('+', [Math.PI / 2, -Math.PI / 2]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol(']', []),
-                        newSymbol('[', []),
-                        newSymbol('+', [-Math.PI / 2, -Math.PI / 2]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, -Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol('+', [0, Math.PI / 8]),
-                        newSymbol('1', []),
-                        newSymbol(']', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', [])], 0);*/
 
 const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
@@ -277,7 +275,6 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
-                        newSymbol('1', []),
                         newSymbol('[', []),
                         newSymbol('+', [Math.random() * 2.0 * Math.PI, -Math.PI / 2]),
                         newSymbol('0', []), 
@@ -287,6 +284,22 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
                         newSymbol('*', []),
-                        newSymbol('1', []) ], 4);
+                        newSymbol('1', [])/*,
+                        newSymbol('[', []),
+                        newSymbol('+', [-Math.PI / 2, -Math.PI / 4]),
+                        newSymbol('0', []), 
+                        newSymbol(']', []),
+                        newSymbol('[', []),
+                        newSymbol('+', [Math.PI / 2, -Math.PI / 4]),
+                        newSymbol('0', []), 
+                        newSymbol(']', [])*/ ], 4);
+
+const testString2 = buildString(newSymbol('1', []),
+                        newSymbol('*', []),
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []),
+                        newSymbol('*', []), 
+                        newSymbol('1', []), 0)
 
 const newTree = new Tree(testString);

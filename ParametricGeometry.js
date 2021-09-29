@@ -2,18 +2,19 @@
 
 class ParametricGeometry extends Geometry {
 	
-	constructor(surface, mapping, uSteps, vSteps, invertedNormals, useST, useNormals) {
+	constructor(surface/*, mapping*/, uSteps, vSteps, invertedNormals, useST, useNormals, mappingFunc=null) {
 
 		super(invertedNormals, useNormals, useST);
 
 		this.surface = surface;
 		this.uSteps = uSteps;
 		this.vSteps = vSteps;
-		//this.useNormals = useNormals;
 
-		this.stBuffer = [];
+		//this.stBuffer = [];
 
-		this.stMapping = mapping;
+		//this.stMapping = mapping;
+
+		this.mappingFunc = mappingFunc;
 
 		this.vertexBuffer = this.generateBuffers();
 	}
@@ -42,7 +43,6 @@ class ParametricGeometry extends Geometry {
 						{return ((vStep + offset[0]) * (this.uSteps)) + (uStep + offset[1]);}
 					);
 
-
 	        		if (this.isValidTriangle(indices)) {
 	        			this.indexBuffer.push(...indices);
 	        		}
@@ -53,7 +53,14 @@ class ParametricGeometry extends Geometry {
 
 	generateSTs() {
 
+		let stMap = this.mappingFunc(this);
+
 		for (let i = 0; i < this.vertices.length; i++) {
+
+			this.STs.push(stMap[i]);
+		}
+
+		/*for (let i = 0; i < this.vertices.length; i++) {
 
 			let u = Math.floor(i / this.vSteps);
 			let v = i % this.vSteps;
@@ -64,7 +71,7 @@ class ParametricGeometry extends Geometry {
 			//console.log('s:' + s + 't:', t);
 
 			this.stBuffer.push(t, -s);
-		}
+		}*/
 
 	}
 

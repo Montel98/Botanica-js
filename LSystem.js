@@ -35,17 +35,10 @@ class LSystem {
 
 		let stemPath = new BezierCubic(p0, p1, p2, p3);
 
-		let babyR = radiusProperties(0.002, 0.002, 0);
+		let babyR = radiusProperties(0.001, 0.001, 0);
 
 		let surface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		let babySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, babyR), 0.0, 1.0, 0.0, 2.0 * Math.PI);
-
-		let stMapping = {
-							vMin: surface.vMin, 
-							vMax: surface.vMax,
-							uMin: surface.uMin, 
-							uMax: surface.uMax
-						};
 
 		let resolution = 32;
 
@@ -53,8 +46,8 @@ class LSystem {
 			resolution = 8;
 		}
 
-		let stemGeometry = new ParametricGeometry(surface, stMapping, 2, resolution, false, false, true);
-		let babyStemGeometry = new ParametricGeometry(babySurface, stMapping, 2, resolution, false, false, false);
+		let stemGeometry = new ParametricGeometry(surface, 2, resolution, false, false, true);
+		let babyStemGeometry = new ParametricGeometry(babySurface, 2, resolution, false, false, false);
 
 		if (prevStem) {
 
@@ -97,7 +90,9 @@ class LSystem {
 	}
 
 	generateStems(startIndex, stackFrame) {
-		let stack = [];
+		//let stack = [];
+
+		stackFrame = copyStack(stackFrame);
 
 		let leafMatrices = [];
 
@@ -132,7 +127,7 @@ class LSystem {
 
 				let r = radiusFunc(stackFrame.radius.radiusStart, stackFrame.radius.radiusEnd, stackFrame.count, 0);
 
-				stackFrame.radius = radiusProperties(0.7 * r, 0.4 * r, 0);
+				stackFrame.radius = radiusProperties(0.7 * r, 0.4 * r, /*0*/stackFrame.count);
 
 				stackFrame.level++
 
@@ -140,7 +135,10 @@ class LSystem {
 
 				stackFrame.count = 0;
 
-				terminalStem['childStems'].push(stackFrame); 
+				stackFrame.stringIndex++;
+
+				terminalStem['childStems'].push(stackFrame);
+
 				i = this.skipBranch(i);
 				stackFrame = stackFrameCopy;
 			}
@@ -154,7 +152,8 @@ class LSystem {
 													stackFrame.prevStem);
 
 				stackFrame.prevStem = stemParts;
-
+				stackFrame.count++;
+				stackFrame.radius.shift = stackFrame.count;
 
 				let meristem = new Stem(stemParts.stemGeometry.stemEnd, stemParts.stemGeometry.stemStart);
 
@@ -166,7 +165,7 @@ class LSystem {
 
 			i++;
 			stackFrame.stringIndex = i;
-			stackFrame.count++;
+			//stackFrame.count++;
 		}
 
 		return terminalStem;
@@ -327,5 +326,7 @@ function radiusProperties(rStart, rEnd, shift) {
 }
 
 function radiusFunc(rStart, rEnd, shift, u) {
-	return rEnd + (rStart - rEnd) * Math.exp(-1.0 * (u + shift + 1.0));
+	//console.log('shift:', shift);
+	//return rEnd + (rStart - rEnd) * Math.exp(-1.0 * (u + shift + 1.0));
+	return rEnd + (rStart - rEnd) * Math.exp(-0.5 * (u + shift));
 }

@@ -2,7 +2,7 @@ class Material {
 	constructor(texture) {
 		this.maps = {
 			//normalMap: null,
-			//textureMap: null
+			//textureMap: texture
 		}
 
 		//this.shaders = shaderBuilder.getDefaultShaders();
@@ -14,7 +14,7 @@ class Material {
 }
 
 class Texture {
-	constructor(imgSrc) {
+	constructor(imgSrc="") {
 		this.imgSrc = imgSrc;
 		this.textureID = -1;
 	}
@@ -22,4 +22,17 @@ class Texture {
 	setTextureID(handle) {
 		this.textureID = handle;
 	}
+
+	setCustomBufferData(width, height, bufferData /*, target*/) {
+		this.textureBuffer = bufferData;
+		this.width = width;
+		this.height = height;
+	}
+}
+
+function LocalTexture(width, height, bufferData) {
+	const texture = new Texture();
+	texture.setCustomBufferData(width, height, bufferData);
+
+	return texture;
 }

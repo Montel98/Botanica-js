@@ -114,3 +114,4 @@ const downVector = new Vector([0.0, 0.0, -1.0]);
 const leftVector = new Vector([-1.0, 0.0, 0.0]);
 const rightVector = new Vector([1.0, 0.0, 0.0]);
 const zeroVector = new Vector([0.0, 0.0, 0.0]);
+const zeroVector2D = new Vector([0.0, 0.0]);
