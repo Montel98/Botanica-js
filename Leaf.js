@@ -79,6 +79,27 @@ void main() {
 }
 `;
 
+const geneTable = {
+
+	colours: {'0': {rgb: [0.0, 0.0, 0.4]}, // Midnight blue
+				'1': {rgb: [0.6, 0.6, 0.4]}, // Murky Green
+				'2': {rgb: [0.8, 0.0, 0.6]}, // Fuschia
+				'3': {rgb: [1.0, 0.6, 0.0]}, // Orange
+				'4': {rgb: [1.0, 0.8, 1.0]}, // Blossom
+				'5': {rgb: [1.0, 1.0, 1.0]}, // White
+				'6': {rgb: [0.8, 0.0, 0.0]}, // Fiery Red
+				'7': {rgb: [0.0, 0.4, 0.15]}, // Verdant Green
+				'8': {rgb: [0.1, 1.0, 0.8]}, // Aqua Green
+				'9': {rgb: [0.8, 0.6, 0.0]}, // Mustard Brown
+				'10': {rgb: [1.0, 1.0, 0.6]}, // Silver
+				'11': {rgb: [1.0, 1.0, 0.6]}, // Gold
+				'12': {rgb: [1.0, 1.0, 0.6]}, // Rose Gold
+				'13': {rgb: [0.6, 0.6, 0.6]}, // Grey
+				'14': {rgb: [0.8, 1.0, 0.2]}, // Lime Yellow
+				'15': {rgb: [1.0, 1.0, 0.6]} // Trippy
+			} 
+}
+
 const leafProfileStart = (x) => {
 	return -0.4 * x;
 }
@@ -107,8 +128,6 @@ const leafFunc = (fourier, foldFactor, foldFrequency, profileFunc, vMax) => {
 	}
 }
 
-//const leafTexture = new Texture('flower_stem1.png');
-
 const leafTexture = generateLeafTexture(512, 512, 4);
 
 // Test instancing:
@@ -117,11 +136,11 @@ class Leaves extends Entity {
 
 	static maxAge = 1.0;
 
-	constructor(sequence) {
+	constructor(genome) {
 
 		super();
 
-		const geometry = this.generateGeometry(sequence);
+		const geometry = this.generateGeometry(genome);
 		const material = new Material(leafTexture);
 		material.maps['textureMap'] = leafTexture;
 
@@ -147,7 +166,8 @@ class Leaves extends Entity {
                                                         );
 
 		this.colourStart = new Vector([0.2, 0.5, 0.1]);
-		this.colourEnd = new Vector([Math.random(), Math.random(), Math.random()]);
+		//this.colourEnd = new Vector([Math.random(), Math.random(), Math.random()]);
+		this.colourEnd = this.getColour(genome);
 
 		this.shaderUniforms = this.mesh.shaders.uniforms;
 		this.shaderUniforms['colourStart'] = this.colourStart;
@@ -209,30 +229,28 @@ class Leaves extends Entity {
 		}
 	}
 
-	generateGeometry(sequence) {
+	generateGeometry(genome) {
 
-		//let magnitudeA = sequence & 15;
-        //let magnitudeB = (sequence & (15 << 4)) >> 4;
+        let shapeAllele = genome.getGenotype('Leaf Shape').left.allele;
 
-        let magnitudeA = Math.floor(16 * Math.random());
-        let magnitudeB = Math.floor(magnitudeA * Math.random());
+        let gene = genome.getGene('Leaf Shape');
+
+        let halfGeneLength = 0.5 * (gene.sequenceEnd - gene.sequenceStart + 1);
+
+        let magnitudeA = shapeAllele.geneticCode & (2**halfGeneLength - 1);
+        let magnitudeB = (shapeAllele.geneticCode & ((2**halfGeneLength - 1) << halfGeneLength)) >> halfGeneLength;
+
+        console.log('magnitude A:', magnitudeA);
+        console.log('magnitude B:', magnitudeB);
 
 		let termA = new FourierTerm(0.0, 0.6, 0.5, 2.0);
-        let termB = new FourierTerm(0.0, 0.3, 0.5 * magnitudeA, 2.0);
-        let termC  = new FourierTerm(0.0, 0.1, 0.5 * magnitudeB, 2.0);
+        let termB = new FourierTerm(0.0, 0.3, 0.5 * magnitudeB, 2.0);
+        let termC  = new FourierTerm(0.0, 0.1, 0.5 * magnitudeA, 2.0);
 
         let fourier = new FourierSeries(0.0, [termA, termB, termC]);
 
         const leafSurfaceEnd = new ParametricSurface(leafFunc(fourier, 0.02, 20.0, leafProfileEnd, 0.2), 0.0, 2.0 * Math.PI, 0.0, 0.2);
         const leafSurfaceStart = new ParametricSurface(leafFunc(fourier, 0.1, 10.0, leafProfileStart, 0.2), 0.0, 2.0 * Math.PI, 0.0, 0.2);
-
-
-		/*const leafMapping = {
-					vMin: leafSurfaceEnd.vMin, 
-					vMax: leafSurfaceEnd.vMax,
-					uMin: leafSurfaceEnd.uMin, 
-					uMax: leafSurfaceEnd.uMax
-					};*/
 
 		const leafGeometryEnd = new ParametricGeometry(leafSurfaceEnd, 200, 6, false, true, true, textureMapping);
 		const leafGeometryStart = new ParametricGeometry(leafSurfaceStart, 200, 6, false, false, false);
@@ -242,6 +260,46 @@ class Leaves extends Entity {
 		leafGeometryEnd.addBufferAttribute('aMorphTarget', 3, leafGeometryEnd.bufferAttributes.bufferLength, morphTargets);
 
 		return leafGeometryEnd;
+	}
+
+	getColour(genome) {
+
+		if (!this.colourEnd) {
+
+			let colourAlleles = genome.getGenotype('Leaf Colour');
+			let leftAllele = colourAlleles.left;
+			let rightAllele = colourAlleles.right;
+
+			let leftWeight = 0.0;
+			let rightWeight = 0.0;
+
+			if (leftAllele.dominance == 'Dominant') {
+				leftWeight = 1.0;
+			}
+			else if (rightAllele.dominance == 'Dominant') {
+				rightWeight = 1.0;
+			}
+			else {
+				leftWeight = 0.5;
+				rightWeight = 0.5;
+			}
+
+			let leftColourID = leftAllele.allele.geneticCode;
+			let rightColourID = rightAllele.allele.geneticCode;
+
+			let leftColourVector = new Vector([...geneTable.colours[leftColourID].rgb]);
+			let rightColourVector = new Vector([...geneTable.colours[rightColourID].rgb]);
+
+			let colourVector = add(leftColourVector.scale(leftWeight), rightColourVector.scale(rightWeight));
+
+			return colourVector;
+		}
+
+		return this.colourEnd;
+	}
+
+	getPattern(genome) {
+		
 	}
 }
 
@@ -332,8 +390,6 @@ function textureMapping(geometry) {
     	texturePoint.components[1] = (texturePoint.components[1] - yMin) / (yMax - yMin);
 
     }
-
-    //console.log(stMap);
 
     return stMap;
 }

@@ -117,6 +117,7 @@ class Tree extends Entity {
                                                         );
 
 		this.colourEnd = new Vector([0.25, 0.18, 0.12]);
+        //this.colourEnd = new Vector([1.0, 0.8, 0.8])
         this.colourStart = new Vector([0.3, 0.6, 0.1]);
         this.currentColour = this.colourStart;
         this.mesh.shaders.uniforms['ambientColour'] = this.currentColour;
@@ -124,12 +125,20 @@ class Tree extends Entity {
         this.age = 0.0;
         this.growthRate = 0.003;
 
+        this.germinationDate = (new Date()).toLocaleDateString();
+
         // Leaves
+        const leftSequence = randomGeneticSequence();
+        const rightSequence = randomGeneticSequence();
 
-        const sequence = Math.floor(Math.random() * 255);
-        const leafGeometry = 
+        this.genome = new Genome(leftSequence, rightSequence);
 
-        this.leaves = new Leaves(sequence);
+        for (let gene in Genes) {
+            console.log(gene);
+            console.log(this.genome.getGenotype(gene));
+        }
+
+        this.leaves = new Leaves(this.genome);
         this.addChild(this.leaves);
 
 	}
@@ -163,15 +172,6 @@ class Tree extends Entity {
         terminalStem.mesh.geometry.removeBufferAttribute('aMorphTarget3');
         this.mesh.geometry.addGeometry(terminalStem.mesh.geometry);
 	}
-
-    /*decode(sequence) {
-
-        sequenceA = sequence & 15;
-        sequenceB = (sequence & (15 << 4)) >> 4;
-        sequenceC = (sequence & (15 << 8)) >> 8;
-
-        return {termA: sequenceA, termB: sequenceB, termC: sequenceC};
-    }*/
 
     generateNewStems() {
 
@@ -240,6 +240,10 @@ class Tree extends Entity {
         return newStem;
     }
 
+    getGenome() {
+        return this.genome;
+    }
+
 }
 
 const testString = buildString([ newSymbol('1', []),
@@ -284,22 +288,6 @@ const testString = buildString([ newSymbol('1', []),
                         newSymbol('*', []),
                         newSymbol('1', []),
                         newSymbol('*', []),
-                        newSymbol('1', [])/*,
-                        newSymbol('[', []),
-                        newSymbol('+', [-Math.PI / 2, -Math.PI / 4]),
-                        newSymbol('0', []), 
-                        newSymbol(']', []),
-                        newSymbol('[', []),
-                        newSymbol('+', [Math.PI / 2, -Math.PI / 4]),
-                        newSymbol('0', []), 
-                        newSymbol(']', [])*/ ], 4);
-
-const testString2 = buildString(newSymbol('1', []),
-                        newSymbol('*', []),
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []),
-                        newSymbol('*', []), 
-                        newSymbol('1', []), 0)
+                        newSymbol('1', [])], 4);
 
 const newTree = new Tree(testString);

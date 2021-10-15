@@ -10,4 +10,8 @@ class WorldTime {
 		this.timeNow = Date.now() / 1000;
 		this.dt = this.timeNow - this.timePrev;
 	}
+
+	getTimeNow() {
+		return Date.now();
+	}
 }

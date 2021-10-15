@@ -291,9 +291,9 @@ class Renderer {
 	    for (let attribName in bufferAttributes.attributes) {
 
 	    	let attrib = bufferAttributes.attributes[attribName];
-	    	console.log(attribName);
+	    	//console.log(attribName);
 	    	let baseAttribLocation = gl.getAttribLocation(program, attribName);
-	    	console.log(baseAttribLocation);
+	    	//console.log(baseAttribLocation);
 
 	    	for (let i = 0; i < attrib.meta.length; i++) {
 
@@ -339,7 +339,7 @@ class Renderer {
 		//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 
-		/*if (texture.imgSrc != "") {
+		if (texture.imgSrc != "") {
 
 			const image = new Image();
 			image.src = texture.imgSrc;
@@ -350,10 +350,10 @@ class Renderer {
 				gl.bindTexture(gl.TEXTURE_2D, textureID);
 				gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, gl.UNSIGNED_BYTE, image);
 				gl.generateMipmap(gl.TEXTURE_2D);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			});
-		}*/
+		}
 		/*else {
 				gl.bindTexture(gl.TEXTURE_2D, textureID);
 				gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.bufferData);
@@ -371,7 +371,7 @@ class Renderer {
 	    const vertexShader = this.loadShader(gl.VERTEX_SHADER, vsSource);
 	    const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fsSource);
 
-	    console.log(vsSource);
+	    //console.log(vsSource);
 
 	    // Create program and attach shaders
 	    const shaderProgram = gl.createProgram();
