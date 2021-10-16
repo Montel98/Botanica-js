@@ -1,7 +1,11 @@
 const canvas = document.querySelector('#glCanvas');
 
-canvas.setAttribute('width', window.innerWidth);
-canvas.setAttribute('height', window.innerHeight);
+const game = canvas.parentNode.getBoundingClientRect();
+
+console.log(game.width, game.height);
+
+canvas.width = game.width;
+canvas.height = game.height;
 
 const keys = {};
 
@@ -45,7 +49,7 @@ const sensitivity = 0.005;
 
 // Input
 
-canvas.addEventListener('mousemove', e => {
+/*canvas.addEventListener('mousemove', e => {
     let dx =  e.offsetX - prevX;
     let dy = e.offsetY - prevY;
 
@@ -54,7 +58,7 @@ canvas.addEventListener('mousemove', e => {
 
     camera.rotateHorizontal(-sensitivity * dx);
     camera.rotateVertical(sensitivity * dy);
-});
+});*/
 
 window.addEventListener('keydown', e => {
     let key = e.which || e.keyCode;
@@ -69,8 +73,8 @@ window.addEventListener('keyup', e => {
 });
 
 window.addEventListener('resize', e => {
-    canvas.setAttribute('width', window.innerWidth);
-    canvas.setAttribute('height', window.innerHeight);
+    canvas.setAttribute('width', game.width);
+    canvas.setAttribute('height', game.height);
 })
 
 mainLoop();

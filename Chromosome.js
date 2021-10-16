@@ -2,12 +2,13 @@ const alleleColours = [new Vector([25, 50, 100]), new Vector([50, 100, 100])];
 
 function createChromomes(genome) {
 	let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	svg.setAttribute('id', 'chromosome')
 
-	svg.setAttribute("width", "250");
-	svg.setAttribute("height", "800");
+	svg.setAttribute("width", "100%");
+	svg.setAttribute("height", "100%");
 
-	svg.appendChild(chromosomeBody(10, 70)); // Left Chromosome
-	svg.appendChild(chromosomeBody(140, 70)); // Right Chromosome
+	svg.appendChild(chromosomeBody(50, 130)); // Left Chromosome
+	svg.appendChild(chromosomeBody(190, 130)); // Right Chromosome
 
 	let geneSections = getGeneSections(genome);
 	
@@ -30,7 +31,7 @@ function getGeneSections(genome) {
 
 	for (let geneName in genes) {
 
-		let pixelStartY = 70 + (genes[geneName].sequenceStart / chromosomeLength) * chromosomePixelLength;
+		let pixelStartY = 130 + (genes[geneName].sequenceStart / chromosomeLength) * chromosomePixelLength;
 		let genePixelLength = ((genes[geneName].sequenceEnd - genes[geneName].sequenceStart + 1) / chromosomeLength) * chromosomePixelLength;
 
 		const leftAllele = genome.getGenotype(geneName).left.allele;
@@ -45,8 +46,8 @@ function getGeneSections(genome) {
 			leftColour = rightColour;
 		}
 
-		let leftX = 10;
-		let rightX = 140;
+		let leftX = 50;
+		let rightX = 190;
 
 		geneSections.push(geneSection(leftX, pixelStartY, genePixelLength, leftColour));
 		geneSections.push(geneSection(rightX, pixelStartY, genePixelLength, rightColour));
@@ -102,5 +103,13 @@ function chromosomeBody(x, y) {
 	return newPath;
 }
 
-var overlay = document.getElementById('overlay');
-overlay.appendChild(createChromomes(newTree.getGenome()));
+var overlay = document.getElementById('test');
+var overlayDims = overlay.getBoundingClientRect();
+
+var svgChromosome = createChromomes(newTree.getGenome());
+
+console.log('mm: ', overlay.getBoundingClientRect());
+overlay.appendChild(svgChromosome);
+
+//svgChromosome.width = overlayDims.width;
+//svgChromosome.height = overlayDims.height;
