@@ -31,6 +31,7 @@
     "webpack-dev-server": "^4.7.3"
   },
   "dependencies": {
+    "express": "^4.17.2",
     "@pinata/sdk": "^1.1.23",
     "axios": "^0.25.0",
     "cbor": "^8.1.0",
