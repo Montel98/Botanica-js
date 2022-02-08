@@ -1,9 +1,15 @@
-class Entity {
+import WorldTime from './WorldTime.js';
+import { identityMatrix, multiply, translate } from './Matrix.js';
+
+export default class Entity {
+
 	constructor() {
 		this.parent = null;
 		this.children = [];
 		this.localMatrix = identityMatrix;
 		this.worldMatrix = this.localMatrix;
+
+		this.isHidden = false;
 	}
 
 	getChildren() {
@@ -18,6 +24,9 @@ class Entity {
 	removeChild(childEntity) {
 		for (let i = 0; i < this.children.length; i++) {
 			if (this.children[i] == childEntity) {
+				
+				const child = this.children[i];
+				//child.mesh.geometry.destroyGeometry();
 				this.children.splice(i, 1);
 			}
 		}
@@ -46,5 +55,13 @@ class Entity {
 	setPosition(x, y, z) {
 		this.localMatrix = translate(x, y, z);
 		this.worldMatrix = this.localMatrix;
+	}
+
+	hide() {
+		this.isHidden = true;
+	}
+
+	show() {
+		this.isHidden = false;
 	}
 }

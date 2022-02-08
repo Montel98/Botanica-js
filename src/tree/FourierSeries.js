@@ -1,4 +1,4 @@
-class FourierTerm {
+export class FourierTerm {
     constructor(sinMag, cosMag, n, sharpness) {
         this.sinMagnitude = sinMag;
         this.cosMagnitude = cosMag;
@@ -14,7 +14,7 @@ class FourierTerm {
     }
 }
 
-class FourierSeries {
+export class FourierSeries {
     constructor(a0, terms) {
         this.a0 = a0; // The first (constant) term
         this.terms = terms; // List of all sinusoidal terms

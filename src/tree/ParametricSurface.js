@@ -1,4 +1,7 @@
-class ParametricSurface {
+import Vector from './Vector.js';
+
+export default class ParametricSurface {
+	
 	constructor(functions, uMin, uMax, vMin, vMax) {
 		this.functions = functions;
 

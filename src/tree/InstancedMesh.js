@@ -1,4 +1,10 @@
-class InstancedMesh extends Mesh {
+import ShaderBuilder from './ShaderBuilder.js';
+import { identityMatrix } from './Matrix.js';
+import Material from './Material.js';
+import Mesh from './Mesh.js';
+
+export default class InstancedMesh extends Mesh {
+
 	constructor(material, geometry, count) {
 
 		super(material, geometry);
@@ -19,14 +25,15 @@ class InstancedMesh extends Mesh {
 		this.isInstanced = true;
 		this.modifiedInstanceEvents = [];
 
-		this.instanceBufferAttributes = {bufferID: -1,
+		this.instanceBufferAttributes = {bufferID: null,
 										buffers: {'instanceBuffer': {size: -1, offset: 0, elementSize: 4, isIndexBuffer: false}},
-										bufferLength: 16, 
+										bufferLength: 16,
+										indexesUsed: 11,
 										attributes: {'offset': {meta: 
-																	[{attribLength: 4, offset: 0},
-																	{attribLength: 4, offset: 4},
-																	{attribLength: 4, offset: 8},
-																	{attribLength: 4, offset: 12}
+																	[{attribLength: 4, offset: 0, index: 8},
+																	{attribLength: 4, offset: 4, index: 9},
+																	{attribLength: 4, offset: 8, index: 10},
+																	{attribLength: 4, offset: 12, index: 11}
 																	],
 																	bufferData: this.worldMatrices
 																}
@@ -34,10 +41,10 @@ class InstancedMesh extends Mesh {
 
 		//this.instanceBuffer = new Array(this.instanceBufferAttributes * count);
 
-		this.shaders = shaderBuilder.getShader(material.maps, this.isInstanced);
+		this.shaders = ShaderBuilder.getShader(material.maps, this.isInstanced);
 	}
 
-	addInstance(poseMatrix, instanceData) {
+	addInstance(poseMatrix, instanceData={}) {
 		this.localMatrices.push(poseMatrix);
 		this.worldMatrices.push(poseMatrix);
 
@@ -50,15 +57,28 @@ class InstancedMesh extends Mesh {
 		const oldInstanceCount = this.instanceCount;
 		this.instanceCount += 1;
 
-		const index = this.instanceBufferAttributes.bufferLength * oldInstanceCount;
+		//const index = this.instanceBufferAttributes.bufferLength * oldInstanceCount;
 
-		this.modifiedInstanceEvents.push({instanceBufferIndex: index, bufferDataIndex: this.instanceCount - 1});
+		//this.modifiedInstanceEvents.push({instanceBufferIndex: index, bufferDataIndex: this.instanceCount - 1});
+	}
+
+	removeInstance(index) {
+		for (let attribName in this.instanceBufferAttributes.attributes) {
+
+			let attrib = this.instanceBufferAttributes.attributes[attribName];
+			attrib.bufferData.splice(index, 1);
+		}
+
+		this.localMatrices.splice(index, 1);
+
+		this.instanceCount -= 1;
 	}
 
 	addInstanceBufferAttribute(name, length, attribOffset, data) {
 		this.instanceBufferAttributes.attributes[name] = {meta: 
 															[{attribLength: length,
-															offset: attribOffset}],
+															offset: attribOffset,
+															index: ++this.instanceBufferAttributes.indexesUsed}],
 															bufferData: data};
 
 		this.instanceBufferAttributes.bufferLength += length;

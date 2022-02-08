@@ -1,4 +1,6 @@
-class Matrix {
+import Vector, { cross, add, upVector, leftVector, zeroVector } from './Vector.js';
+
+export default class Matrix {
 	constructor(components) {
 		this.components = components;
 
@@ -25,45 +27,49 @@ class Matrix {
 
 function multiplyAux(matrixA, matrixB) {
 
-	const reducer = (total, val) => total + val;
+	let newCols = [];
 
-	var newCols = matrixB.map((vecB) => { 
-						let newColVector = matrixA[0].map((val, i) => {
-							let entry = matrixA.map((vecA, j) => vecA[i] * vecB[j]).reduce(reducer, 0.0);
-							return entry;
-						});
-						return newColVector;
-					});
+	for (let i = 0; i < matrixB.length; i++) {
 
-	/*for (let i = 0; i < matrixB.length; i++) {
+		let vecB = matrixB[i];
 
-		for (let j = 0; i < matrixA[0].length; j++) {
+		let newColVector = [];
+
+		for (let j = 0; j < matrixA[0].length; j++) {
+
+			let sum = 0;
 
 			for (let k = 0; k < matrixA.length; k++) {
 
+				let vecA = matrixA[k];
 
+				sum += vecA[j] * vecB[k];
 			}
+
+			newColVector.push(sum);
 		}
-	}*/
+
+		newCols.push(newColVector);
+	}
 
 	return newCols;
 }
 
-function multiply(matrixA, matrixB) {
+export function multiply(matrixA, matrixB) {
 	let mA = matrixA.components;
 	let mB = matrixB.components;
 
 	return new Matrix(multiplyAux(mA, mB));
 }
 
-function transform(vector, matrix) {
+export function transform(vector, matrix) {
 	let vComponents = [vector.components];
 	let mComponents = matrix.components;
 
 	return new Vector(multiplyAux(mComponents, vComponents).flat());
 }
 
-function perspective(fov, near, far, aspect) {
+export function perspective(fov, near, far, aspect) {
 	let xyInv = 1.0 / Math.tan(0.5 * fov);
 
 	return new Matrix(
@@ -73,7 +79,17 @@ function perspective(fov, near, far, aspect) {
 		[0, 0, (2 * far * near) / (near - far), 0]]);
 }
 
-function lookAt(eye, direction, left, vertical) {
+export function inversePerspective(fov, near, far, aspect) {
+	let xyInv = 1.0 / Math.tan(0.5 * fov);
+
+	return new Matrix(
+		[[aspect / xyInv, 0, 0, 0],
+		[0, 1 / xyInv, 0, 0],
+		[0, 0, 0, -1],
+		[0, 0, 0.5 * (near - far) / (far * near), 0.5 * (far + near) / (far * near)]]);
+}
+
+export function lookAt(eye, direction, left, vertical) {
 	let xCol = [left.components[0], vertical.components[0], direction.components[0], 0];
 	let yCol = [left.components[1], vertical.components[1], direction.components[1], 0];
 	let zCol = [left.components[2], vertical.components[2], direction.components[2], 0];
@@ -87,63 +103,77 @@ function lookAt(eye, direction, left, vertical) {
 	return multiply(projectionMatrix, translationMatrix);
 }
 
-function translate(dx, dy, dz) {
+export function inverseLookAt(eye, direction, left, vertical) {
+	let xCol = [left.components[0], left.components[1], left.components[2], 0];
+	let yCol = [vertical.components[0], vertical.components[1], vertical.components[2], 0];
+	let zCol = [direction.components[0], direction.components[1], direction.components[2], 0];
+
+	let inverseProjectionMatrix = new Matrix([xCol, yCol, zCol, [0, 0, 0, 1]]);
+	
+	let inverseTranslationMatrix = translate(eye.components[0],
+											eye.components[1],
+											eye.components[2]);
+
+	return multiply(inverseTranslationMatrix, inverseProjectionMatrix);
+}
+
+export function translate(dx, dy, dz) {
 	let translationMatrix = new Matrix(
 		[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [dx, dy, dz, 1]]);
 
 	return translationMatrix;
 }
 
-function scale(x, y, z) {
+export function scale(x, y, z) {
 	let scalingMatrix = new Matrix(
 		[[x, 0, 0, 0], [0, y, 0, 0], [0, 0, z, 0], [0, 0, 0, 1]]);
 
 	return scalingMatrix;
 }
 
-function rotate3X(angle) {
+export function rotate3X(angle) {
 	let rotationXMatrix = new Matrix(
 		[[1, 0, 0], [0, Math.cos(angle), Math.sin(angle)], [0, -1 * Math.sin(angle), Math.cos(angle)]]);
 
 	return rotationXMatrix;
 }
 
-function rotate4X(angle) {
+export function rotate4X(angle) {
 	let rotationXMatrix = new Matrix(
 		[[1, 0, 0, 0], [0, Math.cos(angle), Math.sin(angle), 0], [0, -1 * Math.sin(angle), Math.cos(angle), 0], [0, 0, 0, 1]]);
 
 	return rotationXMatrix;
 }
 
-function rotate3Y(angle) {
+export function rotate3Y(angle) {
 	let rotationYMatrix = new Matrix(
 		[[Math.cos(angle), 0, -1 * Math.sin(angle)], [0, 1, 0], [Math.sin(angle), 0, Math.cos(angle)]]);
 
 	return rotationYMatrix;
 }
 
-function rotate4Y(angle) {
+export function rotate4Y(angle) {
 	let rotationYMatrix = new Matrix(
 		[[Math.cos(angle), 0, -1 * Math.sin(angle), 0], [0, 1, 0, 0], [Math.sin(angle), 0, Math.cos(angle), 0], [0, 0, 0, 1]]);
 
 	return rotationYMatrix;
 }
 
-function rotate3Z(angle) {
+export function rotate3Z(angle) {
 	let rotationZMatrix = new Matrix(
 				[[Math.cos(angle), Math.sin(angle), 0], [-1 * Math.sin(angle), Math.cos(angle), 0], [0, 0, 1]]);
 
 	return rotationZMatrix;
 }
 
-function rotate4Z(angle) {
+export function rotate4Z(angle) {
 	let rotationZMatrix = new Matrix(
 				[[Math.cos(angle), Math.sin(angle), 0, 0], [-1 * Math.sin(angle), Math.cos(angle), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
 
 	return rotationZMatrix;
 }
 
-function rotateVectorHorizontal(dir, angle) {
+export function rotateVectorHorizontal(dir, angle) {
 
 	let left = cross(dir, upVector);
 
@@ -165,7 +195,7 @@ function rotateVectorHorizontal(dir, angle) {
 	return rotationMatrix;
 }
 
-function rotateVectorVertical(dir, angle) {
+export function rotateVectorVertical(dir, angle) {
 
 	let up = cross(dir, leftVector);
 
@@ -187,7 +217,7 @@ function rotateVectorVertical(dir, angle) {
 	return rotationMatrix;
 }
 
-function rotateFrameHorizontal(axis, angle) {
+export function rotateFrameHorizontal(axis, angle) {
 
 	let forwardTemp = axis.forward.copy();
 
@@ -196,7 +226,7 @@ function rotateFrameHorizontal(axis, angle) {
 
 }
 
-function rotateFrameVertical(axis, angle) {
+export function rotateFrameVertical(axis, angle) {
 
 	let forwardTemp = axis.forward.copy();
 
@@ -204,7 +234,7 @@ function rotateFrameVertical(axis, angle) {
 	axis.up = add(forwardTemp.scale(Math.cos(angle + 0.5 * Math.PI)), axis.up.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
 }
 
-function rotateFrameRoll(axis, angle) {
+export function rotateFrameRoll(axis, angle) {
 
 	let upTemp = axis.up.copy();
 
@@ -212,7 +242,7 @@ function rotateFrameRoll(axis, angle) {
 	axis.left = add(axis.left.scale(Math.cos(angle + 0.5 * Math.PI)), upTemp.scale(Math.sin(angle + 0.5 * Math.PI))).normalize();
 }
 
-function projectToNewAxis(axis, position) {
+export function projectToLeafAxis(axis, position) {
 
 	const newLeft = new Vector([axis.left.components[0], axis.left.components[1], 0]).normalize();
 	const newUp = upVector.copy();
@@ -226,7 +256,35 @@ function projectToNewAxis(axis, position) {
 		]);
 }
 
-const identityMatrix = new Matrix(
+export function projectToFlowerAxis(axis, position) {
+
+	let translationMatrix = translate(...position.components);
+
+	let projectionMatrix = new Matrix([
+		[axis.left.components[0], axis.left.components[1], axis.left.components[2], 0],
+		[axis.forward.components[0], axis.forward.components[1], axis.forward.components[2], 0],
+		[axis.up.components[0], axis.up.components[1], axis.up.components[2], 0],
+		[0, 0, 0, 1],
+	]);
+
+	return multiply(translationMatrix, projectionMatrix);
+}
+
+export function projectToStumpAxis(axis, position) {
+
+	let translationMatrix = translate(...position.components);
+
+	let projectionMatrix = new Matrix([
+		[axis.left.components[0], axis.left.components[1], axis.left.components[2], 0],
+		[axis.up.components[0], axis.up.components[1], axis.up.components[2], 0],
+		[axis.forward.components[0], axis.forward.components[1], axis.forward.components[2], 0],
+		[0, 0, 0, 1],
+	]);
+
+	return multiply(translationMatrix, projectionMatrix);
+}
+
+export const identityMatrix = new Matrix(
 	[[1,0,0,0],
 	[0,1,0,0],
 	[0,0,1,0],

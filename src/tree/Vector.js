@@ -1,4 +1,5 @@
-class Vector {
+export default class Vector {
+	
 	constructor(components) {
 		this.components = components;
 		this.noRows = components.length;
@@ -15,14 +16,28 @@ class Vector {
 	}
 
 	magnitude() {
-		const reducer = (accumulator, val) => accumulator + (val ** 2.0);
-		let sum = this.components.reduce(reducer, 0.0);
+		/*const reducer = (accumulator, val) => accumulator + (val ** 2.0);
+		let sum = this.components.reduce(reducer, 0.0);*/
+
+		let sum = 0;
+
+		for (let i = 0; i < this.components.length; i++) {
+
+			sum += this.components[i] ** 2.0;
+		}
 
 		return Math.sqrt(sum);
 	}
 
 	scale(factor) {
-		let scaledComponents = this.components.map((val) => val * factor);
+		//let scaledComponents = this.components.map((val) => val * factor);
+
+		let scaledComponents = new Array(this.components.length);
+
+		for (let i = 0; i < this.components.length; i++) {
+
+			scaledComponents[i] = factor * this.components[i];
+		}
 
 		return new Vector(scaledComponents);
 	}
@@ -74,27 +89,60 @@ class Vector {
 	copy() {
 		return new Vector([...this.components]);
 	}
+
+	squeeze(component) {
+		this.components.splice(component, 1);
+		this.noRows -= 1;
+	}
+
+	addDim(value) {
+		this.components.push(value);
+		this.noRows += 1;
+	}
 }
 
-function add(vectorA, vectorB) {
-	let vectorSum = vectorA.components.map((val, i) => val + vectorB.components[i]);
+export function add(vectorA, vectorB) {
+	//let vectorSum = vectorA.components.map((val, i) => val + vectorB.components[i]);
+
+	let vectorSum = new Array(vectorA.length);
+
+	for (let i = 0; i < vectorA.components.length; i++) {
+
+		vectorSum[i] = vectorA.components[i] + vectorB.components[i];
+	}
 
 	return new Vector(vectorSum);
 }
 
-function subtract(vectorA, vectorB) {
-	let vectorSum = vectorA.components.map((val, i) => val - vectorB.components[i]);
+export function subtract(vectorA, vectorB) {
+	//let vectorSum = vectorA.components.map((val, i) => val - vectorB.components[i]);
+
+	let vectorSum = new Array(vectorA.length);
+
+	for (let i = 0; i < vectorA.components.length; i++) {
+
+		vectorSum[i] = vectorA.components[i] - vectorB.components[i];
+	}
 
 	return new Vector(vectorSum);
 }
 
-function dot(vectorA, vectorB) {
-	const reducer = (accumulator, val) => accumulator + val;
+export function dot(vectorA, vectorB) {
+	//const reducer = (accumulator, val) => accumulator + val;
 
-	return vectorA.components.map((num, i) => num * vectorB.components[i]).reduce(reducer, 0.0);
+	//return vectorA.components.map((num, i) => num * vectorB.components[i]).reduce(reducer, 0.0);
+
+	let sum = 0;
+
+	for (let i = 0; i < vectorA.components.length; i++) {
+
+		sum += vectorA.components[i] * vectorB.components[i];
+	}
+
+	return sum;
 }
 
-function cross(vectorA, vectorB) {
+export function cross(vectorA, vectorB) {
 	if (vectorA.noRows != 3 || vectorB.noRows != 3) {
 		throw 'Cross product undefined for vectors that are not 3D';
 	}
@@ -109,9 +157,9 @@ function cross(vectorA, vectorB) {
 	return new Vector([x, y, z]);
 }
 
-const upVector = new Vector([0.0, 0.0, 1.0]);
-const downVector = new Vector([0.0, 0.0, -1.0]);
-const leftVector = new Vector([-1.0, 0.0, 0.0]);
-const rightVector = new Vector([1.0, 0.0, 0.0]);
-const zeroVector = new Vector([0.0, 0.0, 0.0]);
-const zeroVector2D = new Vector([0.0, 0.0]);
+export const upVector = new Vector([0.0, 0.0, 1.0]);
+export const downVector = new Vector([0.0, 0.0, -1.0]);
+export const leftVector = new Vector([-1.0, 0.0, 0.0]);
+export const rightVector = new Vector([1.0, 0.0, 0.0]);
+export const zeroVector = new Vector([0.0, 0.0, 0.0]);
+export const zeroVector2D = new Vector([0.0, 0.0]);

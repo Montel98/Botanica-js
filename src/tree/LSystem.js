@@ -1,115 +1,206 @@
-// 0 - New stem and flower
-// 1 - New stem
-// - 30 degrees left
-// + 30 degrees right
-// [ push to stack
-// ] pop from stack
+import ParametricSurface from './ParametricSurface.js';
+import ParametricGeometry from './ParametricGeometry.js';
+import Vector, { add } from './Vector.js';
+import BezierCubic from './BezierCubic.js';
+import Branch from './Branch.js';
+import Stem, { stemFunc, crossSection, trunkCrossSection } from './Stem.js';
+import { rotateFrameVertical, rotateFrameHorizontal, rotateFrameRoll } from './Matrix.js';
+import TreeSeed from './Seed.js';
 
-class LSystem {
-	constructor(inputStr) {
+export default class LSystem {
+	constructor(inputStr, genome) {
 
-		this.LString = inputStr;
+		this.stringGenRules = this.initStringGenRules();
 
-		this.rules = {
-			'0': (pos, axis, r, level, prevStem) => {
-				return this.generateBranch(pos, axis, r, level, prevStem);
+		this.LString = this.buildString(inputStr, 4);
+		this.genome = genome;
+
+		this.buildRules = {
+			'0': (stackFrame) => {
+				return this.generateBranch(stackFrame);
 			},
 
-			'1': (pos, axis, r, level, prevStem) => {
-				return this.generateBranch(pos, axis, r, level, prevStem);
+			'1': (stackFrame) => {
+				return this.generateBranch(stackFrame);
+			},
+			'4': (stackFrame) => {
+				return this.generateBranch(stackFrame);
 			}
 		}
 	}
 
-	generateStem(pos, axis, r, level, prevStem) {
+	generateStem(stackFrame) {
+
+		let pos = stackFrame.pos;
+		let axis = stackFrame.axis;
+		let r = stackFrame.radius;
+		let branch = stackFrame.branch;
+		let prevStem = stackFrame.prevStem;
+
 		let normDir = axis.forward.normalize();
 
 		let tempFactor = 0.1;
+		//let tipTempFactor = 0.025;
 
 		let p0 = new Vector([...pos.components]);
-		let p1 = add(pos, normDir.scale(0.1 * tempFactor));
-		let p2 = add(pos, normDir.scale(0.2 * tempFactor));
-		let p3 = add(pos, normDir.scale(0.3 * tempFactor));
+		let p1 = add(pos, normDir.scale(0.01));
+		let p2 = add(pos, normDir.scale(0.02));
+		let p3 = add(pos, normDir.scale(0.03));
 
-		pos.add(normDir.scale(0.3 * tempFactor));
+		let p4 = add(pos, normDir.scale(0.034));
+		let p5 = add(pos, normDir.scale(0.038));
+		let p6 = add(pos, normDir.scale(0.042));
+
+		let p7 = add(pos, normDir.scale(0.004));
+		let p8 = add(pos, normDir.scale(0.008));
+		let p9 = add(pos, normDir.scale(0.012));
 
 		let stemPath = new BezierCubic(p0, p1, p2, p3);
+		let stemTipPath = new BezierCubic(p3, p4, p5, p6);
+		let immatureStemTipPath = new BezierCubic(p0, p7, p8, p9);
 
-		let babyR = radiusProperties(0.001, 0.001, 0);
+		let babyR = radiusProperties(0.001, 0.001, branch.branchLength, 0);
 
-		let surface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, r), 0.0, 1.0, 0.0, 2.0 * Math.PI);
-		let babySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, babyR), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		var crossSectionFunc;
 
-		let resolution = 32;
-
-		if (level > 2) {
-			resolution = 8;
+		if (branch.level > 0) {
+			crossSectionFunc = crossSection;
+		}
+		else {
+			crossSectionFunc = trunkCrossSection;
 		}
 
-		let stemGeometry = new ParametricGeometry(surface, 2, resolution, false, false, true);
-		let babyStemGeometry = new ParametricGeometry(babySurface, 2, resolution, false, false, false);
+		// Stem Body
+		let endStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, r),
+														 0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		if (prevStem) {
+		let startStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, babyR), 
+														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-			let prevStemGeometry = prevStem.stemGeometry;
+		// Stem Tip
+		let endStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFunc1, crossSectionFunc, r), 
+														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-			for (let i = 0; i < stemGeometry.vSteps; i++) {
+		let startStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFunc1, crossSectionFunc, babyR), 
+														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-				stemGeometry.vertices[(2 * i)] = prevStemGeometry.stemEnd.vertices[(2 * i) + 1].copy();
-				stemGeometry.normals[(2 * i)] = prevStemGeometry.stemEnd.normals[(2 * i) + 1].copy();
+		let endImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, r), 
+															0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-				babyStemGeometry.vertices[(2 * i)] = prevStemGeometry.stemStart.vertices[(2 * i) + 1].copy();
+		let startImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, babyR), 
+															0.0, 1.0, 0.0, 2.0 * Math.PI);
+
+		let uResolution = 2;
+		//let uTipResolution = 4;
+		let uTipResolution = 3;
+		let vResolution = 16;
+
+		const stemUVMapping = getMappingByWoodType(this.genome, stackFrame);
+
+		let endStemBodyGeometry = new ParametricGeometry(endStemBodySurface, uResolution, vResolution, false, true, true, null, stemUVMapping);
+		let startStemBodyGeometry = new ParametricGeometry(startStemBodySurface, uResolution, vResolution, false, true, false, null, stemUVMapping);
+
+		let endStemTipGeometry = new ParametricGeometry(endStemTipSurface, uTipResolution, vResolution, false, true, true, null, stemUVMapping);
+		let startStemTipGeometry = new ParametricGeometry(startStemTipSurface, uTipResolution, vResolution, false, true, false, null, stemUVMapping);
+
+		let endImmatureStemTipGeometry = new ParametricGeometry(endImmatureStemTipSurface, uTipResolution, vResolution, false, true, true, null, stemUVMapping);
+		let startImmatureStemTipGeometry = new ParametricGeometry(startImmatureStemTipSurface, uTipResolution, vResolution, false, true, false, null, stemUVMapping);
+
+		if (/*stackFrame.count != 0*/stackFrame.connectParent && stackFrame.prevStem) {
+
+			let prevStemGeometry = prevStem.stem.geometryParts;
+
+			//console.log(prevStemGeometry);
+
+			let offset = uResolution - 1;
+
+			for (let i = 0; i < endStemBodyGeometry.vSteps; i++) {
+
+				let prevEndBody = prevStemGeometry.matureGeometry.endBodyGeometry;
+				let prevStartBody = prevStemGeometry.matureGeometry.startBodyGeometry;
+
+				endStemBodyGeometry.vertices[(uResolution * i)] = prevEndBody.vertices[(uResolution * i) + offset].copy();
+				endStemBodyGeometry.normals[(uResolution * i)] = prevEndBody.normals[(uResolution * i) + offset].copy();
+
+				endImmatureStemTipGeometry.vertices[(uTipResolution * i)] = prevEndBody.vertices[(uResolution * i) + offset].copy();
+				endImmatureStemTipGeometry.normals[(uTipResolution * i)] = prevEndBody.normals[(uResolution * i) + offset].copy();
+
+				startStemBodyGeometry.vertices[(uResolution * i)] = prevStartBody.vertices[(uResolution * i) + offset].copy();
+
+				startImmatureStemTipGeometry.vertices[(uTipResolution * i)] = prevStartBody.vertices[(uResolution * i) + offset].copy();
 			}
 		}
 
-		stemGeometry.vertexBuffer = stemGeometry.mergeAttributes();
-		babyStemGeometry.vertexBuffer = babyStemGeometry.mergeAttributes();
+		return {matureGeometry: {endBodyGeometry: endStemBodyGeometry, startBodyGeometry: startStemBodyGeometry,
+								endTipGeometry: endStemTipGeometry, startTipGeometry: startStemTipGeometry},
 
-		return {stemEnd: stemGeometry, stemStart: babyStemGeometry};
+				immatureGeometry: {endTipGeometry: endImmatureStemTipGeometry, startTipGeometry: startImmatureStemTipGeometry}
+			};
 	}
 
-	generateLeaves(pos, axis, r, level) {
-
-		var leafMatrix = null;
-
-		if (level > 2) {
-			leafMatrix = projectToNewAxis(axis, pos);
-		}
-
-		return leafMatrix;
-	}
-
-	generateBranch(pos, axis, r, level, prevStem) {
-		let newStemGeometry = this.generateStem(pos, axis, r, level, prevStem);
-		let leafMatrix = this.generateLeaves(pos, axis, r, level);
+	generateBranch(stackFrame) {
+		let newStemGeometry = this.generateStem(stackFrame);
+		//let leafMatrix = this.generateLeaves(stackFrame);
 
 		return {
 			stemGeometry: newStemGeometry,
-			leafPose: leafMatrix
+			//leafPose: leafMatrix
 		}
 	}
 
-	generateStems(startIndex, stackFrame) {
-		//let stack = [];
+	generateStems(startStackFrame, endIndex) {
 
-		stackFrame = copyStack(stackFrame);
+		let frames = [];
+		let rootStems = [];
+		let stackFrame = copyStack(startStackFrame);
+		//let currentStem = null;
+		let currentStem = startStackFrame.prevStem;
 
-		let leafMatrices = [];
+		for (let index = startStackFrame.stringIndex; index < endIndex; index++) {
 
-		let terminalStem = {};
-		terminalStem['childStems'] = [];
+			let symbol = this.LString[index].symbol;
+			let params = this.LString[index].params;
 
-		let newSegments = false;
-		let i = startIndex;
+			stackFrame.stringIndex = index;
 
-		let symbol = this.LString[i].symbol;
+			if (symbol === '[') {
 
-		while (newSegments == false && i < this.LString.length && symbol !== ']') {
+				frames.push({stem: currentStem, stackFrame: copyStack(stackFrame)});
 
-			symbol = this.LString[i].symbol;
-			var params = this.LString[i].params;
+				let connectParent = false;
 
-			if (symbol === '+') {
+				if (params.length > 0) {
+					connectParent = params[0];
+				}
+
+				let prevStem = stackFrame.prevStem;
+
+				let rStart = 1.2 * radiusFunc(stackFrame.radius, 
+												stackFrame.count);
+				let rEnd = /*0.4*/0.3 * radiusFunc(stackFrame.radius, 
+										stackFrame.branch.branchLength - 1);
+
+				let newBranch = new Branch(this.getNoSegmentsInRange(index + 1, 
+										this.skipBranch(index) + 1),
+										stackFrame.branch.level + 1);
+
+				stackFrame.branch = newBranch;
+				stackFrame.radius = radiusProperties(rStart, rEnd, newBranch.branchLength, 0);
+				stackFrame.count = 0;
+				stackFrame.stringIndex++;
+				stackFrame.radius.shift = stackFrame.count;
+				stackFrame.connectParent = connectParent;
+
+			}
+
+			else if (symbol === ']') {
+
+				let parentStem = frames.pop();
+				currentStem = parentStem.stem;
+				stackFrame = parentStem.stackFrame;
+			}
+
+			else if (symbol === '+') {
 
 				rotateFrameVertical(stackFrame.axis, params[1]);
 				rotateFrameHorizontal(stackFrame.axis, params[0]);
@@ -117,64 +208,63 @@ class LSystem {
 
 			else if (symbol === '*') {
 
-				rotateFrameVertical(stackFrame.axis, randomNormal(0, Math.PI / 16));
-				rotateFrameHorizontal(stackFrame.axis, randomNormal(0, Math.PI / 16));
+				let variance = params[0];
+
+				rotateFrameVertical(stackFrame.axis, randomNormal(0, variance));
+				rotateFrameHorizontal(stackFrame.axis, randomNormal(0, variance));
 			}
 
-			else if (symbol === '[') {
+			else if (symbol === 'r') {
 
-				let stackFrameCopy = copyStack(stackFrame);
-
-				let r = radiusFunc(stackFrame.radius.radiusStart, stackFrame.radius.radiusEnd, stackFrame.count, 0);
-
-				stackFrame.radius = radiusProperties(0.7 * r, 0.4 * r, /*0*/stackFrame.count);
-
-				stackFrame.level++
-
-				stackFrame.prevStem = null;
-
-				stackFrame.count = 0;
-
-				stackFrame.stringIndex++;
-
-				terminalStem['childStems'].push(stackFrame);
-
-				i = this.skipBranch(i);
-				stackFrame = stackFrameCopy;
+				rotateFrameRoll(stackFrame.axis, params[0]);
 			}
 
-			else {
+			else if (symbol === 'h') {
 
-				let stemParts = this.rules[symbol](stackFrame.pos, 
-													stackFrame.axis, 
-													stackFrame.radius, 
-													stackFrame.level, 
-													stackFrame.prevStem);
+				rotateFrameHorizontal(stackFrame.axis, params[0]);
+			}
+			else if (symbol === 'v') {
 
-				stackFrame.prevStem = stemParts;
+				rotateFrameVertical(stackFrame.axis, params[0]);
+			} 
+
+			else if (symbol !== '0') {
+
+				stackFrame.prevStem = currentStem;
+
+				let stemParts = this.buildRules[symbol](stackFrame);
+
+				let meristem = new Stem(this.genome,
+										stemParts.stemGeometry.matureGeometry, 
+										stemParts.stemGeometry.immatureGeometry, stackFrame.branch);
+
+				let newStem = {stem: meristem, stackFrame: copyStack(stackFrame)};
+
+				if (/*!stackFrame.prevStem*/ stackFrame.prevStem == startStackFrame.prevStem) {
+					rootStems.push(newStem);
+				}
+				else {
+					currentStem.stackFrame.nextStems.push(newStem);
+				}
+
+				currentStem = newStem;
+
 				stackFrame.count++;
 				stackFrame.radius.shift = stackFrame.count;
-
-				let meristem = new Stem(stemParts.stemGeometry.stemEnd, stemParts.stemGeometry.stemStart);
-
-				terminalStem['stem'] = meristem;
-				terminalStem['stackFrame'] = stackFrame;
-
-				newSegments = true;
+				stackFrame.pos = add(stackFrame.pos, stackFrame.axis.forward.scale(0.03));
+				stackFrame.depth++;
+				stackFrame.connectParent = true;
 			}
-
-			i++;
-			stackFrame.stringIndex = i;
-			//stackFrame.count++;
 		}
 
-		return terminalStem;
+		return rootStems;
 	}
 
 	skipBranch(index) {
+
 		let parenthesisCount = 1;
 
-		while (parenthesisCount != 0) {
+		while (parenthesisCount != 0 && index + 1 < this.LString.length) {
 			index++;
 
 			if (this.LString[index].symbol === '[') {
@@ -184,15 +274,133 @@ class LSystem {
 			else if (this.LString[index].symbol === ']') {
 				parenthesisCount--;
 			}
-			else continue;
 		}
 
 		return index;
 	}
+
+	getNoSegmentsInRange(startIndex, endIndex) {
+
+		let segmentCount = 0;
+
+		for (let index = startIndex; index < endIndex; index++) {
+
+			if (this.LString[index].symbol === '[') {
+
+				index = this.skipBranch(index);
+				continue;
+			}
+
+			if (this.LString[index].symbol === '1') {
+
+				segmentCount++;
+			}
+		}
+
+		return segmentCount;
+	}
+
+	initStringGenRules() {
+		const rules = {};
+
+		rules['0'] = (params) => {
+						return [{ symbols: [ 	
+						newSymbol('+', [0.0, Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('[', []),
+						newSymbol('+', [/*Math.PI / 4.0*/Math.PI / 6.0, 0.0]),
+						newSymbol('0', []),
+						newSymbol(']', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('[', []),
+						newSymbol('+', [/*-Math.PI / 4.0*/-Math.PI / 6.0, 0.0]),
+						newSymbol('0', []),
+						newSymbol(']', []),
+						newSymbol('*', [Math.PI / 16]),
+						newSymbol('1', []),
+						newSymbol('[', [true]),
+						newSymbol('h', [(Math.PI / 5) + ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
+						newSymbol('1', []),							
+						newSymbol(']', []),
+						newSymbol('[', [true]),
+						newSymbol('h', [-(Math.PI / 5) - ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
+						newSymbol('1', []),
+						newSymbol(']', [])], probability: 1.0 }];
+		};
+
+		rules['4'] = (params) => {
+						return [{ symbols: [ 	
+						newSymbol('[', [true]),
+						newSymbol('+', [/*Math.PI / 4.0*/Math.PI / 6.0, 0.0]),
+						newSymbol('0', []),
+						newSymbol(']', []),
+						newSymbol('[', [true]),
+						newSymbol('+', [/*-Math.PI / 4.0*/-Math.PI / 6.0, 0.0]),
+						newSymbol('0', []),
+						newSymbol(']', [])], probability: 1.0 }];
+		};
+
+		return rules;
+	}
+
+	getRandomRule(symbol, params) {
+
+		let randValue = Math.random();
+		let rule = this.stringGenRules[symbol](params);
+		let successor = rule[0];
+
+		for (let i = 0; i < rule.length; i++) {
+			successor = rule[i];
+
+			let probability = successor.probability;
+
+			if (randValue <= probability) {
+
+				return successor.symbols;
+			}
+		}
+
+		return successor.symbols;
+	}
+
+	buildString(start, depth) {
+		let inputStr = start;
+		let outputStr = start;
+
+		for (var i = 0; i < depth; i++) {
+
+			outputStr = [];
+
+			for (var s = 0; s < inputStr.length; s++) {
+				var symbol = inputStr[s].symbol;
+				var params = inputStr[s].params;
+
+				if (symbol in this.stringGenRules) {
+					outputStr.push(...this.getRandomRule(symbol, params));
+				}
+				else {
+					outputStr.push(newSymbol(symbol, params));
+				}
+			}
+
+			inputStr = outputStr;
+		}
+
+		return outputStr;
+	}
 }
 
-function copyStack(stackFrame) {
-	stackFrameCopy = {};
+export function copyStack(stackFrame) {
+	const stackFrameCopy = {};
 
 	for (let param in stackFrame) {
 
@@ -205,8 +413,12 @@ function copyStack(stackFrame) {
 		else if (param == 'radius') {
 			let r = stackFrame.radius;
 			stackFrameCopy['radius'] = radiusProperties(r.radiusStart, 
-														r.radiusEnd, 
+														r.radiusEnd,
+														r.branchLength,
 														r.shift);
+		}
+		else if (param == 'nextStems') {
+			stackFrameCopy['nextStems'] = [...stackFrame.nextStems];
 		}
 		else {
 			stackFrameCopy[param] = stackFrame[param];
@@ -222,35 +434,8 @@ function copyAxis(axis) {
 			left: axis.left.copy()}
 }
 
-const rules = {};
 
-rules['0'] = [{ symbols: [ 	newSymbol('+', [0.0, Math.PI / 16]),
-							newSymbol('1', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('[', []),
-							newSymbol('+', [Math.PI / 4.0, 0.0]),
-							newSymbol('0', []),
-							newSymbol(']', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('[', []),
-							newSymbol('+', [-Math.PI / 4.0, 0.0]),
-							newSymbol('0', []),
-							newSymbol(']', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							newSymbol('*', []),
-							newSymbol('1', []),
-							/*newSymbol('+', [-Math.PI / 5, 0.0])*/], probability: 1.0 }];
-
-function newSymbol(symbolString, parameters) {
+export function newSymbol(symbolString, parameters) {
 	return {
 		symbol: symbolString,
 		params: parameters
@@ -264,69 +449,78 @@ function newBranch(terminalStemPos, currentLength) {
 	}
 }
 
-function buildString(start, depth) {
-	let inputStr = start;
-	let outputStr = start;
-
-	for (var i = 0; i < depth; i++) {
-
-		outputStr = [];
-
-		for (var s = 0; s < inputStr.length; s++) {
-			var symbol = inputStr[s].symbol;
-			var params = inputStr[s].params;
-
-			if (symbol in rules) {
-				outputStr.push(...getRandomRule(symbol));
-			}
-			else {
-				outputStr.push(newSymbol(symbol, params));
-			}
-		}
-
-		inputStr = outputStr;
-	}
-
-	return outputStr;
-}
-
-function getRandomRule(symbol) {
-
-	let randValue = Math.random();
-	let rule = rules[symbol];
-	let successor = rule[0];
-
-	for (let i = 0; i < rule.length; i++) {
-		successor = rule[i];
-
-		let probability = successor.probability;
-
-		if (randValue <= probability) {
-
-			return successor.symbols;
-		}
-	}
-
-	return successor.symbols;
-}
-
 function randomNormal(mean, variance) {
-	let u = 1.0 - Math.random();
-	let v = 1.0 - Math.random();
+	let u = 1.0 - TreeSeed.growth.randomFloat();
+	let v = 1.0 - TreeSeed.growth.randomFloat();
 
 	return mean + (variance * (Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)));
 }
 
-function radiusProperties(rStart, rEnd, shift) {
+// Move these radius functions to stem
+
+export function radiusProperties(rStart, rEnd, length, shift) {
+
 	return {
 		radiusStart: rStart,
 		radiusEnd: rEnd,
+		branchLength: length,
 		shift: shift
 	}
 }
 
-function radiusFunc(rStart, rEnd, shift, u) {
-	//console.log('shift:', shift);
-	//return rEnd + (rStart - rEnd) * Math.exp(-1.0 * (u + shift + 1.0));
-	return rEnd + (rStart - rEnd) * Math.exp(-0.5 * (u + shift));
+export function radiusFunc(radius, u) {
+
+	var decayRate;
+
+	if (radius.radiusEnd == radius.radiusStart) {
+		decayRate = 0.0;
+	}
+	else {
+		decayRate = (-1.0 / radius.branchLength) * Math.log((0.9 * radius.radiusEnd) / (radius.radiusStart - radius.radiusEnd));
+	}
+
+	return radius.radiusEnd + (radius.radiusStart - radius.radiusEnd) * Math.exp(-decayRate * (u + radius.shift));
+}
+
+function stemTipRadiusFunc(radius, u) {
+
+	return radiusFunc(radius, 0.0) * (1.0 - u**2);
+}
+
+function stemTipRadiusFunc1(radius, u) {
+
+	return radiusFunc(radius, 1.0) * (1.0 - u**2);
+}
+
+// Only needs to be called once!
+
+function getMappingByWoodType(genome, stackFrame) {
+
+	let sMinUV = 0.0;
+	let sMaxUV = 1.0;
+
+	const woodTypeAllele = genome.getGenotype('Wood Type').left.allele;
+
+	if (woodTypeAllele.name == 'Birch') {
+
+		if (stackFrame.branch.level == 0) {
+
+			sMinUV = (stackFrame.count % 4) / 4;
+			sMaxUV = (stackFrame.count + 1) % 4 == 0 ? 1.0 : ((stackFrame.count + 1) % 4) / 4;
+		}
+	}
+	else if (woodTypeAllele.name == 'Dark Wood' || woodTypeAllele.name == 'Light Wood') {
+
+		if (stackFrame.branch.level == 0) {
+
+			sMinUV = (stackFrame.count % 16) / 16;
+			sMaxUV = (stackFrame.count + 1) % 16 == 0 ? 1.0 : ((stackFrame.count + 1) % 16) / 16;
+		}
+		else {
+			sMinUV = 0.7;
+			sMaxUV = 0.9;
+		}
+	}
+
+	return {sMin: sMinUV, sMax: sMaxUV, tMin: 0.0, tMax: 1.0};
 }

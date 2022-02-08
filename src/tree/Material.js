@@ -1,8 +1,16 @@
-class Material {
+export default class Material {
+	
 	constructor(texture) {
 		this.maps = {
 			//normalMap: null,
 			//textureMap: texture
+		}
+
+		this.lighting = {
+			ambient: 0.0,
+			diffuse: 0.0,
+			specular: 0.0,
+			reflectivity: 0.0
 		}
 
 		//this.shaders = shaderBuilder.getDefaultShaders();
@@ -11,28 +19,16 @@ class Material {
 	/*setShaderProgramID(location) {
 		this.shaders.programID = location;
 	}*/
-}
 
-class Texture {
-	constructor(imgSrc="") {
-		this.imgSrc = imgSrc;
-		this.textureID = -1;
+	setPhongComponents(ambient, diffuse, specular) {
+
+		this.lighting.ambient = ambient;
+		this.lighting.diffuse = diffuse;
+		this.lighting.specular = specular;
 	}
 
-	setTextureID(handle) {
-		this.textureID = handle;
+	setReflectivity(reflectivity) {
+
+		this.lighting.reflectivity = reflectivity;
 	}
-
-	setCustomBufferData(width, height, bufferData /*, target*/) {
-		this.textureBuffer = bufferData;
-		this.width = width;
-		this.height = height;
-	}
-}
-
-function LocalTexture(width, height, bufferData) {
-	const texture = new Texture();
-	texture.setCustomBufferData(width, height, bufferData);
-
-	return texture;
 }

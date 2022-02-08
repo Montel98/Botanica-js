@@ -1,4 +1,7 @@
-class Camera {
+import { transform, lookAt, inverseLookAt, perspective, inversePerspective } from './Matrix.js';
+import Vector, { add, subtract, cross } from './Vector.js';
+
+export default class Camera {
 	constructor(eye, centre, up) {
 		this.origin = eye;
 		this.centre = centre;
@@ -9,6 +12,7 @@ class Camera {
 
 		this.zNear = 0.1;
 		this.zFar = 100.0;
+
 	}
 
 	rotateHorizontal(angle) {
@@ -38,16 +42,37 @@ class Camera {
 		this.origin.subtract(this.direction.scale(z));
 	}
 
+	zoom() {
+		
+	}
+
 	getCameraMatrices(canvas) {
 
 		return {camera: lookAt(this.origin, this.direction, this.left, this.vertical),
-				perspective: perspective(Math.PI * 0.25, this.zNear, this.zFar, canvas.scrollWidth / canvas.scrollHeight)
+				perspective: perspective(Math.PI * 0.25, this.zNear, this.zFar, /*canvas.scrollWidth / canvas.scrollHeight*/canvas.width / canvas.height)
+			}
+	}
+
+	getInverseCameraMatrices(canvas) {
+
+		return {camera: inverseLookAt(this.origin, this.direction, this.left, this.vertical),
+				perspective: inversePerspective(Math.PI * 0.25, this.zNear, this.zFar, /*canvas.scrollWidth / canvas.scrollHeight*/ canvas.width / canvas.height)
 			}
 	}
 
 	getCameraPosition() {
 		
-		return this.origin;
+		return this.origin.copy();
+	}
+
+	setOrigin(x, y, z) {
+
+		this.origin = new Vector([x, y, z]);
+	}
+
+	setCentre(x, y, z) {
+
+		this.centre = new Vector([x, y, z]);
 	}
 
 	setMode(mode) {

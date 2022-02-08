@@ -1,4 +1,6 @@
-class BezierCubic {
+import { subtract } from './Vector.js';
+
+export default class BezierCubic {
 	constructor(p0, p1, p2, p3) {
 		this.p0 = p0;
 		this.p1 = p1;
