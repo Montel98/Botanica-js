@@ -923,8 +923,8 @@ export default class Tree extends Entity {
 
         let stumpsToRemove = [];
 
-        //let retainedStemSet = new Set(retainedStems.map(currentStem => currentStem.stem));
-        let retainedStemSet = new Set(retainedStems);
+        let retainedStemSet = new Set(retainedStems.map(currentStem => currentStem.stem));
+        //let retainedStemSet = new Set(retainedStems);
 
         for (let i = 0; i < this.stumps.length; i++) {
 

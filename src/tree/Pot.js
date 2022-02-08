@@ -403,7 +403,7 @@ const newPotFunc = (crossSectionFuncXY, crossSectionFuncXZ, displacementFunc=nul
 
 		z(u, v) {
 			let z = this.pathXZ.components[1];
-			return displacementFunc ? z + displacementFunc(u, v) + 0.08 * Math.sin(5.0*u*Math.cos(v))*Math.sin(5.0*u*Math.sin(v)) : z;
+			return displacementFunc ? 0.97*z + displacementFunc(u, v) + 0.08 * Math.sin(5.0*u*Math.cos(v))*Math.sin(5.0*u*Math.sin(v)) : z;
 		}
 	}
 }
@@ -486,12 +486,12 @@ const potMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.0, tMax: 0.5};
 
 const potParams = [
 
-	{body: newPotFunc(ovalCrossSectionXY, newBezierPot2), 
-	base: newPotFunc(ovalCrossSectionXY, newBezierPotBase2), 
-	bottom: newPotFunc(ovalCrossSectionXY, newBezierPotBottom2), 
-	top: newPotFunc(ovalCrossSectionXY, newBezierPotTop), 
-	inner: newPotFunc(ovalCrossSectionXY, newBezierPotInner),
-	soil: newPotFunc(ovalCrossSectionXY, bezierSoil, zDisplacement),
+	{body: [ovalCrossSectionXY, newBezierPot2], 
+	base: [ovalCrossSectionXY, newBezierPotBase2], 
+	bottom: [ovalCrossSectionXY, newBezierPotBottom2], 
+	top: [ovalCrossSectionXY, newBezierPotTop], 
+	inner: [ovalCrossSectionXY, newBezierPotInner],
+	soil: [ovalCrossSectionXY, bezierSoil, zDisplacement],
 	hasLegs: false,
 	scale: 0.14,
 	textures: [{func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
@@ -501,12 +501,12 @@ const potParams = [
 	frequency: 0.2,
 	},
 
-	{body: newPotFunc(hexCrossSectionXY, newBezierPot), 
-	base: newPotFunc(hexCrossSectionXY, newBezierPotBase), 
-	bottom: newPotFunc(hexCrossSectionXY, newBezierPotBottom), 
-	top: newPotFunc(hexCrossSectionXY, newBezierPotTop), 
-	inner: newPotFunc(hexCrossSectionXY, newBezierPotInner),
-	soil: newPotFunc(hexCrossSectionXY, bezierSoil, zDisplacement),
+	{body: [hexCrossSectionXY, newBezierPot], 
+	base: [hexCrossSectionXY, newBezierPotBase], 
+	bottom: [hexCrossSectionXY, newBezierPotBottom], 
+	top: [hexCrossSectionXY, newBezierPotTop], 
+	inner: [hexCrossSectionXY, newBezierPotInner],
+	soil: [hexCrossSectionXY, bezierSoil, zDisplacement],
 	hasLegs: false,
 	scale: 0.14,
 	textures: [{func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
@@ -516,12 +516,12 @@ const potParams = [
 	frequency: 0.2,
 	},
 
-	{body: newPotFunc(crossSectionXY, newBezierPot), 
-	base: newPotFunc(crossSectionXY, newBezierPotBase), 
-	bottom: newPotFunc(crossSectionXY, newBezierPotBottom), 
-	top: newPotFunc(crossSectionXY, newBezierPotTop), 
-	inner: newPotFunc(crossSectionXY, newBezierPotInner),
-	soil: newPotFunc(crossSectionXY, bezierSoil, zDisplacement),
+	{body: [crossSectionXY, newBezierPot], 
+	base: [crossSectionXY, newBezierPotBase], 
+	bottom: [crossSectionXY, newBezierPotBottom], 
+	top: [crossSectionXY, newBezierPotTop], 
+	inner: [crossSectionXY, newBezierPotInner],
+	soil: [crossSectionXY, bezierSoil, zDisplacement],
 	hasLegs: true,
 	scale: 0.11,
 	textures: [{func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.5},
@@ -530,12 +530,12 @@ const potParams = [
 	frequency: 0.2,
 	},
 
-	{body: newPotFunc(circleCrossSectionXY, newBezierPot3), 
-	base: newPotFunc(circleCrossSectionXY, newBezierPotBase3), 
-	bottom: newPotFunc(circleCrossSectionXY, newBezierPotBottom3), 
-	top: newPotFunc(circleCrossSectionXY, newBezierPotTop), 
-	inner: newPotFunc(circleCrossSectionXY, newBezierPotInner),
-	soil: newPotFunc(circleCrossSectionXY, bezierSoil, zDisplacement),
+	{body: [circleCrossSectionXY, newBezierPot3], 
+	base: [circleCrossSectionXY, newBezierPotBase3], 
+	bottom: [circleCrossSectionXY, newBezierPotBottom3], 
+	top: [circleCrossSectionXY, newBezierPotTop], 
+	inner: [circleCrossSectionXY, newBezierPotInner],
+	soil: [circleCrossSectionXY, bezierSoil, zDisplacement],
 	hasLegs: false,
 	scale: 0.12,
 	textures: [{func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
@@ -545,12 +545,12 @@ const potParams = [
 	frequency: 0.2,
 	},
 
-	{body: newPotFunc(circleCrossSectionXY, newBezierPot4),
-	base: newPotFunc(circleCrossSectionXY, newBezierPotBase3),
-	bottom: newPotFunc(circleCrossSectionXY, newBezierPotBottom3),
-	top: newPotFunc(circleCrossSectionXY, newBezierPotTop), 
-	inner: newPotFunc(circleCrossSectionXY, newBezierPotInner),
-	soil: newPotFunc(circleCrossSectionXY, bezierSoil, zDisplacement),
+	{body: [circleCrossSectionXY, newBezierPot4],
+	base: [circleCrossSectionXY, newBezierPotBase3],
+	bottom: [circleCrossSectionXY, newBezierPotBottom3],
+	top: [circleCrossSectionXY, newBezierPotTop], 
+	inner: [circleCrossSectionXY, newBezierPotInner],
+	soil: [circleCrossSectionXY, bezierSoil, zDisplacement],
 	hasLegs: false,
 	scale: 0.12,
 	textures: [{func: TextureBuilder.generateGradientPotTexture, params: [new Vector([0, 0.3, 0.3]), new Vector([0.3, 0.7, 0.7])], reflectivity: 0.15, frequency: 0.5},
@@ -680,19 +680,19 @@ export default class Pot extends Entity {
 
 		const params = potParams[potId];
 
-		const widePotSurface = new ParametricSurface(params.body, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const widePotSurface = new ParametricSurface(newPotFunc(...params.body), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const widePotGeometry = new ParametricGeometry(widePotSurface, 16, 128, false, true, true, null, potMapping);
 
-		const widePotBaseSurface = new ParametricSurface(params.base, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const widePotBaseSurface = new ParametricSurface(newPotFunc(...params.base), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const widePotBaseGeometry = new ParametricGeometry(widePotBaseSurface, 4, 128, false, true, true, null, potLegMapping);
 
-		const widePotBottomSurface = new ParametricSurface(params.bottom, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const widePotBottomSurface = new ParametricSurface(newPotFunc(...params.bottom), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const widePotBottomGeometry = new ParametricGeometry(widePotBottomSurface, 4, 128, false, true, true, null, potLegMapping);
 
-		const widePotTopSurface = new ParametricSurface(params.top, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const widePotTopSurface = new ParametricSurface(newPotFunc(...params.top), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const widePotTopGeometry = new ParametricGeometry(widePotTopSurface, 4, 128, false, true, true, null, potLegMapping);
 
-		const widePotInnerSurface = new ParametricSurface(params.inner, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const widePotInnerSurface = new ParametricSurface(newPotFunc(...params.inner), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const widePotInnerGeometry = new ParametricGeometry(widePotInnerSurface, 4, 128, false, true, true, null, potLegMapping);
 
 		if (params.hasLegs) {
@@ -744,9 +744,9 @@ class Soil extends Entity {
 
 		const params = potParams[potId];
 
-		const soilSurface = new ParametricSurface(params.soil, 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const soilSurface = new ParametricSurface(newPotFunc(...params.soil), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const soilGeometry = new ParametricGeometry(soilSurface, 8, 128, false, true, true, null, potMapping);
-		soilGeometry.scale(params.scale, params.scale, params.scale);
+		soilGeometry.scale(0.985*params.scale, 0.985*params.scale, 0.985*params.scale);
 
 		return soilGeometry;
 	}

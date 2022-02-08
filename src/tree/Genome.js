@@ -581,8 +581,6 @@ function bla() {
 	//console.log('probabilities: ', leafDist);
 }
 
-//bla();
-//console.log('leaf shapes: ', Object.keys(generateLeafShapes()));
-//console.log('probabilities: ', flowerLeafProbabilities(Object.keys(generateLeafShapes()), leafMassFunc));
-
-bla();
+for (let geneName in Genes) {
+	console.log(geneName, Object.keys(Genes[geneName].alleles).length);
+}

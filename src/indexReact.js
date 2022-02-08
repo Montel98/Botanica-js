@@ -360,7 +360,7 @@ class Wallet extends React.Component {
 
         return (
             <div id="walletContainer">
-                <div id="wallet" onClick={this.connectWallet}>
+                <div id="wallet" {/*onClick={this.connectWallet}*/}>
                     <a>Connect Wallet</a>
                 </div>
                 {/*<div id="redeem" onClick={this.redeem}>
@@ -464,12 +464,12 @@ function PruningBox(props) {
 function SocialLinks(props) {
     return (
         <div class="socialLink">
-            <div id="twitter">
-                <a href={"https://twitter.com/BotanicaTrees"} id="twitter">
-                    <img src={twitterLogo} href={"https://twitter.com/BotanicaTrees"} />
+            <div class="twitter">
+                <a href={"https://twitter.com/BotanicaTrees"}>
+                    <img src={twitterLogo} />
                 </a>
             </div>
-            <div id="discord">
+            <div class="discord">
                 <a>
                     <img src={discordLogo} />
                 </a>
@@ -481,8 +481,23 @@ function SocialLinks(props) {
 function Genome(props) {
     return (
         <div id="chromosome">
-            <div id="chromosomeText">With the exception of the pot design, background and tree location (hemisphere), each trait is genetically encoded with over 166,789,259 different possible combinations.</div>
+            <div id="chromosomeText">With the exception of the pot design, background and tree location (hemisphere), each trait is genetically encoded with theoretically <span style={{"font-weight": "bold"}}>479,001,60</span> different possible combinations.</div>
             <img src={chromosome} />
+        </div>
+    );
+}
+
+function Footer(props) {
+    return (
+        <div id="socialLinkFooter">
+            <div class="twitter">
+                <a href={"https://twitter.com/BotanicaTrees"}>
+                    <img src={twitterLogo} />
+                </a>
+            </div>
+            <div class="discord">
+                <img src={discordLogo} />
+            </div>
         </div>
     );
 }
@@ -566,10 +581,6 @@ ReactDOM.render(
         </div>
         <div id="treeFeaturesContainer">
             <div id="featuresTitle">Features</div>
-            {/*<TreeFeatures />
-            <GrowthBox />
-            <SeasonBox />
-            <PruningBox />*/}
             <TreeFeatures />
         </div>
         <div id="chromosomeContainer">
@@ -577,7 +588,7 @@ ReactDOM.render(
                 <Genome />
         </div>
         <div id="roadmapContainer">
-            <div id="roadmapTitle">Current Dev Milestones & Roadmap</div>
+            <div id="roadmapTitle">Current Task Milestones & Roadmap</div>
             <div id="roadmapText">While we feel that in its current state this project offers something fresh and unique to the space, ultimately the community decides its future. There are ideas for additional features (besides pruning) we would like to add after release, contingent on community interest in the project. Please note that the roadmap is not exhaustive and is subject to change, though <span style={{"font-weight": "bold"}}>realistic</span> goals in the near-mid term have been detailed.</div>
             <Roadmap />
         </div>
@@ -586,7 +597,8 @@ ReactDOM.render(
             <div id="faqText">The release date, total supply and mint price are to be announced in the near future.</div>
             <Accordion />
         </div>
-        <div>
+        <div id="footer">
+            <Footer />
         </div>
     </div>,
     document.getElementById('root')
