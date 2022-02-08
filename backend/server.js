@@ -7,8 +7,6 @@ const Wallet = require('./WalletConnector.js');
 
 const tree = require('./TreeBuilder.js');
 
-const compression = require('compression');
-
 const app = express();
 const pinata = pinataSDK('e973504b541abcbb8a06', '6b4b48713b6f20863c966bf0c7c47c8b3c4caea78c4a8028e5294d1aa7411f88');
 
