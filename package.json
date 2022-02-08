@@ -1,0 +1,44 @@
+{
+  "name": "botanicanft",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "dev": "webpack serve --mode development",
+    "server": "node ./backend/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/plugin-transform-runtime": "^7.16.8",
+    "@babel/preset-env": "^7.16.8",
+    "@babel/preset-react": "^7.16.7",
+    "babel-loader": "^8.2.3",
+    "css-loader": "^4.3.0",
+    "express": "^4.17.2",
+    "file-loader": "^6.2.0",
+    "html-inline-script-webpack-plugin": "^2.0.3",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.1",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-middleware": "^5.3.0",
+    "webpack-dev-server": "^4.7.3"
+  },
+  "dependencies": {
+    "@pinata/sdk": "^1.1.23",
+    "axios": "^0.25.0",
+    "cbor": "^8.1.0",
+    "cbor-web": "^8.1.0",
+    "lodash": "^4.17.21",
+    "node-fetch": "^3.2.0",
+    "react": "^17.0.2",
+    "react-compare-slider": "^2.2.0",
+    "react-dom": "^17.0.2"
+  }
+}

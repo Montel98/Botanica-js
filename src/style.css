@@ -1,0 +1,831 @@
+* {
+    -moz-box-sizing: border-box; 
+    -webkit-box-sizing: border-box; 
+     box-sizing: border-box; 
+}
+
+html, body {
+    height: 100vh;
+    padding: 0;
+    margin: 0 auto;
+    //background-image: linear-gradient(to right, rgb(28, 31, 36), rgb(42, 48, 59));
+    //background-image: linear-gradient(to right, rgb(20, 21, 25), rgb(28, 31, 36));
+    //background-image: linear-gradient(to right, rgb(31, 26, 33), rgb(55, 51, 28));
+
+    //background-image: linear-gradient(to right, rgb(28, 31, 36), rgb(60, 70, 90));
+    //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(60, 70, 90));
+
+    //background-image: linear-gradient(to top, rgb(15, 15, 20), rgb(40, 60, 80));
+    background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(40, 60, 80));
+
+    //background-image: linear-gradient(to top, rgb(26, 37, 40), rgb(60, 70, 90));
+
+    color: rgb(232, 232, 232);
+
+    font-family: 'Open Sans';
+
+    scroll-behavior: smooth;
+    user-select: none;
+
+    //overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}
+
+#navigation ul {
+    list-style-type: none;
+    text-decoration: none;
+    text-align: center;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+
+}
+
+li {
+    width: 100%;
+    height: 100%;
+}
+
+#headerContainer {
+    z-index: 3;
+    grid-row: 1 / 2;
+    grid-column: 1 / 3;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;   
+}
+
+#header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    width: 100%;
+}
+
+.testGrid {
+    display: grid;
+    //height: 100%;
+    //width: 100%;
+    height: 100vh;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 5fr 5fr;
+}
+
+#game {
+    z-index: 2;
+    grid-row: 1 / 4;
+    grid-column: 1 / 3;
+
+    position: relative;
+}
+
+#modeButtons {
+    z-index: 10;
+    position: absolute;
+    right: 10%;
+    bottom: 20%;
+
+    display: flex;
+    flex-direction: column;
+
+    //display: none;
+}
+
+.treeMessage {
+    z-index: 10;
+    position: absolute;
+    right: 22%;
+    bottom: 50%;
+
+    background-color: rgb(255, 255, 255, 0.05);
+    border-color: rgb(255, 255, 255, 0.05);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+
+    padding: 4px;
+
+    animation: fadeout 4s forwards;
+
+    pointer-events: none;
+}
+
+@keyframes fadeout {
+    0% {
+        opacity: 1.0;
+    }
+
+    75% {
+        opacity: 1.0;
+    }
+
+    100% {
+        opacity: 0.0;
+    }
+}
+
+.modeButton {
+    font-size: 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 1.2%;
+    //background-color: rgb(0, 255, 0, 0.3);
+    text-align: center;
+    margin: 2%;
+
+    border-style: solid;
+    border-width: 1px;
+
+    padding: 4%;
+}
+
+#modeButtonMessage {
+    margin-top: 10%;
+}
+
+.modeToggled {
+    background-color: rgb(0, 255, 0, 0.5);
+    cursor: pointer;
+
+    border-color: white;
+    border-width: 1px;
+    border-style: solid; 
+}
+
+.pruningCursor {
+    cursor: url('./cursors/pruning-shears.png') 32 0, pointer;
+}
+
+.modeButton:hover {
+    background-color: rgb(0, 255, 0, 0.3);
+    cursor: pointer;
+
+    animation-duration: 0.25s;
+    animation-name: wobble;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+
+    border-color: white;
+    border-width: 1px;
+    border-style: solid;
+}
+
+#title {
+    font-size: 30px;
+    font-weight: bold;
+    flex-grow: 1;
+    text-align: center;
+}
+
+#navigation {
+    font-size: 20px;
+    flex-grow: 3;
+}
+
+.navigationTitle {
+    padding: 0% 0% 5% 0%;
+}
+
+.navigationTitle:hover {
+    border-width: 0px 0px 2px 0px;
+    border-color: white;
+    border-style: solid;
+}
+
+#walletContainer {
+    display: flex;
+    flex-grow: 4;
+    justify-content: flex-end;
+    margin: 2%;
+}
+
+#wallet {
+    font-size: 20px;
+
+    text-align: center;
+    
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 1px;
+
+    font-weight: bold;
+    padding: 1.2%;
+    //background-color: rgb(0, 255, 0, 0.3);
+    //background-color: rgb(62, 201, 178);
+}
+
+#wallet:hover {
+    background-color: rgb(0, 255, 0, 0.3);
+    //cursor: pointer;
+
+    cursor:not-allowed;
+
+    animation-duration: 0.25s;
+    animation-name: wobble;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes wobble {
+    from {
+        transform: rotateZ(-5deg);
+    }
+
+    to {
+        transform: rotateZ(5deg);
+    }
+}
+
+#redeem {
+    font-size: 20px;
+    margin-right: 15%;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 1px;
+    padding: 1.2%;
+}
+
+#redeem:hover {
+    background-color: rgb(0, 255, 0, 0.3);
+    cursor: pointer;
+}
+
+.topText {
+    grid-row: 2 / 4;
+    grid-column: 1 / 2;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background-color: transparent;
+
+    z-index: 20;
+
+    pointer-events: none;
+}
+
+.topTextUpper {
+    font-weight: bold;
+    font-size: 48px;
+
+    margin: 0% 0% 5% 5%;
+
+    //display: none;
+}
+
+.topTextLower {
+    line-height: 1.5;
+    font-size: 20px;
+
+    margin: 0% 0% 0% 5%;
+
+    //display: none;
+}
+
+/*#treeFeatures {
+    background-color: rgb(20, 20, 20);
+    height: 100vh;
+
+    display: flex;
+    flex-direction: row;
+}*/
+
+#treeFeaturesContainer {
+    background-color: rgb(30, 30, 30);
+    //background-color: rgb(26, 37, 40);
+    //height: 100vh;
+
+    //display: grid;
+    //grid-template-rows: 1fr 8fr;
+    //grid-template-columns: 1fr 1fr 1fr;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#treeFeatures {
+    //display: grid;
+    //grid-template-rows: 1fr 8fr;
+    //grid-template-columns: 1fr 1fr 1fr;
+
+    //width: 80%;
+
+    display: flex;
+    flex-direction: column;
+    width: 70%;
+}
+
+#faq {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(30, 30, 30);
+    height: 100vh;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+#roadmapContainer {
+    background-color: rgb(30, 30, 30);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#roadmap {
+    width: 80%;
+    //height: 40%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    gap: 4%;
+    line-height: 1.7;  
+}
+
+#roadmapTitle {
+    font-size: 45px;
+    font-weight: bold;
+    margin: 4%;
+    text-align: center;
+    width: 70%;
+}
+
+.roadmapQuarter {
+    border-radius: 20px;
+    border-colour: rgb(60, 70, 90);
+    background-color: rgb(60, 70, 90);
+
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
+}
+
+/*.roadmapQuarter:hover {
+    transform: scale(1.07);
+}*/
+
+.roadmapQuarter:hover {
+    background-color: rgb(78, 91, 117);
+}
+
+.roadmapQuarter:nth-child(1):hover {
+    transform: scale(1.05) rotateZ(-5deg);
+}
+
+.roadmapQuarter:nth-child(2):hover {
+    transform: scale(1.05);
+}
+
+.roadmapQuarter:nth-child(3):hover {
+    transform: scale(1.05) rotateZ(5deg);
+}
+
+.roadmapQuarterHeader {
+    margin: 3% 5% 3% 5%;
+    padding: 0% 0% 3% 0%;
+    font-weight: bold;
+    //font-size: 25px;
+    font-size: 1.2em;
+    text-align: center;
+
+    border-style: solid;
+    border-color: rgb(150, 150, 150);
+    border-width: 0px 0px 1px 0px;
+}
+
+.roadmapMonthHeader {
+    margin: 3% 5% 0% 5%;
+    font-weight: bold;
+    text-align: left;
+}
+
+.roadmapContents {
+    margin: 1% 5% 1% 5%;
+    text-align: left;
+}
+
+#roadmapText {
+    width: 70%;
+    line-height: 1.7;
+    margin: 0% 0% 4% 0%;
+    text-align: center;
+
+    font-size: 1.2em;
+}
+
+.featureBox {
+    display: grid;
+
+    padding: 3% 0% 3% 0%;
+
+    grid-template-rows: 1fr 5fr;
+    grid-template-columns: 1fr 3fr;
+
+    border-width: 0px 0px 1px 0px;
+    border-color: rgb(150, 150, 150);
+    border-style: solid;
+}
+
+#featuresTitle {
+    font-size: 45px;
+    grid-row: 1 / 2;
+    grid-column: 1 / 4;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+
+    margin: 4%;
+}
+
+.featureBody {
+    display: flex;
+    flex-direction: column;
+
+    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+}
+
+.featureText {
+    //font-size: 20px;
+    font-size: 1.2em;
+    //font-size: 1.2vw;
+    font-weight: normal;
+    margin: 0% 5% 0 5%;
+    line-height: 1.7;
+    text-align: left;
+
+    vertical-align: text-top;
+}
+
+.featureTextSmall {
+    margin: 0% 5% 2% 5%;
+    line-height: 1.7;
+    font-size: 1em;
+    text-align: left;
+    font-weight: bold;
+}
+
+.featureTitle {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: left;
+    margin: 0% 0% 2% 5%;
+
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+}
+
+.featureImage {
+    //margin: 7% 0% 7% 0%;
+
+    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+}
+
+.bla {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+#mintInfo {
+    width: 100%;
+    height: 100%;
+}
+
+#popup {
+    position: fixed;
+    right: 0;
+    top: 20%;
+    //font-weight: bold;
+    z-index: 10;
+    background-color: rgb(76, 153, 0);
+    padding: 1% 8% 1% 1%;
+    border-radius: 10px 0px 0px 10px;
+    animation: slidein 0.5s forwards;
+}
+
+#faqTitle {
+    margin: 4%;
+    font-size: 45px;
+    font-weight: bold;
+}
+
+#faqText {
+    width: 70%;
+    line-height: 1.7;
+    margin: 0% 0% 4% 0%;
+    text-align: center;
+
+    font-size: 1.2em;
+}
+
+.accordion {
+    height: 30%;
+    width: 70%;
+}
+
+.accordionBox {
+    display: flex;
+    flex-direction: column;
+}
+
+.accordionBox a {
+    color: rgb(0, 102, 153);
+    text-decoration: underline;
+}
+
+.accordionHeader {
+    border-width: 0px 0px 1px 0px;
+    border-color: rgb(150, 150, 150);
+    border-style: solid;
+
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+
+    font-size: 1.2em;
+    height: 1fr;
+}
+
+.expanded {
+    border-width: 0px;
+}
+
+.accordionHeader:hover {
+    background-color: rgb(40, 40, 40);
+    cursor: pointer;
+}
+
+.accordionHeaderContent {
+    margin: 2%;
+    font-weight: bold;
+}
+
+.dropDownContent {
+    margin: 2%;
+    line-height: 1.7;
+}
+
+.dropDown {
+    //font-size: 20px;
+    font-size: 1em;
+    //height: 1fr;
+
+    //background-color: rgb(50, 50, 50);
+
+    border-width: 0px 0px 1px 0px;
+    border-color: rgb(150, 150, 150);
+    border-style: solid;
+}
+
+.socialLink {
+
+    flex-grow: 1;
+
+    display: flex;
+    justify-content: space-around;
+}
+
+#twitter:hover {
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+#discord:hover {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#mainContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+#chromosomeContainer {
+    background-color: rgb(30, 30, 30);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#chromosome {
+    width: 70%;
+}
+
+#chromosomeTitle {
+    font-size: 45px;
+    font-weight: bold;
+    margin: 4%;
+}
+
+#chromosomeText {
+    //font-size: 25px;
+    font-size: 1.2em;
+    text-align: center;
+    line-height: 1.7;
+}
+
+#navigationMin {
+    display: none;
+}
+
+#navigationMin .img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+#navigationMin img:hover {
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+#navigationMinDropdown {
+
+    display: none;
+}
+
+#navigationMinDropdown ul {
+    list-style-type: none;
+    text-decoration: none;
+    text-align: center;
+    padding: 0;
+}
+
+.navigationTitleMin {
+    padding: 2% 0% 2% 0%;
+}
+
+.navigationTitleMin:hover {
+    background-color: rgb(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+#discord:hover {
+    cursor: not-allowed;
+}
+
+@keyframes slideDown {
+    from {
+        height: 0%;
+    }
+    to {
+        height: 100%;
+    }
+}
+
+@keyframes slidein {
+    from {
+        right: -5%;
+    }
+    to {
+        right: 0;
+    }
+}
+
+@media screen and (max-width: 400px) {
+
+    #walletContainer {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+
+    #roadmap {
+        flex-direction: column;
+    }
+
+    .roadmapQuarter {
+
+        margin-bottom: 2%;
+    }
+
+    .roadmapContents {
+        font-size: 0.9em;
+    }
+
+    #navigation {
+        display: none;
+    }
+
+    #navigationMin {
+        flex-grow: 1;
+        display: flex;
+        //justify-content: space-between;
+        justify-content: flex-end;
+        margin: 3% 3% 3% 3%;
+
+    }
+
+    .socialLink {
+        display: none;
+    }
+
+    #title {
+        text-align: left;
+        margin: 3%;
+    }
+
+    #header {
+        background-color: rgb(255, 255, 255, 0.05);
+    }
+}
+
+@media screen and (max-width: 1100px) {
+
+    .featureBox {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .featureTitle {
+
+        margin: 4% 0% 4% 0%;
+    }
+
+    .featureBody {
+
+        margin: 4% 0% 0% 0%;
+    }
+
+    .featureText {
+        font-size: 1em;
+    }
+
+    .featureTextSmall {
+        font-size: 0.8em;
+    }
+
+    #chromosomeText {
+        font-size: 1em;
+    }
+
+    .topTextUpper {
+        font-size: 30px;
+        width: 70%;
+        text-align: center;
+    }
+
+    .topTextLower {
+        font-size: 18px;
+        width: 70%;
+        text-align: center;
+    }
+
+    .topText {
+        grid-column: 1 / 3;
+        align-items: center;
+    }
+
+    #game {
+        filter: blur(2px);
+        grid-column: 1 / 3;
+        grid-row: 1 / 4;
+    }
+
+    #game:not(:hover) {
+        cursor: default;
+    }
+
+    #modeButtons {
+        display: none;
+    }
+
+    .dropDown {
+        font-size: 1em;
+    }
+
+    #roadmapText {
+        font-size: 1em;
+    }
+
+    #navigationMinDropdown {
+        display: flex;
+        flex-direction: column;
+
+        background-color: rgb(255, 255, 255, 0.1);
+
+        z-index: 100000;
+
+        width: 100%;
+
+        animation: slideDown 0.25s forwards;
+    }
+}
