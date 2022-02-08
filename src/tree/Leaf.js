@@ -575,7 +575,7 @@ export default class Leaves extends Entity {
         let shapeAllele = genome.getGenotype('Leaf Shape').left.allele;
         //shapeAllele.geneticCode = 197;
 
-        console.log('Leaf Allele: ', shapeAllele.geneticCode);
+        //console.log('Leaf Allele: ', shapeAllele.geneticCode);
 
         let gene = genome.getGene('Leaf Shape');
 

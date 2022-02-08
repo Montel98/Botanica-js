@@ -360,7 +360,8 @@ class Wallet extends React.Component {
 
         return (
             <div id="walletContainer">
-                <div id="wallet" {/*onClick={this.connectWallet}*/}>
+                {/*<div id="wallet" onClick={this.connectWallet}>*/}
+                <div id="wallet">
                     <a>Connect Wallet</a>
                 </div>
                 {/*<div id="redeem" onClick={this.redeem}>
@@ -481,7 +482,7 @@ function SocialLinks(props) {
 function Genome(props) {
     return (
         <div id="chromosome">
-            <div id="chromosomeText">With the exception of the pot design, background and tree location (hemisphere), each trait is genetically encoded with theoretically <span style={{"font-weight": "bold"}}>479,001,60</span> different possible combinations.</div>
+            <div id="chromosomeText">With the exception of the pot design, background and tree location (hemisphere), each trait is genetically encoded. All traits combined theoretically allow <span style={{"font-weight": "bold"}}>47,900,160</span> possible combinations.</div>
             <img src={chromosome} />
         </div>
     );

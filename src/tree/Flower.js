@@ -328,7 +328,7 @@ export default class Flowers extends Entity {
 
 		let shapeAllele = genome.getGenotype('Flower Shape').left.allele;
 
-		console.log('FLOWER ALLELE: ', genome.getGenotype('Flower Shape'));
+		//console.log('FLOWER ALLELE: ', genome.getGenotype('Flower Shape'));
 
 		let gene = genome.getGene('Flower Shape');
 
@@ -337,7 +337,7 @@ export default class Flowers extends Entity {
         let magnitudeA = shapeAllele.geneticCode & (2**halfGeneLength - 1);
         let magnitudeB = (shapeAllele.geneticCode & ((2**halfGeneLength - 1) << halfGeneLength)) >> halfGeneLength;
 
-        console.log('Mag A:', magnitudeA, 'Mag B:', magnitudeB);
+        //console.log('Mag A:', magnitudeA, 'Mag B:', magnitudeB);
 
         let mainTerm = new FourierTerm(0.0, 0.6, 0.5 * magnitudeA, 2.0);
         let outerTerm = new FourierTerm(0.0, 0.4, 0.5 * magnitudeB, 2.0);

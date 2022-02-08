@@ -751,7 +751,7 @@ export default class Renderer {
 		const srcFormat = gl.RGBA;
 		const internalFormat = gl.RGBA;
 
-		console.log(texture);
+		//console.log(texture);
 
 		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.textureBuffer);
 
@@ -764,7 +764,7 @@ export default class Renderer {
 			image.crossOrigin = '';
 
 			image.addEventListener('load', function() {
-				console.log('Done!');
+				//console.log('Done!');
 				gl.bindTexture(target, textureID);
 				gl.texImage2D(target, level, internalFormat, srcFormat, gl.UNSIGNED_BYTE, image);
 				gl.generateMipmap(target);

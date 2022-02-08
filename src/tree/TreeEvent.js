@@ -43,7 +43,7 @@ export default class TreeEvent {
     }
 
     setState(newState) {
-        console.log('new state::: ', newState);
+        //console.log('new state::: ', newState);
         this.stemStates = newState;
     }
 
@@ -56,7 +56,7 @@ export default class TreeEvent {
             let newEvent = this.makeEvent(prevEventYear + 1);
             this.setEvent(newEvent);
             this.setState(this.getNextState(this.generator, this.event, this.root));
-            console.log('new event:', this.event);
+            //console.log('new event:', this.event);
         }
     }
 }
@@ -291,7 +291,7 @@ function getFloweringPeriod(genome) {
     const startEnum = monthsToEnum[dateFromTo[0]];
     const endEnum = monthsToEnum[dateFromTo[1]];
 
-    console.log('Flowering Period: ', floweringPeriodAllele.name);
+    //console.log('Flowering Period: ', floweringPeriodAllele.name);
 
     return {monthStartEnum: startEnum, monthEndEnum: endEnum};
 }

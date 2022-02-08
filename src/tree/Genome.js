@@ -581,6 +581,6 @@ function bla() {
 	//console.log('probabilities: ', leafDist);
 }
 
-for (let geneName in Genes) {
+/*for (let geneName in Genes) {
 	console.log(geneName, Object.keys(Genes[geneName].alleles).length);
-}
+}*/

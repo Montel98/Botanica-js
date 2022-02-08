@@ -282,10 +282,10 @@ export default class Tree extends Entity {
         this.initBranchIndexProperties();
 
         this.events = TEvent.initTreeEvents(this.root, this.genome, this.currentDate, this.germinationDate);
-        console.log('autumn: ', this.events.autumn.event);
+        /*console.log('autumn: ', this.events.autumn.event);
         console.log('spring: ', this.events.spring.event);
         console.log('bloom start: ', this.events.bloomStart.event);
-        console.log('bloom end: ', this.events.bloomEnd.event);
+        console.log('bloom end: ', this.events.bloomEnd.event);*/
 
         //setStemStates(this.currentDate, this);
 
@@ -684,7 +684,7 @@ export default class Tree extends Entity {
         let newColourIds = [];
         //let retainedBranches = new Set();
         let retainedBranches = this.addRetainedBranches([...terminalStemsToRetain]);
-        console.log('retained branches:', retainedBranches);
+        //console.log('retained branches:', retainedBranches);
         let newBranchIndices = [];
 
         //console.log('retained branches: ', this.getRetainedBranches(retainedStems));
