@@ -112,7 +112,7 @@ function treeStumpGeometry(axis, position, radius) {
     return plane;
 }
 
-const stumpTexture = generateStumpTexture(new Vector([0.8*112, 0.8*97, 0.8*80]), new Vector([196, 164, 132]), 512, 512);
+const stumpTexture = generateStumpTexture(new Vector([0.8*112, 0.8*97, 0.8*80]), new Vector([196, 164, 132]), 256, 256);
 
 export default class TreeStump extends Entity {
 

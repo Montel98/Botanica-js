@@ -398,23 +398,23 @@ export default class Stem extends Entity {
 			case 'Light Wood':
 				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
 				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([48, 45, 41]), 
-																		new Vector([112, 97, 80]), 256, 256);
+																		new Vector([112, 97, 80]), 32, 32);
 				break;
 			case'Dark Wood':
 				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
 				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([26, 21, 20]),
 																		new Vector([54, 51, 50])
-																		/*new Vector([71, 67, 66])*/, 256, 256);
+																		/*new Vector([71, 67, 66])*/, 32, 32);
 				break;
 			case'Silver':
-				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.75, 0.75, 0.75]), 256, 256);
+				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.75, 0.75, 0.75]), 32, 32);
 				reflectivity = 0.3;
 				break;
 			case 'Gold':
-				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.83, 0.68, 0.21]), 256, 256)
+				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.83, 0.68, 0.21]), 32, 32)
 				reflectivity = 0.3;
 			default:
-				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.87, 0.75, 0.72]), 256, 256);
+				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.87, 0.75, 0.72]), 32, 32);
 				reflectivity = 0.3;
 		}
 
