@@ -28,3 +28,9 @@ export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 
 
 //export default newSeed(76858, 5302, 5940, 23902, [732621,68734,19433,26346], 17946);
 //export default newSeed(SPRING_SEED, AUTUMN_SEED, BLOOM_START_SEED, BLOOM_END_SEED, [TRAITS_SEED], GROWTH_SEED);
+
+//export default newSeed(76858, 5302, 5940, 23902, [5243,668,1393,2495], 14);
+
+//export default newSeed(76858, 5302, 5940, 23902, [58080243,6680808,1398003,24958080], 180804);
+
+//export default newSeed(76858, 5302, 5940, 23902, [Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random())], Math.floor(10000*Math.random()));

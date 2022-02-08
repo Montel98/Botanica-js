@@ -390,16 +390,21 @@ export default class Stem extends Entity {
 
 		let stemTexture = undefined;
 
-		switch (woodTypeAllele.name) {
+		switch (woodTypeAllele.name/*'Dark Wood'*/) {
 
 			case 'Birch':
 				stemTexture = TextureBuilder.generateBirchTexture(1024, 1024);
 				break;
 			case 'Light Wood':
-				stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
+				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
+				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([48, 45, 41]), 
+																		new Vector([112, 97, 80]), 256, 256);
 				break;
 			case'Dark Wood':
-				stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
+				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
+				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([26, 21, 20]),
+																		new Vector([54, 51, 50])
+																		/*new Vector([71, 67, 66])*/, 256, 256);
 				break;
 			case'Silver':
 				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.75, 0.75, 0.75]), 256, 256);

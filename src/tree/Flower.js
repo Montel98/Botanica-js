@@ -304,7 +304,8 @@ export default class Flowers extends Entity {
 	}
 
 	getFlowerColourInfo() {
-		const randomIndex = Math.floor(Object.keys(FlowerColours).length * Math.random());
+		//const randomIndex = Math.floor(Object.keys(FlowerColours).length * Math.random());
+		const randomIndex = 0;
 
 		return FlowerColours[randomIndex];
 	}
@@ -494,5 +495,6 @@ function FlowerColour(hueA, hueB, hueC, thresholdA, thresholdB) {
 
 const FlowerColours = {
 	'0': FlowerColour(new Vector([255, 204, 0]), new Vector([102, 0, 51]), new Vector([255, 255, 255]), 0.2, 1.0),
-	'1': FlowerColour(new Vector([255, 204, 0]), new Vector([75, 0, 130]), new Vector([123, 104, 238]), 0.2, 1.0)
+	'1': FlowerColour(new Vector([255, 204, 0]), new Vector([75, 0, 130]), new Vector([123, 104, 238]), 0.2, 1.0),
+	'2': FlowerColour(new Vector([255, 204, 0]), new Vector([250, 196, 180]), new Vector([250, 249, 222]), 0.2, 1.0),
 }

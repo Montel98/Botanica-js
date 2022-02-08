@@ -452,7 +452,7 @@ export default class Tree extends Entity {
             }
         }
 
-        console.log('Terminal Stems: ', this.terminalStems.length);
+        //console.log('Terminal Stems: ', this.terminalStems.length);
     }
 
     addStumpToStem(currentStem) {

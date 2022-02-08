@@ -577,7 +577,7 @@ ReactDOM.render(
                 <Genome />
         </div>
         <div id="roadmapContainer">
-            <div id="roadmapTitle">Current Development Milestones & Roadmap</div>
+            <div id="roadmapTitle">Current Dev Milestones & Roadmap</div>
             <div id="roadmapText">While we feel that in its current state this project offers something fresh and unique to the space, ultimately the community decides its future. There are ideas for additional features (besides pruning) we would like to add after release, contingent on community interest in the project. Please note that the roadmap is not exhaustive and is subject to change, though <span style={{"font-weight": "bold"}}>realistic</span> goals in the near-mid term have been detailed.</div>
             <Roadmap />
         </div>

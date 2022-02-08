@@ -16,7 +16,11 @@ html, body {
     //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(60, 70, 90));
 
     //background-image: linear-gradient(to top, rgb(15, 15, 20), rgb(40, 60, 80));
+
+
     background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(40, 60, 80));
+    //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(28, 42, 56));
+    //background-color: black;
 
     //background-image: linear-gradient(to top, rgb(26, 37, 40), rgb(60, 70, 90));
 
@@ -66,6 +70,7 @@ li {
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
 
     width: 100%;
 }
@@ -179,10 +184,14 @@ li {
 }
 
 #title {
+    //height: 100%;
     font-size: 30px;
     font-weight: bold;
     flex-grow: 1;
     text-align: center;
+
+    //padding: 2% 0% 2% 0%;
+    padding: 0% 0% 1% 0%;
 }
 
 #navigation {
@@ -192,12 +201,14 @@ li {
 
 .navigationTitle {
     padding: 0% 0% 5% 0%;
+
+    border-width: 0px 0px 1px 0px;
+    border-color: transparent;
+    border-style: solid;
 }
 
 .navigationTitle:hover {
-    border-width: 0px 0px 2px 0px;
     border-color: white;
-    border-style: solid;
 }
 
 #walletContainer {
@@ -697,6 +708,18 @@ li {
     }
 }
 
+/*#header {
+    display: none;
+}
+
+#modeButtons {
+    display: none;
+}
+
+.topText {
+    display: none;
+}*/
+
 @media screen and (max-width: 400px) {
 
     #walletContainer {
@@ -743,6 +766,10 @@ li {
 
     #header {
         background-color: rgb(255, 255, 255, 0.05);
+    }
+
+    #roadmapTitle {
+        font-size: 38px;
     }
 }
 

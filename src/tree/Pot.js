@@ -539,7 +539,7 @@ const potParams = [
 	hasLegs: false,
 	scale: 0.12,
 	textures: [{func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
-			   {func: TextureBuilder.generatePlainPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
+			   {func: TextureBuilder.generatePotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
 			   {func: TextureBuilder.generateWavyPotTexture, params: [], reflectivity: 0.15, frequency: 0.33},
 			   ],
 	frequency: 0.2,
@@ -653,7 +653,7 @@ export default class Pot extends Entity {
 
 		let totalProbability = 0;
 
-		let chosenStyle = potParams[potIndex].textures[0];
+		let chosenStyle = potParams[potIndex].textures[2];
 
 		for (let styleIndex = 0; styleIndex < potParams[potIndex].textures.length; styleIndex++) {
 

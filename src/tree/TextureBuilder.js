@@ -440,7 +440,7 @@ export function generateBirchTexture(width, height) {
 	return Texture.LocalTexture(width, height, buffer);
 }
 
-export function generateLightWoodTexture(width, height) {
+export function generateGradientWoodTexture(baseColour, bodyColour, width, height) {
 
 	let buffer = new Uint8Array(width * height * 4);
 	let noise = new FastSimplexNoise({frequency: 2.0, octaves: 2});
@@ -475,10 +475,8 @@ export function generateLightWoodTexture(width, height) {
 
 			let yNorm = y / (height - 1);
 
-			//let bodyColour = new Vector([128, 112, 94]);
-			let bodyColour = new Vector([112, 97, 80]);
-			//let baseColour = new Vector([74, 67, 59]);
-			let baseColour = new Vector([48, 45, 41]);
+			//let bodyColour = new Vector([112, 97, 80]);
+			//let baseColour = new Vector([48, 45, 41]);
 
 			let threshold = 0.5;
 			let weight = smoothStep(0, threshold, yNorm);

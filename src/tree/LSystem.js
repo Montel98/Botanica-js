@@ -500,13 +500,17 @@ function getMappingByWoodType(genome, stackFrame) {
 	let sMaxUV = 1.0;
 
 	const woodTypeAllele = genome.getGenotype('Wood Type').left.allele;
+	//woodTypeAllele.name = 'Dark Wood';
 
 	if (woodTypeAllele.name == 'Birch') {
 
+		//const wrapFactor = 4;
+		const sWrapTrunk = 8;
+
 		if (stackFrame.branch.level == 0) {
 
-			sMinUV = (stackFrame.count % 4) / 4;
-			sMaxUV = (stackFrame.count + 1) % 4 == 0 ? 1.0 : ((stackFrame.count + 1) % 4) / 4;
+			sMinUV = (stackFrame.count % sWrapTrunk) / sWrapTrunk;
+			sMaxUV = (stackFrame.count + 1) % sWrapTrunk == 0 ? 1.0 : ((stackFrame.count + 1) % sWrapTrunk) / sWrapTrunk;
 		}
 	}
 	else if (woodTypeAllele.name == 'Dark Wood' || woodTypeAllele.name == 'Light Wood') {

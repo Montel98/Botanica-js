@@ -74,6 +74,7 @@ let prevY = null;
 let velocity = defaultVelocity;
 
 let mode = PAN_MODE;
+//let mode = PRUNE_MODE;
 
 let messageDiv = null;
 
@@ -85,10 +86,16 @@ function initInput(controller, renderer, camera, tree, worldTime) {
 
         const game = canvas.parentNode.getBoundingClientRect();
 
-        console.log(game.width, game.height);
+        //console.log(game.width, game.height);
 
-        canvas.width = game.width;
-        canvas.height = game.height;
+        if (isFirefox()) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        else {
+            canvas.width = game.width;
+            canvas.height = game.height;
+        }
 
         canvas.setAttribute('width', canvas.width);
         canvas.setAttribute('height', canvas.height);
@@ -211,6 +218,12 @@ function assignTreePosition(e, camera) {
     else {
         camera.setOrigin(-0.45, -1.7, 0.6);
         camera.setCentre(-0.45, 1.15, 0.6);
+
+        //camera.setOrigin(0.0, -1.7, 0.6);
+        //camera.setCentre(0.0, 1.15, 0.6);
+
+        //camera.setOrigin(0.0, -1.2, 0.5);
+        //camera.setOrigin(0.0, -1.2, 0.5)
     }
 }
 
@@ -337,7 +350,19 @@ function messageBox(text) {
     game.appendChild(messageDiv);
 }
 
-function isFirefox() {
+/*function isFirefox() {
 
     return typeof InstallTrigger !== 'undefined';
+}*/
+
+function isFirefox() {
+
+    const userAgent = navigator.userAgent;
+
+    if (userAgent.match(/firefox|fxios/i)) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
