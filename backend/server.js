@@ -10,7 +10,8 @@ const tree = require('./TreeBuilder.js');
 const app = express();
 const pinata = pinataSDK('e973504b541abcbb8a06', '6b4b48713b6f20863c966bf0c7c47c8b3c4caea78c4a8028e5294d1aa7411f88');
 
-const port = 3001;
+const host = '0.0.0.0';
+const port = process.env.PORT || 3000;
 
 console.log(Wallet);
 
@@ -111,7 +112,7 @@ app.get('/accessorTokens/:userAddress', async (req, res) => {
 	res.send({tokens: accessorTokens});
 });
 
-app.listen(port, () => {
+app.listen(port, host, () => {
 	console.log(`Botanica listening on port http://localhost:${port}`)
 });
 
