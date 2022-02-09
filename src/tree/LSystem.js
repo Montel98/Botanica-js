@@ -2,6 +2,7 @@ import ParametricSurface from './ParametricSurface.js';
 import ParametricGeometry from './ParametricGeometry.js';
 import Vector, { add } from './Vector.js';
 import BezierCubic from './BezierCubic.js';
+import BezierLinear from './BezierLinear.js';
 import Branch from './Branch.js';
 import Stem, { stemFunc, crossSection, trunkCrossSection } from './Stem.js';
 import { rotateFrameVertical, rotateFrameHorizontal, rotateFrameRoll } from './Matrix.js';
@@ -39,36 +40,18 @@ export default class LSystem {
 
 		let normDir = axis.forward.normalize();
 
-		let tempFactor = 0.1;
-		//let tipTempFactor = 0.025;
-
 		let p0 = new Vector([...pos.components]);
-		let p1 = add(pos, normDir.scale(0.01));
-		let p2 = add(pos, normDir.scale(0.02));
-		let p3 = add(pos, normDir.scale(0.03));
+		let p1 = add(pos, normDir.scale(0.03));
+		let p2 = add(pos, normDir.scale(0.042));
+		let p3 = add(pos, normDir.scale(0.012));
 
-		let p4 = add(pos, normDir.scale(0.034));
-		let p5 = add(pos, normDir.scale(0.038));
-		let p6 = add(pos, normDir.scale(0.042));
-
-		let p7 = add(pos, normDir.scale(0.004));
-		let p8 = add(pos, normDir.scale(0.008));
-		let p9 = add(pos, normDir.scale(0.012));
-
-		let stemPath = new BezierCubic(p0, p1, p2, p3);
-		let stemTipPath = new BezierCubic(p3, p4, p5, p6);
-		let immatureStemTipPath = new BezierCubic(p0, p7, p8, p9);
+		let stemPath = new BezierLinear(p0, p1);
+		let stemTipPath = new BezierLinear(p1, p2);
+		let immatureStemTipPath = new BezierLinear(p0, p3);
 
 		let babyR = radiusProperties(0.001, 0.001, branch.branchLength, 0);
 
-		var crossSectionFunc;
-
-		if (branch.level > 0) {
-			crossSectionFunc = crossSection;
-		}
-		else {
-			crossSectionFunc = trunkCrossSection;
-		}
+		const crossSectionFunc = crossSection;
 
 		// Stem Body
 		let endStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, r),

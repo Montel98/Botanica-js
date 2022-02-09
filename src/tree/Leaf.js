@@ -440,7 +440,7 @@ export default class Leaves extends Entity {
 		const colourInfo = this.getColour(genome);
 		const patternInfo = this.getPatternInfo(genome);
 
-		const leafTexture = patternInfo.textureFunc(1024, 1024, 4);
+		const leafTexture = patternInfo.textureFunc(512, 512, 4);
 
 		const material = new Material(leafTexture);
 		material.maps['textureMap'] = leafTexture;

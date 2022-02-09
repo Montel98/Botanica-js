@@ -23,11 +23,19 @@ export default class ParametricGeometry extends Geometry {
 
 	isValidTriangle(indices) {
 
-		let vertices = indices.map(index => this.vertices[index]);
+		//let vertices = indices.map(index => this.vertices[index]);
 
-		return !vertices[0].equals(vertices[1]) &&
-		!vertices[0].equals(vertices[2]) && 
-		!vertices[1].equals(vertices[2]);
+		let triangleVertices = [];
+
+		for (let i = 0; i < indices.length; i++) {
+
+			const index = indices[i];
+			triangleVertices.push(this.vertices[index]);
+		}
+
+		return !triangleVertices[0].equals(triangleVertices[1]) &&
+		!triangleVertices[0].equals(triangleVertices[2]) && 
+		!triangleVertices[1].equals(triangleVertices[2]);
 	}
 
 	generateIndices() {
@@ -41,9 +49,17 @@ export default class ParametricGeometry extends Geometry {
 
 	       		for (let i = 0; i < offsets.length; i++) {
 
-	        		var indices = offsets[i].map(offset =>
+	        		/*var indices = offsets[i].map(offset =>
 						{return ((vStep + offset[0]) * (this.uSteps)) + (uStep + offset[1]);}
-					);
+					);*/
+
+					let indices = [];
+
+					for (let offsetIndex = 0; offsetIndex < offsets[i].length; offsetIndex++) {
+
+						const offset = offsets[i][offsetIndex];
+						indices.push( ((vStep + offset[0]) * (this.uSteps)) + (uStep + offset[1]) );
+					}
 
 	        		if (this.isValidTriangle(indices)) {
 	        			this.indexBuffer.push(...indices);
@@ -88,8 +104,7 @@ export default class ParametricGeometry extends Geometry {
 		        let v = Math.floor(i / this.uSteps);
 
 		        //geometry.STs[i] = (new Vector([v / (vMax - 1), u / (uMax - 1)]));
-		        //this.STs.push(new Vector([0.2 * u / (this.uSteps - 1), v / (this.vSteps - 1)])); <- for trunk I think, 0.2 squished it
-
+		        //this.STs.push(new Vector([0.2 * u / (this.uSteps - 1), v / (this.vSteps - 1)])); <- for trunk, 0.2 squished it
 
 		        let s = sMin + ((sMax - sMin) * (u / (this.uSteps - 1)));
 		        let t = tMin + ((tMax - tMin) * (v / (this.vSteps - 1)));
@@ -119,13 +134,16 @@ export default class ParametricGeometry extends Geometry {
 
         		this.vertices.push(vertex);
 
-        		let du = subtract(this.surface.eval((u + eps), v), vertex);
-        		let dv = subtract(this.surface.eval(u, (v + eps)), vertex);
+        		//let du = subtract(this.surface.eval((u + eps), v), vertex);
+        		//let dv = subtract(this.surface.eval(u, (v + eps)), vertex);
 
 
         		if (this.useNormals) {
 
 	        		var normal;
+
+        			let du = subtract(this.surface.eval((u + eps), v), vertex);
+        			let dv = subtract(this.surface.eval(u, (v + eps)), vertex);
 
 	        		if (this.invertedNormals) {
 	        			normal = cross(du, dv);

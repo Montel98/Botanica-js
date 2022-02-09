@@ -179,9 +179,6 @@ export default class Stem extends Entity {
 		this.worldMatrix = identityMatrix;
 
 		this.colour = new Vector([0.25, 0.18, 0.12]);
-		//this.colour = new Vector([0.83, 0.68, 0.21]); // Gold
-        //this.colourEnd = new Vector([0.75, 0.75, 0.75]); // Silver
-		//this.colour = new Vector([0.87, 0.75, 0.72]);
 
 		// Experimental
 
@@ -191,10 +188,7 @@ export default class Stem extends Entity {
 		this.stringLoc = 0; // Corresponding location in L-String this stem corresponds to
 
 		this.stemLength = 0.0;
-		//this.growthRate = 0.05; // Growth Rate in units/second
-		//this.growthRate = 0.2;
-		//this.growthRate = 2.0;
-		this.growthRate = 2.0 / 3;
+		this.growthRate = 2.0 / 3; // Growth Rate in units/second
 
 		// Merge stem tip and body
 
@@ -207,8 +201,6 @@ export default class Stem extends Entity {
 		this.morphTargets = [];
 		this.girthMorphTargets = startGeometry.vertices;
 		this.girthMorphTargets2 = [];
-
-		//endGeometry.setFaceCulling(true);
 
 		let endBodyGeometrySteps = matureGeometry.endBodyGeometry.uSteps;
 
@@ -286,7 +278,6 @@ export default class Stem extends Entity {
 		this.defaultShader.uniforms['ambientColour'] = this.tree.currentColour;
 		//this.defaultShader.uniforms['ambientColour'] = add(this.tree.colourStart.scale(1.0 - this.branch.age**0.2), this.tree.colourEnd.scale(this.branch.age**0.2));
 		this.defaultShader.uniforms['du'].components[0] = this.stemLength;
-		//this.defaultShader.uniforms['age'].components[0] = this.tree.age;
 		this.defaultShader.uniforms['age'].components[0] = this.branch.age;
 	}
 
