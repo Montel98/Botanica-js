@@ -4,7 +4,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const pinataSDK = require('@pinata/sdk');
 const Wallet = require('./WalletConnector.js');
-
+const sslRedirect = require('heroku-ssl-redirect').default;
 const tree = require('./TreeBuilder.js');
 
 const app = express();
@@ -17,16 +17,7 @@ console.log(Wallet);
 
 app.use(express.json());
 app.use(express.static('dist'));
-
-if (process.env.NODE_ENV === 'production') {
-
-  app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https')
-      res.redirect(`https://${req.header('host')}${req.url}`)
-    else
-      next()
-  })
-}
+app.use(sslRedirect());
 
 app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, '../dist/index.html'));

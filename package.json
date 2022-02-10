@@ -30,11 +30,12 @@
     "webpack-dev-server": "^4.7.3"
   },
   "dependencies": {
-    "express": "^4.17.2",
     "@pinata/sdk": "^1.1.23",
     "axios": "^0.25.0",
     "cbor": "^8.1.0",
     "cbor-web": "^8.1.0",
+    "express": "^4.17.2",
+    "heroku-ssl-redirect": "^0.1.1",
     "lodash": "^4.17.21",
     "node-fetch": "^3.2.0",
     "react": "^17.0.2",
