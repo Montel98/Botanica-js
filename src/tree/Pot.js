@@ -478,8 +478,9 @@ const legFaceFunc = (yPos) => {
 	}
 }
 
-const potLegMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.5, tMax: 1.0};
-const potMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.0, tMax: 0.5};
+const potLegMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.6, tMax: 0.9};
+//const potMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.0, tMax: 0.5};
+const potMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.1, tMax: 0.4};
 
 //const potLegMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.0, tMax: 1.0};
 //const potMapping = {sMin: 0.0, sMax: 1.0, tMin: 0.0, tMax: 1.0};

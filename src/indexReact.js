@@ -168,13 +168,13 @@ class Wallet extends React.Component {
 
     async componentDidMount() {
 
-        this.setState({ tokens: (await this.getAccessorTokens()).tokens })
+        /*this.setState({ tokens: (await this.getAccessorTokens()).tokens })
 
         const tokenNames = Object.keys(this.state.tokens);
 
         if (tokenNames.length > 0) {
             this.setState({selectedToken: tokenNames[0]});
-        }
+        }*/
     }
 
     accessTokenList() {
@@ -266,7 +266,8 @@ class Wallet extends React.Component {
 
     async getAccessorTokens() {
 
-        const isEnabled = await window.cardano.enable();
+        //const isEnabled = await window.cardano.enable();
+        const isEnabled = false;
 
         if (isEnabled) {
 

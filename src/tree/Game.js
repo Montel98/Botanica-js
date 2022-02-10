@@ -204,11 +204,11 @@ function initInput(controller, renderer, camera, tree, worldTime) {
     });
 
     const widthMediaQuery = window.matchMedia("(max-width: 1100px)");
-    assignTreePosition(widthMediaQuery, camera);
-    widthMediaQuery.addListener(e => {assignTreePosition(e, camera)});
+    setTreePositionAndMode(widthMediaQuery, camera);
+    widthMediaQuery.addListener(e => {setTreePositionAndMode(e, camera)});
 }
 
-function assignTreePosition(e, camera) {
+function setTreePositionAndMode(e, camera) {
 
     // If media query matches
     if (e.matches) {
@@ -376,5 +376,3 @@ function isSafari() {
 
     return !(chromeAgent && safariAgent);
 }
-
-console.log('is safari: ', isSafari());
