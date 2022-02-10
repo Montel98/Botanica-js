@@ -53,8 +53,6 @@ class Header extends React.Component {
 
     toggleDropdown() {
 
-        console.log('BEEN CALLED');
-
         this.setState( {isDropdownToggled: !this.state.isDropdownToggled} );
     }
 
@@ -149,10 +147,10 @@ class Accordion extends React.Component  {
 
         return (
             <div class="accordion">
-                {this.accordionBox(0, "What do I need to mint?", <div class="dropDownContent">You need Nami Wallet - minting will be done on this site using smart contracts. All you are required to do is sign the transaction.</div>)}
+                {this.accordionBox(0, "What do I need to mint?", <div class="dropDownContent">You will need Nami Wallet - minting will be done directly via this site using smart contracts. All you are required to do is sign the generated transaction.</div>)}
                 {this.accordionBox(1, "How can I view my tree?", <div class="dropDownContent">You will be able to view your tree by entering your policy ID and asset name into a site like <a href="https://pool.pm">pool.pm</a>. Once pruning is released, you will also be able to view your tree and utilize the available tools directly on this site.</div>)}
-                {this.accordionBox(2, "Where can I find the smart contract source code?", <div class="dropDownContent">The current state of the source code for all the contracts to be used can be found the Github repository provided below. This will also include the locations of the datums and policy IDs used closer to launch.<br /><br /><a href="https://github.com/Montel98/Botanica-Smart-Contracts">Source Code</a></div>)}
-                {/*{this.accordionBox(3, "What is the mint price?", <div class="dropDownContent">38 ADA (+3 ADA set aside for fees)</div>)}*/}
+                {this.accordionBox(2, "Where can I find the smart contract source code?", <div class="dropDownContent">The current state of the source code for all the contracts to be used can be found in the Github repository provided below. This will also include the locations of the datums and policy IDs used closer to launch.<br /><br /><a href="https://github.com/Montel98/Botanica-Smart-Contracts">Source Code</a></div>)}
+                {this.accordionBox(3, "Are the trees on-chain?", <div class="dropDownContent">Not currently. The maximum transaction size on Cardano is currently 16KB, while the code for a single tree is ~200KB. However, with Cardano's long-term scaling plans, migrating the trees on-chain is a possibility in the future.</div>)}
             </div>
         );
     }
@@ -292,7 +290,8 @@ class Wallet extends React.Component {
 
     connectWallet = async (e) => {
 
-        const isEnabled = await window.cardano.enable();
+        //const isEnabled = await window.cardano.enable();
+        const isEnabled = false;
 
         if (isEnabled && !this.state.isMintButtonLocked) {
 
@@ -300,7 +299,7 @@ class Wallet extends React.Component {
 
             const address = await window.cardano.getUsedAddresses();
 
-            console.log('sending....');
+            //console.log('sending....');
 
             //const response = await fetch(`http://localhost:3000/mint/${address}`);
             const utxos = await window.cardano.getUtxos();

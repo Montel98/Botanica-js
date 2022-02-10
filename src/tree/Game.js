@@ -88,7 +88,7 @@ function initInput(controller, renderer, camera, tree, worldTime) {
 
         //console.log(game.width, game.height);
 
-        if (isFirefox()) {
+        if (isFirefox() || isSafari()) {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
@@ -366,3 +366,15 @@ function isFirefox() {
         return false;
     }
 }
+
+function isSafari() {
+
+    const userAgent = navigator.userAgent;
+
+    const chromeAgent = userAgent.indexOf("Chrome") > -1;
+    const safariAgent = userAgent.indexOf("Safari") > -1;
+
+    return !(chromeAgent && safariAgent);
+}
+
+console.log('is safari: ', isSafari());
