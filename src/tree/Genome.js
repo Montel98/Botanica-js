@@ -495,7 +495,7 @@ function getRandomAlleleFromGene(geneName) {
 
 	//let randomVal = Math.random();
 	const randomVal = TreeSeed.traits();
-	console.log(TreeSeed, randomVal);
+	//console.log(TreeSeed, randomVal);
 
 	//console.log('randomVal: ', randomVal);
 

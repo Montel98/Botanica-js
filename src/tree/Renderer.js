@@ -724,8 +724,6 @@ export default class Renderer {
 
 	initTexture(texture) {
 
-		console.log(texture.textureBuffer);
-
 		const textureID = gl.createTexture();
 		texture.setTextureID(textureID);
 
@@ -741,10 +739,6 @@ export default class Renderer {
 		const level = 0;
 		const srcFormat = gl.RGBA;
 		const internalFormat = gl.RGBA;
-
-		//console.log(texture);
-
-		console.log('Type: ', getTextureType(texture.type));
 
 		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, /*gl.UNSIGNED_BYTE*/getTextureType(texture.type), texture.textureBuffer);
 
