@@ -1,5 +1,6 @@
 //const MAX_STEMS = 609;
 const MAX_STEMS = 550;
+const MAX_BRANCHES = 180;
 
 import Genome, * as Gen from './Genome.js';
 import Vector, { add, zeroVector, upVector } from './Vector.js';
@@ -16,6 +17,7 @@ import Stem from './Stem.js';
 import Leaves from './Leaf.js';
 import Flowers from './Flower.js';
 import { stemIterator } from './StemIterator.js';
+import DataStore from './DataStore.js';
 
 const treeVertexShader = 
 `
@@ -39,11 +41,17 @@ uniform mat4 camera;
 uniform mat4 perspective;
 
 uniform float age;
-uniform float branchAges[${MAX_STEMS}];
+uniform float branchAges[${MAX_BRANCHES}];
+
+uniform sampler2D uDataSampler;
 
 void main() {
 
     float branchAge = branchAges[int(aBranchIndex)];
+    //float branchAge = 0.1;
+    //vec2 branchAgeCoord = vec2(aBranchIndex / 1024.0, 0.0);
+    //vec2 branchAgeCoord = vec2(0.5, 0.0);
+    //float branchAge = texture2D(uDataSampler, branchAgeCoord).r;
 
     vec3 currentPos = aMatureStartVertexPosition + branchAge * (aVertexPosition - aMatureStartVertexPosition);
 
@@ -101,27 +109,13 @@ void main() {
     vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
     vec3 viewDirection = normalize(vVertexPosition - eye);
 
-    //float specular = 0.7 * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0); //<- power was 16
     float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0); //<- power was 16
-    // was 0.5
 
     float light = ambient + diffuse + specular;
     vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
     vec3 treeColour = (1.0 - vBranchAge) * ambientColour + vBranchAge * texture2D(uTexture, vTexCoord).rgb;
 
-    //gl_FragColor = vec4(light * (0.7 * ambientColour + 0.3 * reflectedColour), 1.0); //0.2
-    //gl_FragColor = vec4(vColourId, 1.0);
-    //gl_FragColor = vec4(light * ambientColour, 1.0);
-
-    //gl_FragColor = light * ((1.0 - age) * vec4(ambientColour, 1.0) + age * texture2D(uTexture, vTexCoord));
-    //gl_FragColor = light * ((1.0 - vBranchAge) * vec4(ambientColour, 1.0) + vBranchAge * texture2D(uTexture, vTexCoord));
-    //gl_FragColor = vec4(1.0);
-    //gl_FragColor = vec4(vColourId, 1.0);
-
-    //gl_FragColor = vec4(vBranchAge);
-
     gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour), 1.0); //0.2
-    //gl_FragColor = vec4(light * treeColour, 1.0); //0.2
 }
 `;
 
@@ -140,7 +134,7 @@ uniform mat4 camera;
 uniform mat4 perspective;
 
 uniform float age;
-uniform float branchAges[${MAX_STEMS}];
+uniform float branchAges[${MAX_BRANCHES}];
 
 void main() {
 
@@ -257,12 +251,16 @@ export default class Tree extends Entity {
         this.defaultShader.uniforms['ambientColour'] = this.currentColour;
         this.defaultShader.uniforms['branchAges'] = [];// new Array(620).fill(new Vector([0]));
 
-        for (let i = 0; i < 550; i++) {
+        for (let i = 0; i < MAX_BRANCHES; i++) {
             this.defaultShader.uniforms['branchAges'].push(new Vector([0.0]));
         }
 
+        //this.branchAges = new DataStore();
+        //this.dataStore = this.branchAges;
+
         this.age = 0.0;
         this.growthRate = 0.01;
+        //this.growthRate = 0.03;
 
         this.leaves = new Leaves(this.genome);
         this.addChild(this.leaves);
@@ -334,12 +332,18 @@ export default class Tree extends Entity {
 
     growBranches(worldTime) {
 
+        //const newBranchAges = new Float32Array(1024);
+        //newBranchAges.fill(0.0);
+
         for (let branch of this.branches) {
 
             branch.grow(worldTime);
 
             this.defaultShader.uniforms['branchAges'][branch.branchId].components[0] = branch.age;
+            //newBranchAges[branch.branchId] = branch.age;
         }
+
+        //this.branchAges.update(newBranchAges);
     }
 
     initStackFrame() {

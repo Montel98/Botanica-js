@@ -1,4 +1,4 @@
-var gl, ext, oes_vao_ext;
+var gl, ext, oes_vao_ext, oes_tf_ext;
 
 const GL_UNSIGNED_SHORT_SIZE = 2;
 const GL_FLOAT_SIZE = 4;
@@ -6,7 +6,8 @@ const GL_FLOAT_SIZE = 4;
 const textureUnitMap = {
 	'textureMap' : 0,
 	'normalMap' : 1,
-	'environmentMap': 2
+	'environmentMap': 2,
+	'dataStore': 3
 }
 
 var namedBuffers = {};
@@ -25,18 +26,17 @@ export default class Renderer {
 
 		gl = canvas.getContext("webgl");
 
-		ext = gl.getExtension('ANGLE_instanced_arrays'); // Get extension for instancing
-		oes_vao_ext = gl.getExtension('OES_vertex_array_object'); // Get extension for VAOs
-
     	if (gl == null) {
 
-
-
-        	//alert('Unable to initialiaze WebGL. Your browser or machine may not support it.');
+        	alert('Unable to initialiaze WebGL. Your browser or machine may not support it.');
     	}
+
+		this.initExtensions();
 
     	// Experimental
     	this.frameBuffer = this.initFrameBuffer();
+    	this.drawPassStates = [{frameBuffer: null, shaderName: "Default"},
+    							{frameBuffer: this.frameBuffer, shaderName: "Picking"}];
 	}
 
 	/* (for each frame buffer)
@@ -47,30 +47,6 @@ export default class Renderer {
 
 	normalRendering()
 	*/
-
-	renderScene(scene, program) {
-
-		for (let i = 0; i < this.batchedBuffers.length; i++) {
-
-			let batchedBuffer = this.batchedBuffers[i];
-			this.renderBatch(batchedBuffer, scene, program);
-		}
-
-		let stack = [...scene.entities];
-
-		while (stack.length != 0) {
-
-			let entity = stack.pop();
-			stack.push(...entity.getChildren());
-
-			let geometry = entity.mesh.geometry;
-
-			if (geometry.bufferAttributes.bufferName == "") {
-
-				this.renderEntity(entity, scene, program);
-			}
-		}
-	}
 
 	reWriteBuffer(/*buffer*/ entity) {
 
@@ -163,7 +139,12 @@ export default class Renderer {
 		const programLoc = shaderProgram.programID;
 
 		//this.updateUniforms(camera, programLoc, entity);
+
 		this.bindTextures(programLoc, material);
+
+		/*if (entity.dataStore) {
+			this.bindDataStore(programLoc, entity.dataStore);
+		}*/
 
 		if (scene.background) {
 			this.bindCubeMapTexture(programLoc, scene.background);
@@ -217,77 +198,64 @@ export default class Renderer {
 		}
 	}
 
-	render(entity, scene) {
+	renderEntity(entity, scene, drawPassState) {
 
 		this.resizeViewport();
 
 		const mesh = entity.mesh;
 		const geometry = mesh.geometry;
 
-		for (let programName in mesh.shaderPrograms) {
+		let shaderProgram = mesh.shaderPrograms[drawPassState.shaderName];
 
-			let shaderProgram = mesh.shaderPrograms[programName];
+		let programLoc = this.bindShaderProgram(mesh, shaderProgram, scene.camera);
+		gl.useProgram(programLoc);
 
-			let programLoc = this.bindShaderProgram(mesh, shaderProgram, scene.camera);
-			gl.useProgram(programLoc);
+		this.updateUniforms(scene.camera, programLoc, entity);
 
-			this.updateUniforms(scene.camera, programLoc, entity);
+		this.setBuffersAndAttributes(entity, scene, shaderProgram);
 
-			this.setBuffersAndAttributes(entity, scene, shaderProgram);
+		if (drawPassState.shaderName == 'Default') {
 
-			if (programName == 'Default') {
-
-				if (geometry.modifiedGeometryEvents.length > 0) {
-					this.updateBuffers(geometry);
-				}
-
-				if (mesh.isInstanced) {
-					this.updateInstanceBuffer(mesh);
-				}
-
-				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			if (geometry.modifiedGeometryEvents.length > 0) {
+				this.updateBuffers(geometry);
 			}
-			else {
-				gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-			}
-
-			oes_vao_ext.bindVertexArrayOES(geometry.bufferAttributes.bufferID.VertexArrayLoc);
-
-			const bufferSize = geometry.indexBuffer.length;
-			const offset = geometry.bufferAttributes.buffers['indexBuffer'].index;
 
 			if (mesh.isInstanced) {
-				ext.drawElementsInstancedANGLE(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, 0, mesh.instanceCount);
+				this.updateInstanceBuffer(mesh);
 			}
-			else {
-				gl.drawElements(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, offset * GL_UNSIGNED_SHORT_SIZE);
-			}
+		}
+
+		oes_vao_ext.bindVertexArrayOES(geometry.bufferAttributes.bufferID.VertexArrayLoc);
+
+		const bufferSize = geometry.indexBuffer.length;
+		const offset = geometry.bufferAttributes.buffers['indexBuffer'].index;
+
+		if (mesh.isInstanced) {
+			ext.drawElementsInstancedANGLE(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, 0, mesh.instanceCount);
+		}
+		else {
+			gl.drawElements(gl.TRIANGLES, bufferSize, gl.UNSIGNED_SHORT, offset * GL_UNSIGNED_SHORT_SIZE);
 		}
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 	}
 
-	renderScene(scene) {
+	renderScene(scene, entities) {
 
-		for (let frameBufferName in this.frameBuffers) {
+		for (let state = 0; state < this.drawPassStates.length; state++) {
 
-			let stack = [...scene.entities];
+			let drawPassState = this.drawPassStates[state];
 
-			gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffers[frameBufferName]);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, drawPassState.frameBuffer);
 
-			let programType = frameBufferName;
+			for (let entityIndex = 0; entityIndex < entities.length; entityIndex++) {
 
-			while (stack.length != 0) {
-				
-				let entity = stack.pop();
-				stack.push(...entity.getChildren());
+				let entity = entities[entityIndex];
 
-				let shaderProgram = entity.mesh.shaderPrograms[frameBufferName];
+				if (this.entityUsesProgram(entity, drawPassState.shaderName)) {
 
-				if (this.entityUsesProgram(entity, programType)) {
-
-					this.render(buffer, entity, shaderProgram.programID);
+					this.renderEntity(entity, scene, drawPassState);
 				}
 			}
 		}
@@ -297,6 +265,22 @@ export default class Renderer {
 
 		return programType in entity.mesh.shaderPrograms;
 	}
+
+	/*bindDataStore(programLoc, dataStore) {
+
+		let textureLoc = dataStore.texture.textureID;
+
+		if (textureLoc == -1) {
+			dataStore.texture.textureID = this.initTexture(dataStore.texture);
+			dataStore.flagAsUpdated();
+		}
+		else if (dataStore.hasChanged) {
+			this.updateTexture(dataStore.texture);
+			dataStore.flagAsUpdated();
+		}
+
+		this.bindTexture(programLoc, dataStore.texture, 'dataStore');
+	}*/
 
 	bindTextures(programLoc, material) {
 
@@ -308,22 +292,27 @@ export default class Renderer {
 				material.maps[mapping].textureID = this.initTexture(material.maps[mapping]);
 			}
 
-			this.bindTexture(programLoc, material.maps[mapping].textureID, mapping);
+			//this.bindTexture(programLoc, material.maps[mapping].textureID, mapping);
+			this.bindTexture(programLoc, material.maps[mapping], mapping);
 		}
 	}
 
-	bindTexture(programLoc, textureID, mapping) {
+	bindTexture(programLoc, /*textureID,*/texture, mapping) {
 
 		let unit = textureUnitMap[mapping];
+
+		//console.log('unit: ', unit);
 
 		// Affect given unit
 		gl.activeTexture(gl['TEXTURE' + unit]);
 
 		// Bind entity's texture(s) for drawing
-		gl.bindTexture(gl.TEXTURE_2D, textureID);
+		gl.bindTexture(gl.TEXTURE_2D, texture.textureID);
+
+		//console.log(gl.getUniformLocation(programLoc, /*'uSampler'*/texture.textureName), texture.textureName);
 
 		// Tell shader we bound texture to unit
-		gl.uniform1i(gl.getUniformLocation(programLoc, 'uSampler'), unit);
+		gl.uniform1i(gl.getUniformLocation(programLoc, /*'uSampler'*/texture.textureName), unit);
 	}
 
 	bindCubeMapTexture(programLoc, cubeMap) {
@@ -735,6 +724,8 @@ export default class Renderer {
 
 	initTexture(texture) {
 
+		console.log(texture.textureBuffer);
+
 		const textureID = gl.createTexture();
 		texture.setTextureID(textureID);
 
@@ -753,9 +744,11 @@ export default class Renderer {
 
 		//console.log(texture);
 
-		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.textureBuffer);
+		console.log('Type: ', getTextureType(texture.type));
 
-		gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, /*gl.UNSIGNED_BYTE*/getTextureType(texture.type), texture.textureBuffer);
+
+		gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, /*gl.LINEAR*/getInterpolation(texture.interpolation));
 
 		if (texture.imgSrc != "") {
 
@@ -783,6 +776,26 @@ export default class Renderer {
 		gl.bindTexture(target, null);
 
 		return textureID;
+	}
+
+	updateTexture(texture) {
+
+		//console.log(texture.width, texture.height);
+
+		gl.bindTexture(gl.TEXTURE_2D, texture.textureID);
+
+		console.log(texture.textureBuffer);
+		gl.texSubImage2D(gl.TEXTURE_2D, 
+							0, 
+							0, 
+							0, 
+							texture.width, 
+							texture.height,
+							gl.RGBA,
+							getTextureType(texture.type),
+							texture.textureBuffer);
+
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	initEmptyTexture(textureWidth, textureHeight) {
@@ -964,6 +977,25 @@ export default class Renderer {
 		this.viewportWidth = width;
 		this.viewportHeight = height;
 	}
+
+	initExtensions() {
+
+		ext = gl.getExtension('ANGLE_instanced_arrays'); // Get extension for instancing
+
+		if (!ext) {
+			alert('Your machine or browser does not support ANGLE_instanced_arrays.');
+		}
+		oes_vao_ext = gl.getExtension('OES_vertex_array_object'); // Get extension for VAOs
+
+		if (!oes_vao_ext) {
+			alert('Your machine or browser does not support OES_vertex_array_object.');
+		}
+		oes_tf_ext = gl.getExtension('OES_texture_float'); // Get extension for floats in textures
+
+		if (!oes_tf_ext) {
+			alert('Your machine or browser does not support OES_texture_float.');
+		}	
+	}
 }
 
 function addBuffer(bufferId, vertexBufferLength, indexBufferLength, indexCount) {
@@ -997,4 +1029,24 @@ function mapEntityToBuffer(buffer, entity) {
 	bufferInfo.entities.set(entity, {indexBufferStart: indexBufferLength,
 							vertexBufferStart: vertexBufferLength
 						});
+}
+
+function getInterpolation(interpolation) {
+
+	if (interpolation == 'Linear') {
+		return gl.LINEAR;
+	}
+	else {
+		return gl.NEAREST;
+	}
+}
+
+function getTextureType(type) {
+
+	if (type == 'Float') {
+		return gl.FLOAT;
+	}
+	else {
+		return gl.UNSIGNED_BYTE;
+	}
 }

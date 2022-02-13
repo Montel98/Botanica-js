@@ -472,6 +472,7 @@ export default class Leaves extends Entity {
 												);
 
 		//this.growthRate = 0.05;
+
 		this.growthRate = 0.5;
 
 		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('leaf_shader', 
@@ -663,6 +664,7 @@ class Leaf {
 
 	static startRad = 0.001;
 	static growthRate = 0.5;
+	//static growthRate = 1.5;
 	static maxAge = 1.0;
 
 	constructor(poseMatrix, xAngle, zAngle, parentStem) {
@@ -692,7 +694,8 @@ class Leaf {
 		this.isDestroyed = false;
 		this.isDying = false;
 
-		this.deathRate = 0.1; // Default
+		//this.deathRate = 0.1; // Default
+		this.deathRate = 0.3;
 	}
 
 	grow(worldTime) {

@@ -18,8 +18,8 @@ html, body {
     //background-image: linear-gradient(to top, rgb(15, 15, 20), rgb(40, 60, 80));
 
 
-    background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(40, 60, 80));
-    //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(28, 42, 56));
+    //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(40, 60, 80));
+    background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(28, 42, 56));
     //background-color: black;
 
     //background-image: linear-gradient(to top, rgb(26, 37, 40), rgb(60, 70, 90));
@@ -731,13 +731,13 @@ li {
 
 /*#header {
     display: none;
-}
+}*/
 
-#modeButtons {
+/*#modeButtons {
     display: none;
-}
+}*/
 
-.topText {
+/*.topText {
     display: none;
 }*/
 

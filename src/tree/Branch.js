@@ -2,6 +2,7 @@ export default class Branch {
 
 	static maxAge = 1.0;
 	static growthRate = 0.01;
+	//static growthRate = 0.03;
 	//static growthRate = 1 / (86400000 * 60)
 
 	constructor(length, level) {

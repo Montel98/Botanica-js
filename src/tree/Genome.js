@@ -92,38 +92,6 @@ export class GeneticSequence {
 
 // Generates a random valid genetic sequence
 
-export function randomGeneticSequence1() {
-
-	let alleleMasks = [];
-
-	let sequence = 0;
-
-	for (let geneName in Genes) {
-
-		//console.log(geneName);
-
-		const geneLength = Genes[geneName].sequenceEnd - Genes[geneName].sequenceStart + 1;
-		const offset = Genes[geneName].sequenceStart;
-
-		const alleleList = Object.keys(Genes[geneName].alleles);
-
-		const noAlleles = alleleList.length;
-
-		if (noAlleles > 0) {
-
-			let randomAllele = getRandomAlleleFromGene(geneName);
-
-			//console.log('random: ', randomAllele);
-
-			let alleleMask = randomAllele.geneticCode << offset;
-
-			sequence |= alleleMask;
-		}
-	}
-
-	return new GeneticSequence(sequence);
-}
-
 export function randomGeneticSequence() {
 
 	let alleleMasks = [];
@@ -527,6 +495,7 @@ function getRandomAlleleFromGene(geneName) {
 
 	//let randomVal = Math.random();
 	const randomVal = TreeSeed.traits();
+	console.log(TreeSeed, randomVal);
 
 	//console.log('randomVal: ', randomVal);
 
@@ -543,19 +512,6 @@ function getRandomAlleleFromGene(geneName) {
 
 	return unknownAllele;
 }
-
-/*const Genes = {
-	'Leaf Colour': Gene(0, 0, 4, leafColourAlleles),
-	'Leaf Pattern': Gene(1, 5, 8, leafPatternAlleles),
-	'Leaf Shape': Gene(2, 9, 16, generateLeafShapeAlleles()),
-	'Flowering': Gene(3, 17, 17, floweringAlleles),
-	'Wood Type': Gene(4, 18, 21, woodTypeAlleles),
-	'Leaf Arrangement': Gene(5, 22, 23),
-	'Flower Colour': Gene(5, 24, 27),
-	'Flower Pattern': Gene(6, 28, 29),
-	'Flower Shape': Gene(7, 30, 30, flowerLeafDistribution(generateFlowerShapes, flowerLeafProbabilities)),
-	'Leaf Droopiness': Gene(8, 31, 31)
-}*/
 
 const Genes = {
 	'Leaf Colour': Gene(0, 0, 0, 4, leafColourAlleles),

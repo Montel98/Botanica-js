@@ -64,6 +64,7 @@ export default class Controller {
 
 		let stack = [...this.scene.entities];
 		let entity = undefined;
+		let visibleEntities = [];
 
 		while (stack.length != 0) {
 			
@@ -75,9 +76,12 @@ export default class Controller {
 			entity.updatePose();
 
 			if (!entity.isHidden) {
-				this.renderer.render(entity, this.scene);
+				//this.renderer.render(entity, this.scene);
+				visibleEntities.push(entity);
 			}
 		}
+
+		this.renderer.renderScene(this.scene, visibleEntities);
 
 		this.pixelColour = this.getPixelColour(this.mouseX, this.mouseY);
 		//console.log('colour: ', this.pixelColour);

@@ -16,8 +16,11 @@ function newSeed(springSeed, autumnSeed, bloomStartSeed, bloomEndSeed, traitsSee
 		bloomStart: new LCG(bloomStartSeed), // 24 bit LCG seed
 		bloomEnd: new LCG(bloomEndSeed), // 24 bit LCG seed
 		traits: traitGen, // [32, 32, 32, 32] 4x32 bit sfc32 seed
-		growth: new LCG(growthSeed) // 24 bit LCG seed
-		// Probaby use seperate seed for textures
+		growth: new LCG(growthSeed), // 24 bit LCG seed
+		//pot: traitGen(),
+		//hemisphere: traitGen(),
+		//background: traitGen()
+		// Probably use seperate seed for textures
 	}
 }
 
@@ -34,3 +37,5 @@ export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 
 //export default newSeed(76858, 5302, 5940, 23902, [58080243,6680808,1398003,24958080], 180804);
 
 //export default newSeed(76858, 5302, 5940, 23902, [Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random())], Math.floor(10000*Math.random()));
+
+//export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1588); //<- use this one

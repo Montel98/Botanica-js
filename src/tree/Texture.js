@@ -1,9 +1,12 @@
 export default class Texture {
 	
-	constructor(imgSrc="", textureTarget="2D") {
+	constructor(imgSrc="", textureTarget="2D", textureName="uTexture") {
 		this.imgSrc = imgSrc;
 		this.textureID = -1;
 		this.target = textureTarget;
+		this.textureName = textureName;
+		this.interpolation = 'Linear';
+		this.type = 'Unsigned';
 	}
 
 	setTextureID(handle) {
@@ -14,6 +17,14 @@ export default class Texture {
 		this.textureBuffer = bufferData;
 		this.width = width;
 		this.height = height;
+	}
+
+	setInterpolation(interpolation) {
+		this.interpolation = interpolation;
+	}
+
+	setType(type) {
+		this.type = type;
 	}
 }
 

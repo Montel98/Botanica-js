@@ -49,7 +49,7 @@ module.exports = {
 	plugins: [
 		new HtmlWebpackPlugin({ template: './src/index.html' }),
 	],
-	//devtool: 'inline-source-map',
+	devtool: 'inline-source-map',
 	devServer: {
 		static: './dist',
 		historyApiFallback: true,

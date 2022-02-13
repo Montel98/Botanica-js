@@ -168,6 +168,7 @@ export default class Stem extends Entity {
 	static terminalLength = 1.0;
 	static stemCount = 0;
 	static growthRate = 2.0 / 3;
+	//static growthRate = 2.0;
 
 	static stemMaterial = null;
 
@@ -189,6 +190,7 @@ export default class Stem extends Entity {
 
 		this.stemLength = 0.0;
 		this.growthRate = 2.0 / 3; // Growth Rate in units/second
+		//this.growthRate = 2.0;
 
 		// Merge stem tip and body
 
@@ -316,7 +318,7 @@ export default class Stem extends Entity {
 		this.leaves.push(...leafIndices);
 	}
 
-	killLeaves(deathRate=0.05) {
+	killLeaves(deathRate=0.05/*0.15*/) {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
 

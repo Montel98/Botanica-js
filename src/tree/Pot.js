@@ -747,7 +747,7 @@ class Soil extends Entity {
 
 		const soilSurface = new ParametricSurface(newPotFunc(...params.soil), 0.0, 1.0, 0.0, 2.0 * Math.PI);
 		const soilGeometry = new ParametricGeometry(soilSurface, 8, 128, false, true, true, null, potMapping);
-		soilGeometry.scale(0.985*params.scale, 0.985*params.scale, 0.985*params.scale);
+		soilGeometry.scale(0.983*params.scale, 0.983*params.scale, 0.983*params.scale);
 
 		return soilGeometry;
 	}

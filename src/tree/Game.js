@@ -28,8 +28,11 @@ export default function initGame() {
     canvas.width = game.width;
     canvas.height = game.height;
 
-    const cameraEye = new Vector([-0.45, -1.7, 0.6]);
-    const cameraFacing = new Vector([-0.45, 1.15, 0.6]);
+    //const cameraEye = new Vector([-0.45, -1.7, 0.6]);
+    //const cameraFacing = new Vector([-0.45, 1.15, 0.6]);
+
+    const cameraEye = new Vector([0.0, -1.7, 0.6]);
+    const cameraFacing = new Vector([0.0, 1.15, 0.6]);
 
     const cameraDir = subtract(cameraEye, cameraFacing);
 
