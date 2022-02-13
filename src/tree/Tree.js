@@ -17,7 +17,7 @@ import Stem from './Stem.js';
 import Leaves from './Leaf.js';
 import Flowers from './Flower.js';
 import { stemIterator } from './StemIterator.js';
-import DataStore from './DataStore.js';
+//import DataStore from './DataStore.js';
 
 const treeVertexShader = 
 `
