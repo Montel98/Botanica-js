@@ -515,7 +515,7 @@ function Roadmap(props) {
                         <li>Idea inception / Brainstorming {' \u2713'}</li>
                     </ul>
                 </div>*/}
-                <div class="roadmapMonthHeader">August-September</div>
+                <div class="roadmapMonthHeader">August - September</div>
                 <div class="roadmapContents">
                     <ul>
                         <li>Lightweight WebGL engine development and tree generation prototyping {' \u2713'}</li>
