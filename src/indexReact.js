@@ -545,8 +545,8 @@ function Roadmap(props) {
                         <li>Testing and final tweaks</li>
                         <li>Main Release (Date TBA)</li>
                         <li>Pruning extension release - Ability to view and modify trees directly on the site via wallet signing</li>
-                        <li>Website upgrades - Ability to view genetic traits directly on site, compare genetic similarity to other trees etc (likely late Q1 / early Q2)</li>
-                        <li>Potential plans for implementing genetic mutations (Q2)</li>
+                        <li>Website upgrades - Ability to view genetic traits directly on site, compare genetic similarity to other trees etc</li>
+                        <li>Potential plans for implementing genetic mutations</li>
                     </ul>
                 </div>
             </div>
