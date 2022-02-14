@@ -983,11 +983,6 @@ export default class Renderer {
 
 		if (!oes_vao_ext) {
 			alert('Your machine or browser does not support OES_vertex_array_object.');
-		}
-		oes_tf_ext = gl.getExtension('OES_texture_float'); // Get extension for floats in textures
-
-		if (!oes_tf_ext) {
-			alert('Your machine or browser does not support OES_texture_float.');
 		}	
 	}
 }
