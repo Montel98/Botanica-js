@@ -1,6 +1,6 @@
 //const MAX_STEMS = 609;
 const MAX_STEMS = 550;
-const MAX_BRANCHES = 180;
+const MAX_BRANCHES = 220;
 
 import Genome, * as Gen from './Genome.js';
 import Vector, { add, zeroVector, upVector } from './Vector.js';
