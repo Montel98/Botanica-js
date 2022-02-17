@@ -1,4 +1,5 @@
 import Vector from './Vector.js';
+import { transform, rotate3X, rotate3Y, rotate3Z } from './Matrix.js';
 
 export default class Geometry {
 	
@@ -340,6 +341,14 @@ export default class Geometry {
 
 		this.setVertexBuffer(this.mergeAttributes());
 
+	}
+
+	rotateX(angle) {
+
+		for (let vertex = 0; vertex < this.vertices.length; vertex++) {
+
+			this.vertices[vertex] = transform(this.vertices[vertex], rotate3X(angle));
+		}
 	}
 
 	mirrorY() {

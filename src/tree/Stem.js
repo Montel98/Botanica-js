@@ -318,7 +318,7 @@ export default class Stem extends Entity {
 		this.leaves.push(...leafIndices);
 	}
 
-	killLeaves(deathRate=0.05/*0.15*/) {
+	killLeaves(deathRate=/*0.05*/0.15) {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
 
@@ -383,7 +383,7 @@ export default class Stem extends Entity {
 
 		let stemTexture = undefined;
 
-		switch (woodTypeAllele.name/*'Dark Wood'*/) {
+		switch (/*woodTypeAllele.name*/'Dark Wood'/*'Gold'*//*'Silver'*//*'Rose Gold'*/) {
 
 			case 'Birch':
 				stemTexture = TextureBuilder.generateBirchTexture(1024, 1024);
@@ -406,6 +406,7 @@ export default class Stem extends Entity {
 			case 'Gold':
 				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.83, 0.68, 0.21]), 32, 32)
 				reflectivity = 0.3;
+				break;
 			default:
 				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.87, 0.75, 0.72]), 32, 32);
 				reflectivity = 0.3;

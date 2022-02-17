@@ -49,9 +49,6 @@ void main() {
 
     float branchAge = branchAges[int(aBranchIndex)];
     //float branchAge = 0.1;
-    //vec2 branchAgeCoord = vec2(aBranchIndex / 1024.0, 0.0);
-    //vec2 branchAgeCoord = vec2(0.5, 0.0);
-    //float branchAge = texture2D(uDataSampler, branchAgeCoord).r;
 
     vec3 currentPos = aMatureStartVertexPosition + branchAge * (aVertexPosition - aMatureStartVertexPosition);
 
@@ -115,7 +112,16 @@ void main() {
     vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
     vec3 treeColour = (1.0 - vBranchAge) * ambientColour + vBranchAge * texture2D(uTexture, vTexCoord).rgb;
 
-    gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour), 1.0); //0.2
+    float gamma = 2.2;
+
+    vec3 finalColour = light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour);
+    vec3 finalColourCorrected = pow(finalColour, vec3(1.0 / gamma));
+
+    //vec3 finalColourCorrected = vec3(pow(finalColour.r , 0.5), pow(finalColour.g , 0.5), pow(finalColour.b , 0.5));
+
+    gl_FragColor = vec4(finalColour, 1.0);
+
+    //gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour), 1.0); //0.2
 }
 `;
 
@@ -338,6 +344,8 @@ export default class Tree extends Entity {
         for (let branch of this.branches) {
 
             branch.grow(worldTime);
+
+            //console.log(branch.branchId);
 
             this.defaultShader.uniforms['branchAges'][branch.branchId].components[0] = branch.age;
             //newBranchAges[branch.branchId] = branch.age;

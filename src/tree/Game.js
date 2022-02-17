@@ -85,6 +85,18 @@ let messageDiv = null;
 
 function initInput(controller, renderer, camera, tree, worldTime) {
 
+    window.addEventListener('keydown', e => {
+        let key = e.which || e.keyCode;
+
+        keys[key] = true;
+    });
+
+    window.addEventListener('keyup', e => {
+        let key = e.which || e.keyCode;
+
+        keys[key] = false;
+    });
+
     window.addEventListener('resize', () => /*{resizeCanvas(renderer)}*/{
 
         const game = canvas.parentNode.getBoundingClientRect();
@@ -217,10 +229,14 @@ function setTreePositionAndMode(e, camera) {
     if (e.matches) {
         camera.setOrigin(0, -1.7, 0.6);
         camera.setCentre(0, 1.15, 0.6);
+        //camera.setOrigin(0.05, 0.1, 0.6);
+        //camera.setCentre(0.05, 0.1, 0.6);
     }
     else {
         camera.setOrigin(-0.45, -1.7, 0.6);
         camera.setCentre(-0.45, 1.15, 0.6);
+        //camera.setOrigin(0.05, 0.1, 0.6);
+        //camera.setCentre(0.05, 0.1, 0.6);
 
         //camera.setOrigin(0.0, -1.7, 0.6);
         //camera.setCentre(0.0, 1.15, 0.6);
@@ -232,7 +248,7 @@ function setTreePositionAndMode(e, camera) {
 
 function mainLoop(controller, worldTime) {
     window.requestAnimationFrame(function() {mainLoop(controller, worldTime) });
-    //handleInput(controller.scene.camera);
+    handleInput(controller.scene.camera);
 
     pan(controller, worldTime);
     drawScene(controller, worldTime);

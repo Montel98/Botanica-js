@@ -25,7 +25,7 @@ function newSeed(springSeed, autumnSeed, bloomStartSeed, bloomEndSeed, traitsSee
 }
 
 //export default newSeed(768585, 53025, 59402, 239025, [520968835,66333965,19577405,2052699], 1279000);
-export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1587); //<- use this one
+//export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1587); //<- use this one
 
 //export default newSeed(76858, 5302, 5940, 23902, [523463,63886,137943,26845], 158487);
 
@@ -38,4 +38,10 @@ export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 
 
 //export default newSeed(76858, 5302, 5940, 23902, [Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random()),Math.floor(10000*Math.random())], Math.floor(10000*Math.random()));
 
-//export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1588); //<- use this one
+export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1588); //<- use this one
+
+//export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1591);
+
+
+//Silver Gold RoseGold
+//export default newSeed(76858, 5302, 5940, 23902, [5237463,66386,137943,264645], 1502); //<- use this one

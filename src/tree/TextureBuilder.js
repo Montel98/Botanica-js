@@ -674,17 +674,11 @@ export function generateFlowerTexture(colourInfo, width, height) {
 
 	for (let x = 0; x < width; x++) {
 
-		let xNorm = x / (width - 1);
+		const xNorm = x / (width - 1);
 
 		for (let y = 0; y < height; y++) {
 
-			let yNorm = y / (height - 1);
-
-			/*let red = new Vector([255, 0, 0]);
-			let yellow = new Vector([255, 204, 0]);
-
-			let white = new Vector([255, 255, 255]);
-			let purple = new Vector([102, 0, 51]);*/
+			const yNorm = 2.0 * y / (height - 1);
 
 			let distance = xNorm;
 
@@ -692,17 +686,27 @@ export function generateFlowerTexture(colourInfo, width, height) {
 
 			let s1 = smoothStep(0.0, colourInfo.innerThreshold, xNorm);
 
-			let baseColour = add(colourInfo.colourA.scale(1 - s1), colourInfo.colourB.scale(s1));
+			let flowerColour = add(colourInfo.colourA.scale(1 - s1), colourInfo.colourB.scale(s1));
 
 			//let baseColour = add(red.scale(1 - distance), yellow.scale(distance));
 
 			let s2 = smoothStep(colourInfo.innerThreshold, 1.0, xNorm);
 			let body = add(colourInfo.colourB.scale(1 - s2), colourInfo.colourC.scale(s2));
-			baseColour = add(baseColour, subtract(body, baseColour).scale(step(threshold, xNorm)));
+			flowerColour = add(flowerColour, subtract(body, flowerColour).scale(step(threshold, xNorm)));
 
-			buffer[index] = baseColour.components[0];
-			buffer[index + 1] = baseColour.components[1];
-			buffer[index + 2] = baseColour.components[2];
+			flowerColour = flowerColour.scale(1.0 - step(/*yNorm, 1.0*/1.0, yNorm));
+
+			//const stemColour = new Vector([102, 153, 0]).scale(step(1.0, yNorm)).scale(1.0 - step(1.5, yNorm));
+			const stemColour = new Vector([52, 86, 45]).scale(step(1.0, yNorm)).scale(1.0 - step(1.5, yNorm));
+
+			//const stemColour = new Vector([102, 153, 0]).scale(step(yNorm, 1.0));
+			const antherColour = colourInfo.antherColour.scale(step(1.5, yNorm));
+			let finalColour = add(stemColour, flowerColour);
+			finalColour = add(finalColour, antherColour);
+
+			buffer[index] = finalColour.components[0];
+			buffer[index + 1] = finalColour.components[1];
+			buffer[index + 2] = finalColour.components[2];
 			buffer[index + 3] = 255;
 
 			//console.log(baseColour.components);

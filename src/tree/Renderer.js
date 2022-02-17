@@ -1,4 +1,7 @@
-var gl, ext, oes_vao_ext, oes_tf_ext;
+var gl, ext, oes_vao_ext, oes_tf_ext, oes_tf_linear_ext, oes_thf_ext, oes_thf_linear_ext;
+
+import { PlaneEntity } from './PrimitiveShapes.js';
+import ShaderBuilder from './ShaderBuilder.js';
 
 const GL_UNSIGNED_SHORT_SIZE = 2;
 const GL_FLOAT_SIZE = 4;
@@ -34,9 +37,16 @@ export default class Renderer {
 		this.initExtensions();
 
     	// Experimental
-    	this.frameBuffer = this.initFrameBuffer();
-    	this.drawPassStates = [{frameBuffer: null, shaderName: "Default"},
-    							{frameBuffer: this.frameBuffer, shaderName: "Picking"}];
+    	this.frameBuffer = this.initFrameBuffer(gl.UNSIGNED_BYTE);
+    	//this.floatFrameBuffer = this.initFrameBuffer(gl.UNSIGNED_BYTE);
+
+    	//this.HDRFrameBuffer = this.initHDRFrameBuffer();
+    	this.drawPassStates = [{frameBuffer: /*this.floatFrameBuffer*/null, shaderName: "Default"},
+    							{frameBuffer: this.frameBuffer, shaderName: "Picking"},
+    							/*{frameBuffer: null, shaderName: "Default"}*/];
+
+    	//this.quad = this.initQuad();
+    	//console.log('quad: ', this.quad);
 	}
 
 	/* (for each frame buffer)
@@ -259,6 +269,21 @@ export default class Renderer {
 				}
 			}
 		}
+
+		//gl.bindFramebuffer(gl.FRAMEBUFFER, this.floatFrameBuffer);
+		//this.renderQuad(scene);
+	}
+
+	renderQuad(scene) {
+
+		gl.activeTexture(gl.TEXTURE4);
+		const hdrTexture = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+		gl.bindTexture(gl.TEXTURE_2D, hdrTexture);
+		const shaderProgram = this.bindShaderProgram(this.quad.mesh, this.quad.mesh.shaderPrograms['Default'], scene.camera);
+		
+		gl.uniform1i(gl.getUniformLocation(shaderProgram, 'hdrBuffer'), 4);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		this.renderEntity(this.quad, scene, this.drawPassStates[2]);
 	}
 
 	entityUsesProgram(entity, programType) {
@@ -528,6 +553,7 @@ export default class Renderer {
 	clear() {
 		this.clearFrameBuffer();
 		this.clearFrameBuffer(this.frameBuffer);
+		this.clearFrameBuffer(this.floatFrameBuffer);
 	}
 
 	clearFrameBuffer(frameBufferTarget=null) {
@@ -598,39 +624,6 @@ export default class Renderer {
 
 	    return bufferObject;
 	}
-
-	/*initBuffers(geometry, program) {
-
-		// Create handle to vertex array object
-		const VAO = oes_vao_ext.createVertexArrayOES();
-		oes_vao_ext.bindVertexArrayOES(VAO);
-
-		let vertexBufferInfo = geometry.bufferAttributes.buffers['vertexBuffer'];
-		let indexBufferInfo = geometry.bufferAttributes.buffers['indexBuffer'];
-
-		//vertexBufferSize = this.calcBufferSize(vertexBufferInfo, geometry.vertexBuffer);
-		//indexBufferSize = this.calcBufferSize(indexBufferInfo, geometry.indexBuffer);
-
-		let bufferStoreInfo = addBuffer(VAO, vertexBufferSize, 
-	    		indexBufferSize, geometry.vertices.length);
-
-	    const VBO = this.initBuffer(vertexBufferInfo, geometry.vertexBuffer);
-	    const IBO = this.initBuffer(indexBufferInfo, geometry.indexBuffer);
-
-	    this.initBufferAttributes(program, geometry.bufferAttributes, false);
-
-	    const bufferLocations = {
-	    	VertexArrayLoc: VAO,
-	        vertexBufferLoc: VBO,
-	        indexBufferLoc: IBO
-	    };
-
-	   	geometry.setBufferLocation(bufferLocations);
-
-	   	oes_vao_ext.bindVertexArrayOES(null);
-
-	    return bufferLocations;
-	}*/
 
 	initBuffers(geometry, program) {
 
@@ -792,7 +785,7 @@ export default class Renderer {
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
-	initEmptyTexture(textureWidth, textureHeight) {
+	initEmptyTexture(textureWidth, textureHeight, texelType) {
 
 		const textureID = gl.createTexture();
 
@@ -803,11 +796,10 @@ export default class Renderer {
 		const internalFormat = gl.RGBA;
 		const srcFormat = gl.RGBA;
 		const border = 0;
-		const type = gl.UNSIGNED_BYTE;
 		const level = 0;
 
 		// Create empty texture
-		gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, type, null);
+		gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, texelType, null);
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -863,8 +855,6 @@ export default class Renderer {
 	    const vertexShader = this.loadShader(gl.VERTEX_SHADER, vsSource);
 	    const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fsSource);
 
-	    //console.log(vsSource);
-
 	    // Create program and attach shaders
 	    const shaderProgram = gl.createProgram();
 	    gl.attachShader(shaderProgram, vertexShader);
@@ -909,18 +899,17 @@ export default class Renderer {
 	    return shader;
 	}
 
-	initFrameBuffer() {
+	initFrameBuffer(type) {
 
 		const depthBuffer = gl.createRenderbuffer();
 		gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
 		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.canvas.width, this.canvas.height);
 
-		let textureID = this.initEmptyTexture(this.canvas.width, this.canvas.height);
+		let textureID = this.initEmptyTexture(this.canvas.width, this.canvas.height, /*gl.UNSIGNED_BYTE*/type);
 
 		gl.bindTexture(gl.TEXTURE_2D, textureID);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -938,14 +927,48 @@ export default class Renderer {
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-		return frameBuffer;
+		console.log('frameBuffer: ', frameBuffer);
 
+		return frameBuffer;
 	}
+
+	/*makeFloatFrameBuffer() {
+
+		const textureID = this.initEmptyTexture(this.canvas.width, this.canvas.height, ext.HALF_FLOAT_OES);
+		gl.bindTexture(gl.TEXTURE_2D, textureID);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_FILER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		const frameBuffer = gl.createFrameBuffer();
+		gl.bindFrameBuffer(gl.FRAME_BUFFER, frameBuffer);
+
+		// Use float texture as colour buffer 0
+		const attachmentPoint = gl.COLOR_ATTACHMENT0;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentpoint, gl.TEXTURE_2D, textureID, 0);
+
+		gl.bindFrameBuffer(gl.FRAME_BUFFER, null);
+		gl.bindFrameBuffer(gl.TEXTURE_2D, null);
+
+		return frameBuffer;
+	}*/
 
 	initEnvironmentMap(cubeMap) {
 
 		let textureID = this.initCubeMapTextures(cubeMap.faces, cubeMap.dimension);
 		cubeMap.setTextureID(textureID);
+	}
+
+	initQuad() {
+
+    	const quadShader = ShaderBuilder.customShader('default', 
+    												quadVertexShader, 
+    												quadFragmentShader, {}, []);
+    	const quad = new PlaneEntity(quadShader);
+
+    	return quad;
 	}
 
 	getPixelColour(pixelArray, x, y) {
@@ -983,7 +1006,37 @@ export default class Renderer {
 
 		if (!oes_vao_ext) {
 			alert('Your machine or browser does not support OES_vertex_array_object.');
-		}	
+		}
+
+		/*oes_thf_ext = gl.getExtension('OES_texture_half_float'); // Get extension for floats in textures
+
+		if (!oes_thf_ext) {
+			alert('Your machine or browser does not support OES_texture_half_float.');
+		}
+
+		oes_thf_linear_ext = gl.getExtension('OES_texture_half_float_linear');
+
+		if (!oes_thf_linear_ext) {
+			alert('Your machine or browser does not support OES_texture_half_float_linear.');
+		}
+
+		/*cbf_ext = gl.getExtension('WEBGL_color_buffer_float');
+
+		if (!cbf_ext) {
+			alert('Your machine or browser does not support EXT_color_buffer_float. HDR will be disabled.')
+		}*/
+
+		/*oes_tf_ext = gl.getExtension('OES_texture_float');
+
+		if (!oes_tf_ext) {
+			alert('Your machine or browser does not support OES_texture_float.');
+		}
+
+		oes_tf_linear_ext = gl.getExtension('OES_texture_float');
+
+		if (!oes_tf_linear_ext) {
+			alert('Your machine or browser does not support OES_texture_float_linear.');
+		}*/
 	}
 }
 
@@ -1039,3 +1092,49 @@ function getTextureType(type) {
 		return gl.UNSIGNED_BYTE;
 	}
 }
+
+const quadVertexShader = 
+`
+precision mediump float;
+
+attribute vec3 aVertexPosition;
+attribute vec2 aTexCoord;
+
+varying vec2 vTexCoord;
+
+void main() {
+
+	gl_Position = vec4(aVertexPosition, 1.0);
+
+	vTexCoord = aTexCoord;
+}
+`;
+const quadFragmentShader = 
+`
+precision mediump float;
+
+varying vec2 vTexCoord;
+
+uniform sampler2D hdrBuffer;
+
+void main() {
+
+    float gamma = 2.2;
+
+    //vec3 finalColour = pow(texture2D(hdrBuffer, vTexCoords).rgb, vec3(1.0 / gamma));
+    //vec3 finalColour = texture2D(hdrBuffer, vTexCoords).rgba;
+    vec4 finalColour = texture2D(hdrBuffer, vTexCoord);
+
+    float average = 0.2126 * finalColour.r + 0.7152 * finalColour.g + 0.0722 * finalColour.b;
+    //gl_FragColor = vec4(average, average, average, 1.0);
+    //gl_FragColor = finalColour;
+	//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+
+	float exposure = 0.8;
+    vec3 hdrColour = vec3(1.0) - exp(-exposure * finalColour.rgb);
+
+    vec3 gammaColour = pow(hdrColour, vec3(1.0 / gamma));
+
+    gl_FragColor = vec4(gammaColour, finalColour.a);
+} 
+`;

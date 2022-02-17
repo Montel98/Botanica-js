@@ -17,8 +17,14 @@ html, body {
 
     //background-image: linear-gradient(to top, rgb(15, 15, 20), rgb(40, 60, 80));
 
+    //background-image: linear-gradient(to top, rgb(255, 153, 0), rgb(40, 60, 80));
+    //background: linear-gradient(#e66465, #9198e5);
+    //background: linear-gradient(rgb(40, 60, 80), #e66465);
 
     background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(40, 60, 80));
+
+
+
     //background-image: linear-gradient(to top, rgb(30, 30, 30), rgb(28, 42, 56));
     //background-color: black;
 
@@ -313,6 +319,7 @@ li {
 
 #treeFeaturesContainer {
     background-color: rgb(30, 30, 30);
+
     //background-color: rgb(26, 37, 40);
     //height: 100vh;
 
@@ -737,9 +744,9 @@ li {
     display: none;
 }*/
 
-/*.topText {
+.topText {
     display: none;
-}*/
+}
 
 @media screen and (max-width: 500px) {
 

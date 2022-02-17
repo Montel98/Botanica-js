@@ -89,7 +89,7 @@ void main() {
 
 function treeStumpGeometry(axis, position, radius) {
 
-    let plane = PlaneGeometry();
+    let plane = PlaneGeometry(true, true);
     let projectionMatrix = projectToStumpAxis(axis, position);
 
     for (let vertex = 0; vertex < plane.vertices.length; vertex++) {

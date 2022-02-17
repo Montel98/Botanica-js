@@ -157,9 +157,9 @@ void main() {
     float d = 100.0 * length(st);
     float n = fbm(st * 80.0);
     
-    vec3 green = vec3(0.4, 0.6, 0.0);
-    vec3 red = vec3(1.0, 0.5, 0.0); // <- was 0.3
-    vec3 orange = vec3(1.0, 1.0, 0.0);
+    vec3 green = 0.3 * vec3(0.4, 0.6, 0.0);
+    vec3 red = 0.3 * vec3(1.0, 0.5, 0.0); // <- was 0.3
+    vec3 orange = 0.3 * vec3(1.0, 1.0, 0.0);
     
     vec3 colourA = mix(orange, red, n);
     vec3 colourB = red * (0.3 + n);
@@ -180,9 +180,17 @@ void main() {
     vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
 
     vec3 leafColour = ((1.0 - lightSource.reflectivity) * ambientColour * textureColour) + (lightSource.reflectivity * reflectedColour);
-    //vec3 leafColour = ambientColour * textureColour; 
 
-	gl_FragColor = vec4(light * leafColour, 1.0);
+    float exposure = 0.8;
+    vec3 hdrColour = vec3(1.0) - exp(-exposure * light * leafColour);
+
+    float gamma = 2.2;
+
+    vec3 finalColour = pow(hdrColour, vec3(1.0 / gamma));
+
+    gl_FragColor = vec4(finalColour, 1.0);
+
+	//gl_FragColor = vec4(light * leafColour, 1.0);
 }
 `;
 
@@ -319,32 +327,37 @@ void main() {
 
     vec3 leafColour = ((1.0 - lightSource.reflectivity) * ambientColour) + (lightSource.reflectivity * reflectedColour); 
 
-	gl_FragColor = vec4(light * leafColour, 1.0);
+    //float gamma = 2.2;
+
+    //vec3 finalColour = pow(light * leafColour, vec3(1.0 / gamma));
+
+	//gl_FragColor = vec4(light * leafColour, 1.0);
+
+	gl_FragColor = vec4(finalColour, 1.0);
 }
 `;
-
 
 const geneTable = {
 
 	colours: {
 				'0': {rgb: [0.0, 0.0, 0.4], reflectivity: 0.0}, // Midnight blue
-				'1': {rgb: [0.6, 0.6, 0.4], reflectivity: 0.0}, // Murky Green
+				'1': {rgb: /*[0.6, 0.6, 0.4]*/[0.15, 0.15, 0.06], reflectivity: 0.0}, // Murky Green
 				'2': {rgb: [0.8, 0.0, 0.6], reflectivity: 0.0}, // Fuschia
 				'3': {rgb: [1.0, 0.4, 0.0], reflectivity: 0.0}, // Orange
-				'4': {rgb: [1.0, 0.8, 1.0], reflectivity: 0.0}, // Blossom
+				'4': {rgb: /*[1.0, 0.8, 1.0]*/[0.8, 0.3, 0.8], reflectivity: 0.0}, // Blossom
 				'5': {rgb: [1.0, 1.0, 1.0], reflectivity: 0.0}, // White
 				'6': {rgb: [0.8, 0.0, 0.0], reflectivity: 0.0}, // Fiery Red
 				'7': {rgb: [0.0, 0.4, 0.15], reflectivity: 0.0}, // Verdant Green
-				'8': {rgb: [0.1, 1.0, 0.8], reflectivity:  0.0}, // Aqua Green
+				'8': {rgb: /*[0.1, 1.0, 0.8]*/[0.01, 0.8, 0.61], reflectivity:  0.0}, // Aqua Green
 				'9': {rgb: [0.8, 0.6, 0.0], reflectivity: 0.0}, // Mustard Brown
 				'10': {rgb: [0.75, 0.75, 0.75], reflectivity: 0.3}, // Silver
-				'11': {rgb: [0.83, 0.68, 0.21], reflectivity: 0.3}, // Gold
+				'11': {rgb: [/*0.83, 0.68, 0.21*//*0.66*/0.83, 0.42, 0.03], reflectivity: 0.5}, // Gold
 				'12': {rgb: [1.0, 0.85, 0.72], reflectivity: 0.0}, // Peach
 				'13': {rgb: [0.6, 0.6, 0.6], reflectivity: 0.0}, // Grey
-				'14': {rgb: [0.8, 1.0, 0.2], reflectivity: 0.0}, // Lime Yellow
+				'14': {rgb: /*[0.8, 1.0, 0.2]*/[0.6, 0.8, 0.03], reflectivity: 0.0}, // Lime Yellow
 				'15': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Trippy
 				'16': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Hypnosis
-				'17': {rgb: [0.87, 0.75, 0.72], reflectivity: 0.3}, // Rose Gold
+				'17': {rgb: [/*0.87, 0.75, 0.72*/0.73, 0.53, 0.48], reflectivity: 0.3}, // Rose Gold
 	},
 
 	patterns: {
@@ -444,7 +457,7 @@ export default class Leaves extends Entity {
 
 		const material = new Material(leafTexture);
 		material.maps['textureMap'] = leafTexture;
-        material.setPhongComponents(0.2, 0.6, 0.5);
+        material.setPhongComponents(0.2, 0.6, 1.5);
         material.setReflectivity(colourInfo.reflectivity);
 
 		this.ages = [];
@@ -585,6 +598,20 @@ export default class Leaves extends Entity {
         let magnitudeA = shapeAllele.geneticCode & (2**halfGeneLength - 1);
         let magnitudeB = (shapeAllele.geneticCode & ((2**halfGeneLength - 1) << halfGeneLength)) >> halfGeneLength;
 
+        magnitudeA = 10;
+        magnitudeB = 10;
+
+        //magnitudeA = 6;
+        //magnitudeB = 11;
+
+        //magnitudeA = 1;
+        //magnitudeB = 5;
+
+        //magnitudeA = 6;
+        //magnitudeB = 8;
+
+
+
 		let termA = new FourierTerm(0.0, 0.5, 0.5, 2.0);
         let termB = new FourierTerm(0.0, 0.3, 0.5 * magnitudeA, 2.0);
         let termC  = new FourierTerm(0.0, 0.2, 0.5 * magnitudeB, 2.0);
@@ -604,8 +631,8 @@ export default class Leaves extends Entity {
 
         const textureMapping = this.getPatternInfo(genome).mapping;
 
-		const leafGeometryMature = new ParametricGeometry(leafSurfaceMature, /*180*/100, 4, false, true, true, textureMapping);
-		const leafGeometryStart = new ParametricGeometry(leafSurfaceStart, /*180*/100, 4, false, false, true);
+		const leafGeometryMature = new ParametricGeometry(leafSurfaceMature, /*180*/128, 4, false, true, true, textureMapping);
+		const leafGeometryStart = new ParametricGeometry(leafSurfaceStart, /*180*/128, 4, false, false, true);
 
 		const leafStemGeometryMature = new ParametricGeometry(leafStemSurfaceMature, 8, 8, false, true, true, textureMapping);
 		const leafStemGeometryStart = new ParametricGeometry(leafStemSurfaceStart, 8, 8, false, false, true);
@@ -628,7 +655,18 @@ export default class Leaves extends Entity {
 			const leftAllele = colourAlleles.left;
 
 			const colourId = leftAllele.allele.geneticCode;
-			const colourInfo = geneTable.colours[colourId];
+
+
+			//FOR TWITTER:
+			const colourInfo = geneTable.colours[1]; // Murky green
+			//const colourInfo = geneTable.colours[14]; // Lime yellow
+			//const colourInfo = geneTable.colours[12]; // Peach
+			//const colourInfo = geneTable.colours[4]; // Blossom
+			//const colourInfo = geneTable.colours[colourId];
+
+			//const colourInfo = geneTable.colours[8];
+			//const colourInfo = geneTable.colours[10];
+			//const colourInfo = geneTable.colours[11];
 
 			return colourInfo;
 		}

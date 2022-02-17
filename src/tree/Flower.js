@@ -6,7 +6,7 @@ import ParametricGeometry from './ParametricGeometry.js';
 import ParametricSurface from './ParametricSurface.js';
 import { FourierTerm, FourierSeries } from './FourierSeries.js';
 import BezierCubic from './BezierCubic.js';
-import { identityMatrix, multiply, rotate4Z, scale } from './Matrix.js';
+import { identityMatrix, transform, multiply, rotate3Z, rotate4Z, scale } from './Matrix.js';
 import ShaderBuilder from './ShaderBuilder.js';
 import * as TextureBuilder from './TextureBuilder.js';
 import Entity from './Entity.js';
@@ -46,13 +46,21 @@ void main() {
 	float threshold = 0.5;
 	float factor = 1.0 / threshold;
 
-	vec3 v1 = ((1.0 - factor * aAge) * aStartVertexPosition) + factor * aAge * aMidVertexPosition;
-	vec3 v2 = ((1.0 - factor * (aAge - threshold)) * aMidVertexPosition) + (factor * (aAge - threshold) * aVertexPosition); 
+	vec3 aStartVertexPosScaled = 0.2 * aStartVertexPosition;
+
+	vec3 v1 = ((1.0 - factor * aAge) * aStartVertexPosScaled) + factor * aAge * aMidVertexPosition;
+
+	float x = factor * (aAge - threshold);
+
+	float ageScaled = ( 2.0 / ( 1.0 + exp(-10.0 * x) ) ) - 1.0;
+	//vec3 v2 = ((1.0 - factor * (aAge - threshold)) * aMidVertexPosition) + (factor * (aAge - threshold) * aVertexPosition);
+	vec3 v2 = ((1.0 - ageScaled) * aMidVertexPosition) + (ageScaled * aVertexPosition); 
 
 	vec3 currentPos = mix(v1, v2, step(threshold, aAge));
 
 	vec3 n1 = ((1.0 - factor * aAge) * aStartNormal) + factor * aAge * aMidNormal;
-	vec3 n2 = ((1.0 - factor * (aAge - threshold)) * aMidNormal) + (factor * (aAge - threshold) * aNormal); 
+	//vec3 n2 = ((1.0 - factor * (aAge - threshold)) * aMidNormal) + (factor * (aAge - threshold) * aNormal);
+	vec3 n2 = ((1.0 - ageScaled) * aMidNormal) + (ageScaled * aNormal); 
 
 	vec3 currentNormal = mix(n1, n2, step(threshold, aAge));
 
@@ -98,29 +106,25 @@ void main() {
 	vec3 textureColour = texture2D(uTexture, vTexCoord).rgb;
 
 	//gl_FragColor = vec4(light * vColour, 1.0); 
-	gl_FragColor = vec4(light * textureColour, 1.0);
+	//gl_FragColor = vec4(light * textureColour, 1.0);
+
+    float gamma = 2.2;
+
+    //vec3 finalColour = vec3(1.0) - exp(-1.0 * light * textureColour);
+    //vec3 hdrColour = light * textureColour;
+    vec3 hdrColour = vec3(1.0) - exp(-0.8 * 0.5 * light * textureColour);
+
+    vec3 finalColour = pow(hdrColour, vec3(1.0 / gamma));
+
+    gl_FragColor = vec4(finalColour, 1.0);
 }
 `
 
 // 0.3 + 0.5a + 0.2b
 
-//var termA = new FourierTerm(0.0, 0.6, 2.5, 2.0);
-//var termB = new FourierTerm(0.0, 0.3, 4.5, 2.0);
-
-const termA = new FourierTerm(0.0, 0.6, 2.5, 2.0);
-const termB = new FourierTerm(0.0, 0.4, 2.5, 2.0);
-
-//var termA = new FourierTerm(0.0, 0.5, 1.5, 2.0);
-//var termB = new FourierTerm(0.0, 0.4, 3.0, 2.0);
-
-//var termA = new FourierTerm(0.0, 0.6, 4.5, 2.0);
-//var termB = new FourierTerm(0.0, 0.3, 8.0, 2.0);
-
 const termBud = new FourierTerm(0.0, 0.85, 2.0, 2.0);
 const termBud2 = new FourierTerm(0.0, 0.05, 2.0, 200.0);
 
-//var f = new FourierSeries(0.0, [termA, termB]);
-const f = new FourierSeries(0.4, [termA, termB]);
 const f2 = new FourierSeries(1.0, []); // Bud Closed
 const f3 = new FourierSeries(0.1, [termBud, termBud2]); // Bud Mid
 
@@ -174,6 +178,14 @@ const flowerStemPath = new BezierCubic(new Vector([0.0, 0.0, 0.0]),
 									new Vector([1.2, 0.0, 0.9]),
 									new Vector([1.6, 0.0, 1.8]));
 
+//const flowerMapping = {sMin: 0.52, sMax: 0.98, tMin: 0.0, tMax: 1.0};
+//const flowerStemMapping = {sMin: 0.02, sMax: 0.48, tMin: 0.0, tMax: 1.0};
+
+const flowerMapping = {sMin: 0.01, sMax: 0.49, tMin: 0.0, tMax: 1.0};
+
+const flowerStemMapping = {sMin: 0.51, sMax: 0.74, tMin: 0.0, tMax: 1.0};
+const antherMapping = {sMin: 0.76, sMax: 0.99, tMin: 0.0, tMax: 1.0};
+
 const flowerFunc = (dTheta, petalSideProfile, petalTopProfile) => {
 	return {
 		aux(u, v) {
@@ -210,10 +222,8 @@ const flowerFunc = (dTheta, petalSideProfile, petalTopProfile) => {
 	}
 }
 
-const flowerStemFunc = (path) => {
+const flowerStemFunc = (path, radiusStart) => {
 	return {
-
-		radius: 0.1,
 
 		crossSection(gradient, v) {
 
@@ -225,7 +235,8 @@ const flowerStemFunc = (path) => {
 
 		aux(u, v) {
 
-			this.radius = 0.1 - 0.07 * u
+			//this.radius = 0.1 - 0.07 * u;
+			this.radius = radiusStart - (0.7 * radiusStart * u);
 			this.bezierPoint = path.eval(u);
 			this.bezierGradient = path.derivative(u);
 			this.crossSectionPoint = this.crossSection(this.bezierGradient, v);
@@ -245,6 +256,70 @@ const flowerStemFunc = (path) => {
 	}
 }
 
+const filamentPointsEnd = [new Vector([0.0, 0.0, 0.0]),
+							new Vector([0.02, 0.0, 0.4]),
+							new Vector([/*0.5, 0.0, 0.8*/0.4, 0.0, 0.6]),
+							new Vector([/*0.6, 0.0, 1.5*/0.5, 0.0, 1.25])
+							];
+
+const filamentPointsStart = [new Vector([0.0, 0.0, 0.0]),
+							new Vector([0.14, 0.0, 0.4]),
+							new Vector([0.2, 0.0, 1.0]),
+							new Vector([0.03, 0.0, 1])
+							];
+
+const filamentFunc = (angle, points) => {
+
+
+
+	const bezierPointsRotated = points.map(point => transform(point, rotate3Z(angle)));
+
+	/*const pathBase = new BezierCubic(new Vector([0.0, 0.0, 0.0]),
+								new Vector([0.02, 0.0, 0.4]),
+								new Vector([0.2, 0.0, 0.9]),
+								new Vector([0.5, 0.0, 1.2])
+	);*/
+
+	const path = new BezierCubic(...bezierPointsRotated);
+
+	return flowerStemFunc(path, 0.03);
+}
+
+const antherFunc = () => {
+
+	const crossSectionXZ = new BezierCubic(new Vector([0.0, 0.0]),
+										new Vector([0.07, 0.0]),
+										new Vector([0.07, 0.4]),
+										new Vector([0.0, 0.4]));
+
+	return {
+
+		aux(u, v) {
+			this.pathXZ = crossSectionXZ.eval(u);
+		},
+
+		x(u, v) {
+			return this.pathXZ.components[0] * Math.cos(v);
+		},
+
+		y(u, v) {
+			return this.pathXZ.components[0] * Math.sin(v);
+		},
+
+		z(u, v) {
+			return this.pathXZ.components[1];
+		}
+	}
+}
+
+const pistilFunc = (path) => {
+
+	const crossSection = new BezierCubic(new Vector([0.0, 0.0]),
+										new Vector([0.0, 0.4]),
+										new Vector([0.5, 0.8]),
+										new Vector([0.0, 0.72]));
+}
+
 export default class Flowers extends Entity {
 
 	static maxAge = 1.0;
@@ -253,7 +328,7 @@ export default class Flowers extends Entity {
 
 		super();
 
-		const flowerSurface = new ParametricSurface(flowerFunc(0, flowerOpen, f), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+		//const flowerSurface = new ParametricSurface(flowerFunc(0, flowerOpen, f), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 		//const flowerTexture = TextureBuilder.generateFlowerTexture(flowerSurface, 512, 512);
 		const flowerTexture = TextureBuilder.generateFlowerTexture(this.getFlowerColourInfo(), 128, 128);
 		const material = new Material(flowerTexture);
@@ -305,20 +380,35 @@ export default class Flowers extends Entity {
 
 	getFlowerColourInfo() {
 		//const randomIndex = Math.floor(Object.keys(FlowerColours).length * Math.random());
+
 		const randomIndex = 0;
+		//const randomIndex = 1;
+		//const randomIndex = 2;
+		//const randomIndex = 3;
 
 		return FlowerColours[randomIndex];
 	}
 
 	generateFlowerStemGeometry() {
 
-		const stemSurface = new ParametricSurface(flowerStemFunc(flowerStemPath), 0.0, 1.0, 0.0, 2.0 * Math.PI);
-		const stemGeometry = new ParametricGeometry(stemSurface, 8, 8, false, true, true);
+		const stemSurface = new ParametricSurface(flowerStemFunc(flowerStemPath, 0.09), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const stemGeometry = new ParametricGeometry(stemSurface, 8, 8, false, true, true, null, flowerStemMapping);
 
 		stemGeometry.addMorphTarget('Start', stemGeometry.vertices, stemGeometry.normals);
 		stemGeometry.addMorphTarget('Mid', stemGeometry.vertices, stemGeometry.normals);
 
 		return stemGeometry;
+	}
+
+	generateFilamentGeometry() {
+
+		const filamentSurface = new ParametricSurface(filamentFunc(), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+		const filamentGeometry = new ParametricGeometry(filamentSurface, 8, 8, false, true, true, null, flowerStemMapping);
+
+		filamentGeometry.addMorphTarget('Start', filamentGeometry.vertices, filamentGeometry.normals);
+		filamentGeometry.addMorphTarget('Mid', filamentGeometry.vertices, filamentGeometry.normals);
+
+		return filamentGeometry;
 	}
 
 	generateBudGeometry() {
@@ -339,10 +429,22 @@ export default class Flowers extends Entity {
 
         //console.log('Mag A:', magnitudeA, 'Mag B:', magnitudeB);
 
-        let mainTerm = new FourierTerm(0.0, 0.6, 0.5 * magnitudeA, 2.0);
-        let outerTerm = new FourierTerm(0.0, 0.4, 0.5 * magnitudeB, 2.0);
+        magnitudeA = 3;
+        magnitudeB = 6;
 
-        let flowerFourier = new FourierSeries(0.4, [mainTerm, outerTerm]);
+        //magnitudeA = 8;
+        //magnitudeB = 8;
+
+        //magnitudeA = 5;
+        //magnitudeB = 10;
+
+        //magnitudeA = 12;
+        //magnitudeB = 12;
+
+        let mainTerm = new FourierTerm(0.0, /*0.6*/0.45, 0.5 * magnitudeA, 2.0);
+        let outerTerm = new FourierTerm(0.0, /*0.4*/0.3, 0.5 * magnitudeB, 2.0);
+
+        let flowerFourier = new FourierSeries(/*0.4*/0.3, [mainTerm, outerTerm]);
 
 		const stemGeometry = this.generateFlowerStemGeometry();
 
@@ -350,9 +452,9 @@ export default class Flowers extends Entity {
 		const budSurfaceMid = new ParametricSurface(flowerFunc(0, budHalfOpened, f3), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 		const budSurfaceEnd = new ParametricSurface(flowerFunc(0, budOpened, f3), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 
-		const budGeometryStart = new ParametricGeometry(budSurfaceStart, 256, 8, true, true, true);
-		const budGeometryMid = new ParametricGeometry(budSurfaceMid, 256, 8, true, true, true);
-		const budGeometryEnd = new ParametricGeometry(budSurfaceEnd, 256, 8, true, true, true);
+		const budGeometryStart = new ParametricGeometry(budSurfaceStart, 256, 8, true, true, true, null, flowerStemMapping);
+		const budGeometryMid = new ParametricGeometry(budSurfaceMid, 256, 8, true, true, true, null, flowerStemMapping);
+		const budGeometryEnd = new ParametricGeometry(budSurfaceEnd, 256, 8, true, true, true, null, flowerStemMapping);
 
 		budGeometryStart.translate(...flowerStemPath.p3.components);
 		budGeometryMid.translate(...flowerStemPath.p3.components);
@@ -361,16 +463,15 @@ export default class Flowers extends Entity {
 		budGeometryEnd.addMorphTarget('Start', budGeometryStart.vertices, budGeometryStart.normals);
 		budGeometryEnd.addMorphTarget('Mid', budGeometryMid.vertices, budGeometryMid.normals);
 
-		let budColours = [];
-		let budColour = new Vector([0.2, 0.5, 0.0]);
+		//--------------------------------------------------------------------------------------------------------------------------------
 
 		const flowerSurfaceStart = new ParametricSurface(flowerFunc(0, flowerClosed, /*f*/flowerFourier), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 		const flowerSurfaceMid = new ParametricSurface(flowerFunc(0, flowerClosed, /*f*/flowerFourier), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 		const flowerSurfaceEnd = new ParametricSurface(flowerFunc(0, flowerOpen, /*f*/flowerFourier), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 
-		const flowerGeometryStart = new ParametricGeometry(flowerSurfaceStart, 256, 8, false, true, true);
-		const flowerGeometryMid = new ParametricGeometry(flowerSurfaceMid, 256, 8, false, true, true);
-		const flowerGeometryEnd = new ParametricGeometry(flowerSurfaceEnd, 256, 8, false, true, true);
+		const flowerGeometryStart = new ParametricGeometry(flowerSurfaceStart, 256, 8, false, true, true, null, flowerMapping);
+		const flowerGeometryMid = new ParametricGeometry(flowerSurfaceMid, 256, 8, false, true, true, null, flowerMapping);
+		const flowerGeometryEnd = new ParametricGeometry(flowerSurfaceEnd, 256, 8, false, true, true, null, flowerMapping);
 
 		flowerGeometryStart.translate(...flowerStemPath.p3.components);
 		flowerGeometryMid.translate(...flowerStemPath.p3.components);
@@ -379,12 +480,57 @@ export default class Flowers extends Entity {
 		flowerGeometryEnd.addMorphTarget('Start', flowerGeometryStart.vertices, flowerGeometryStart.normals);
 		flowerGeometryEnd.addMorphTarget('Mid', flowerGeometryMid.vertices, flowerGeometryMid.normals);
 
-		let flowerColours = [];
-		//let flowerColour = new Vector([Math.random(), Math.random(), Math.random()]);
-		let flowerColour = new Vector([1.0, 1.0, 1.0]);
+		//--------------------------------------------------------------------------------------------------------------------------------
 
-		budGeometryEnd.addGeometry(flowerGeometryEnd);
-		budGeometryEnd.addGeometry(stemGeometry);
+		const noFilaments = Math.floor(3.0 + 3.0 * Math.random());
+
+		for (let filament = 0; filament < noFilaments; filament++) {
+
+			const angle = Math.PI * 2.0 * (filament / noFilaments);
+
+			const filamentSurfaceEnd = new ParametricSurface(filamentFunc(angle, filamentPointsEnd), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+			const filamentGeometryEnd = new ParametricGeometry(filamentSurfaceEnd, 8, 8, false, true, true, null, flowerStemMapping);
+
+			filamentGeometryEnd.translate(...flowerStemPath.p3.components);
+
+			const filamentSurfaceStart = new ParametricSurface(filamentFunc(angle, filamentPointsStart), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+			const filamentGeometryStart = new ParametricGeometry(filamentSurfaceStart, 8, 8, false, true, true, null, flowerStemMapping);
+
+			filamentGeometryStart.translate(...flowerStemPath.p3.components);
+
+			filamentGeometryEnd.addMorphTarget('Start', filamentGeometryStart.vertices, filamentGeometryStart.normals);
+			filamentGeometryEnd.addMorphTarget('Mid', filamentGeometryStart.vertices, filamentGeometryStart.normals);
+
+			budGeometryEnd.addGeometry(flowerGeometryEnd);
+			budGeometryEnd.addGeometry(stemGeometry);
+
+			//-----------------------------------------------------------------------------------------------------------------
+
+			const randomAngleX = (0.25 * Math.PI) - (0.5 * Math.PI * Math.random());
+
+			const antherSurfaceEnd = new ParametricSurface(antherFunc(), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+			const antherGeometryEnd = new ParametricGeometry(antherSurfaceEnd, 5, 5, false, true, true, null, antherMapping);
+
+			const antherOriginEnd = add(flowerStemPath.p3, transform(filamentPointsEnd[3], rotate3Z(angle)));
+
+			antherGeometryEnd.rotateX(randomAngleX);
+			antherGeometryEnd.translate(...antherOriginEnd.components);
+
+			const antherSurfaceStart = new ParametricSurface(antherFunc(), 0.0, 1.0, 0.0, 2.0 * Math.PI);
+			const antherGeometryStart = new ParametricGeometry(antherSurfaceStart, 5, 5, false, true, true, null, antherMapping);
+
+			const antherOriginStart = add(flowerStemPath.p3, transform(filamentPointsStart[3], rotate3Z(angle)));
+
+			antherGeometryStart.rotateX(randomAngleX);
+			antherGeometryStart.translate(...antherOriginStart.components);
+
+			antherGeometryEnd.addMorphTarget('Start', antherGeometryStart.vertices, antherGeometryStart.normals);
+			antherGeometryEnd.addMorphTarget('Mid', antherGeometryStart.vertices, antherGeometryStart.normals);
+
+			//budGeometryEnd.addGeometry(this.generateFilamentGeometry());
+			budGeometryEnd.addGeometry(filamentGeometryEnd);
+			budGeometryEnd.addGeometry(antherGeometryEnd);
+		}
 
 		return budGeometryEnd;
 	}
@@ -445,6 +591,7 @@ class Flower {
 	static startRad = 0.001;
 	static maxAge = 1.0;
 	static growthRate = 0.5;
+	//static growthRate = 0.1;
 
 	constructor(poseMatrix, zAngle, parentStem) {
 		let stem = parentStem.stem;
@@ -482,19 +629,20 @@ class Flower {
 	}
 }
 
-function FlowerColour(hueA, hueB, hueC, thresholdA, thresholdB) {
+function FlowerColour(hueA, hueB, hueC, antherHue, threshold) {
 
 	return {
 		colourA: hueA,
 		colourB: hueB,
 		colourC: hueC,
-		innerThreshold: thresholdA,
-		outerThreshold: thresholdB
+		innerThreshold: threshold,
+		antherColour: antherHue
 	}
 }
 
 const FlowerColours = {
-	'0': FlowerColour(new Vector([255, 204, 0]), new Vector([102, 0, 51]), new Vector([255, 255, 255]), 0.2, 1.0),
-	'1': FlowerColour(new Vector([255, 204, 0]), new Vector([75, 0, 130]), new Vector([123, 104, 238]), 0.2, 1.0),
-	'2': FlowerColour(new Vector([255, 204, 0]), new Vector([250, 196, 180]), new Vector([250, 249, 222]), 0.2, 1.0),
+	'0': FlowerColour(new Vector([255, 204, 0]), new Vector([102, 0, 51]), new Vector([255, 255, 255]), new Vector([204, 153, 0]), 0.25),
+	'1': FlowerColour(new Vector([255, 204, 0]), new Vector([75, 0, 130]), new Vector([123, 104, 238]), new Vector([204, 153, 0]), 0.25),
+	'2': FlowerColour(new Vector([255, 204, 0]), new Vector([250, 196, 180]), new Vector([250, 249, 222]), new Vector([204, 153, 0]), 0.25),
+	'3': FlowerColour(new Vector([255, 80, 20]), new Vector([255, 166, 0]), new Vector([240, 216, 41]), new Vector([184, 80, 40]), 0.25)
 }
