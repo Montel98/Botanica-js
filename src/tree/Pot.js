@@ -667,7 +667,7 @@ export default class Pot extends Entity {
 			}
 		}
 
-		const potTexture = chosenStyle.func(...chosenStyle.params, /*32, 32*/512, 512);
+		const potTexture = chosenStyle.func(...chosenStyle.params, 32, 32/*512, 512*/);
 
 		const material = new Material(potTexture);
 		material.maps['textureMap'] = potTexture;
