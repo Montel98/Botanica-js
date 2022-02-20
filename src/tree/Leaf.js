@@ -453,7 +453,7 @@ export default class Leaves extends Entity {
 		const colourInfo = this.getColour(genome);
 		const patternInfo = this.getPatternInfo(genome);
 
-		const leafTexture = patternInfo.textureFunc(512, 512, 4);
+		const leafTexture = patternInfo.textureFunc(/*512, 512*/32, 32, 4);
 
 		const material = new Material(leafTexture);
 		material.maps['textureMap'] = leafTexture;
@@ -631,8 +631,8 @@ export default class Leaves extends Entity {
 
         const textureMapping = this.getPatternInfo(genome).mapping;
 
-		const leafGeometryMature = new ParametricGeometry(leafSurfaceMature, /*180*/128, 4, false, true, true, textureMapping);
-		const leafGeometryStart = new ParametricGeometry(leafSurfaceStart, /*180*/128, 4, false, false, true);
+		const leafGeometryMature = new ParametricGeometry(leafSurfaceMature, /*180*//*128*/64, 4, false, true, true, textureMapping);
+		const leafGeometryStart = new ParametricGeometry(leafSurfaceStart, /*180*//*128*/64, 4, false, false, true);
 
 		const leafStemGeometryMature = new ParametricGeometry(leafStemSurfaceMature, 8, 8, false, true, true, textureMapping);
 		const leafStemGeometryStart = new ParametricGeometry(leafStemSurfaceStart, 8, 8, false, false, true);

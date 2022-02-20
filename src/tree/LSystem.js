@@ -77,6 +77,7 @@ export default class LSystem {
 		//let uTipResolution = 4;
 		let uTipResolution = 3;
 		let vResolution = 16;
+		//let vResolution = 6;
 
 		const stemUVMapping = getMappingByWoodType(this.genome, stackFrame);
 

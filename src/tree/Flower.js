@@ -312,14 +312,6 @@ const antherFunc = () => {
 	}
 }
 
-const pistilFunc = (path) => {
-
-	const crossSection = new BezierCubic(new Vector([0.0, 0.0]),
-										new Vector([0.0, 0.4]),
-										new Vector([0.5, 0.8]),
-										new Vector([0.0, 0.72]));
-}
-
 export default class Flowers extends Entity {
 
 	static maxAge = 1.0;

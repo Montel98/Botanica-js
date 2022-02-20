@@ -3,7 +3,7 @@ import Vector, { zeroVector, cross, subtract } from './Vector.js';
 
 export default class ParametricGeometry extends Geometry {
 	
-	constructor(surface/*, mapping*/, uSteps, vSteps, invertedNormals, useST, useNormals, mappingFunc=null, mapping=null) {
+	constructor(surface, uSteps, vSteps, invertedNormals, useST, useNormals, mappingFunc=null, mapping=null) {
 
 		super(invertedNormals, useNormals, useST);
 
