@@ -83,6 +83,10 @@ export default class Geometry {
 		this.setVertexBuffer(this.mergeAttributes());
 	}
 
+	getBufferAttribute(name) {
+		return this.bufferAttributes.attributes[name];
+	}
+
 	setBufferAttributeData(name, bufferData) {
 
 		this.bufferAttributes.attributes[name].bufferData = bufferData;
@@ -155,12 +159,6 @@ export default class Geometry {
 			this.indexBuffer.push(newIndex);
 		}
 
-		/*for (let i = 0; i < newGeometry.indexBuffer.length; i++) {
-			newGeometry.indexBuffer[i] += oldIndexBufferLength;
-		}*/
-
-		// ONLY COPIED THE REFERENCES SO FAR!!! MIGHT CAUSE PROBLEMS IN THE FUTURE
-
 		for (let attribName in this.bufferAttributes.attributes) {
 
 			let newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName].bufferData;
@@ -173,13 +171,6 @@ export default class Geometry {
 		}
 
 		this.vertexBuffer.push(...newGeometry.vertexBuffer);
-
-		//this.setVertexBuffer(this.mergeAttributes());
-
-		//this.indexBuffer.push(...newGeometry.indexBuffer);
-
-		/*this.modifiedGeometryEvents.push({vertexBufferIndex: oldVertexBufferLength, 
-											indexBufferIndex: oldIndexBufferLength});*/
 
 		this.addGeometryEvent(oldIndexBufferLength, oldIndexBufferLength);
 	}
@@ -207,39 +198,14 @@ export default class Geometry {
 		
 		for (let attribName in this.bufferAttributes.attributes) {
 
-			//var newGeometryAttribData;
-
 			let newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName].bufferData;
-
-			//if (newGeometry.bufferAttributes.attributes[attribName]) {
-			//	newGeometryAttribData = newGeometry.bufferAttributes.attributes[attribName].bufferData;
-			//}
-			/*else {
-				console.log('name missing: ', attribName);
-	    		for (let i = 0; i < this.bufferAttributes.attributes[attribName].bufferData.length; i++) {
-	    			newGeometryAttribData.push(0);
-	    		}
-			}*/
 			this.bufferAttributes.attributes[attribName].bufferData.splice(0,
 																		this.bufferAttributes.attributes[attribName].bufferData.length,
 																		...newGeometryAttribData);
 		}
 
-		/*this.vertexBuffer.splice(0, 
-								this.vertexBuffer.length,
-								...newGeometry.vertexBuffer);*/
-
 		this.vertexBuffer = newGeometry.vertexBuffer;
-
-		/*this.indexBuffer.splice(0, 
-								this.indexBuffer.length,
-								...newGeometry.indexBuffer);*/
-
 		this.indexBuffer = newGeometry.indexBuffer;
-
-		/*this.modifiedGeometryEvents.push({vertexBufferIndex: 0,
-											indexBufferIndex: 0});*/
-
 		this.addGeometryEvent(0, 0);
 	}
 
@@ -296,14 +262,6 @@ export default class Geometry {
 				let v1 = vertexData[this.indexBuffer[i]].copy();
 				let v2 = vertexData[this.indexBuffer[i + 1]].copy();
 				let v3 = vertexData[this.indexBuffer[i + 2]].copy();
-
-				/*v1.components[2] += 0.63;
-				v2.components[2] += 0.63;
-				v3.components[2] += 0.63;*/
-
-				/*v1.components[2] += 0.28;
-				v2.components[2] += 0.28;
-				v3.components[2] += 0.28;*/
 
 				triangles[vertexAttribName].push([v1, v2, v3]);
 			}
@@ -365,8 +323,6 @@ export default class Geometry {
 // Combine multiple geometry objects into a single geometry object
 // Buffers are combined provided they have the same structure
 
-// NOT TESTED!!! (VERY BUGGY, DO NOT USE)
-
 export function mergeGeometry(geometries) {
 
 	let mergedGeometry = new Geometry(geometries[0].invertedNormals, geometries[0].useNormals, geometries[0].useST);
@@ -411,8 +367,6 @@ export function mergeGeometry(geometries) {
 			mergedGeometry.bufferAttributes.attributes[attribName].bufferData.push(...geometryAttribDataCopy);
 		}
 	}
-
-	//console.log('merged: ', mergedGeometry);
 
 	mergedGeometry.setVertexBuffer(mergedGeometry.mergeAttributes());
 	mergedGeometry.setIndexBuffer(mergedIndexBuffer);

@@ -18,8 +18,6 @@ export default class Stem extends Entity {
 	static terminalLength = 1.0;
 	static stemCount = 0;
 	static growthRate = 2.0 / 3;
-	//static growthRate = 2.0;
-
 	static stemMaterial = null;
 
 	constructor(genome, matureGeometry, immatureGeometry, branch) {
@@ -29,8 +27,6 @@ export default class Stem extends Entity {
 		this.worldMatrix = identityMatrix;
 
 		this.colour = new Vector([0.25, 0.18, 0.12]);
-
-		// Experimental
 
 		this.tree = null;
 		this.branch = branch;
@@ -44,52 +40,25 @@ export default class Stem extends Entity {
 		this.geometryParts = {matureGeometry: matureGeometry,
 								immatureGeometry: immatureGeometry};
 
-		let endGeometry = mergeGeometry([matureGeometry.endBodyGeometry, matureGeometry.endTipGeometry]);
-		let startGeometry = mergeGeometry([matureGeometry.startBodyGeometry, matureGeometry.startTipGeometry]);
-
-		this.morphTargets = [];
-		this.girthMorphTargets = startGeometry.vertices;
-		this.girthMorphTargets2 = [];
-
-		let endBodyGeometrySteps = matureGeometry.endBodyGeometry.uSteps;
-
-		for (let i = 0; i < matureGeometry.endBodyGeometry.vertices.length; i++) {
-
-			this.morphTargets.push(endGeometry.vertices[(endBodyGeometrySteps * (Math.floor(i / endBodyGeometrySteps)))]);
-			this.girthMorphTargets2.push(startGeometry.vertices[(endBodyGeometrySteps * (Math.floor(i / endBodyGeometrySteps)))]);
-		}
-
-		for (let i = matureGeometry.endBodyGeometry.vertices.length; i < endGeometry.vertices.length; i++) {
-
-			let j = i - matureGeometry.endBodyGeometry.vertices.length;
-
-			this.morphTargets.push(immatureGeometry.endTipGeometry.vertices[j]);
-			this.girthMorphTargets2.push(immatureGeometry.startTipGeometry.vertices[j]);
-		}
-
-		endGeometry.addMorphTarget('End', this.morphTargets);
-		endGeometry.addMorphTarget('MatureStart', this.girthMorphTargets);
-		endGeometry.addMorphTarget('Start', this.girthMorphTargets2);
+		const geometry = this.initStemGeometry(matureGeometry, immatureGeometry);
 
 		this.postStemGeometry = matureGeometry.endBodyGeometry;
-
-		let postGirthMorphTargets = this.girthMorphTargets.slice(0, matureGeometry.startBodyGeometry.vertices.length);
+		let postGirthMorphTargets = geometry.getBufferAttribute('aMatureStartVertexPosition').bufferData.slice(
+			0, matureGeometry.startBodyGeometry.vertices.length
+		);
 
 		this.postStemGeometry.addMorphTarget('MatureStart', postGirthMorphTargets);
 
 		this.material = this.getMaterial(genome);
 
-		this.mesh = new Mesh(/*stemMaterial*/this.material, endGeometry); // Set main geometry as the final form
+		this.mesh = new Mesh(this.material, geometry); // Set main geometry as the final form
 
-		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('meristem_shader', 
-														stemVertexShader, 
-														stemFragmentShader, {'du': new Vector([0.0]), 'age': new Vector([0.0])},
-														[ShaderAttribute('aVertexPosition', 1), 
-														ShaderAttribute('aNormal', 1), 
-														ShaderAttribute('aMorphTarget', 1),
-														ShaderAttribute('aMorphTarget2', 1),
-														ShaderAttribute('aMorphTarget3', 1)]
-														)
+		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader(
+			'meristem_shader', 
+			stemVertexShader, 
+			stemFragmentShader, {'du': new Vector([0.0]), 'age': new Vector([0.0])},
+			[]
+			)
 		);
 
 		this.defaultShader = this.mesh.shaderPrograms['Default'];
@@ -97,7 +66,6 @@ export default class Stem extends Entity {
 		this.defaultShader.uniforms['ambientColour'] = this.colour;
 
 		// Experimental
-		this.isAlive = true;
 		this.isReached = false;
 		this.isTerminal = false;
 
@@ -107,14 +75,14 @@ export default class Stem extends Entity {
 		// Buffer Test
 
 		if (Stem.stemCount >= 305) {
-			endGeometry.useBufferByName('stemBuffer2');
+			geometry.useBufferByName('stemBuffer2');
 		}
 		else {
-			endGeometry.useBufferByName('stemBuffer1');
+			geometry.useBufferByName('stemBuffer1');
 		}
 
-		endGeometry.setVertexBufferSize(6528*305);
-		endGeometry.setIndexBufferSize(1323*305);
+		geometry.setVertexBufferSize(6528*305);
+		geometry.setIndexBufferSize(1323*305);
 
 		Stem.stemCount++;
 	}
@@ -124,7 +92,6 @@ export default class Stem extends Entity {
 		this.grow(worldTime);
 
 		this.defaultShader.uniforms['ambientColour'] = this.tree.currentColour;
-		//this.defaultShader.uniforms['ambientColour'] = add(this.tree.colourStart.scale(1.0 - this.branch.age**0.2), this.tree.colourEnd.scale(this.branch.age**0.2));
 		this.defaultShader.uniforms['du'].components[0] = this.stemLength;
 		this.defaultShader.uniforms['age'].components[0] = this.branch.age;
 	}
@@ -166,7 +133,7 @@ export default class Stem extends Entity {
 	}
 
 	// Makes all leaves on stem go through 'death' process
-	killLeaves(deathRate=/*0.05*/0.15) {
+	killLeaves(deathRate=0.15) {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
 
@@ -240,15 +207,15 @@ export default class Stem extends Entity {
 				stemTexture = TextureBuilder.generateBirchTexture(1024, 1024);
 				break;
 			case 'Light Wood':
-				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
-				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([48, 45, 41]), 
-																		new Vector([112, 97, 80]), 32, 32);
+				stemTexture = TextureBuilder.generateGradientWoodTexture(
+					new Vector([48, 45, 41]), 
+					new Vector([112, 97, 80]), 32, 32
+				);
 				break;
 			case'Dark Wood':
-				//stemTexture = TextureBuilder.generateLightWoodTexture(256, 256);
-				stemTexture = TextureBuilder.generateGradientWoodTexture(new Vector([26, 21, 20]),
-																		new Vector([54, 51, 50])
-																		/*new Vector([71, 67, 66])*/, 32, 32);
+				stemTexture = TextureBuilder.generateGradientWoodTexture(
+					new Vector([26, 21, 20]),
+					new Vector([54, 51, 50]), 32, 32);
 				break;
 			case'Silver':
 				stemTexture = TextureBuilder.generateMonochromeTexture(new Vector([0.75, 0.75, 0.75]), 32, 32);
@@ -273,5 +240,37 @@ export default class Stem extends Entity {
 		Stem.stemMaterial = stemMaterial;
 
 		return stemMaterial;
+	}
+
+	initStemGeometry(matureGeometry, immatureGeometry) {
+
+		let endGeometry = mergeGeometry([matureGeometry.endBodyGeometry, matureGeometry.endTipGeometry]);
+		let startGeometry = mergeGeometry([matureGeometry.startBodyGeometry, matureGeometry.startTipGeometry]);
+
+		let morphTargets = [];
+		let girthMorphTargets = startGeometry.vertices;
+		let girthMorphTargets2 = [];
+
+		let endBodyGeometrySteps = matureGeometry.endBodyGeometry.uSteps;
+
+		for (let i = 0; i < matureGeometry.endBodyGeometry.vertices.length; i++) {
+
+			morphTargets.push(endGeometry.vertices[(endBodyGeometrySteps * (Math.floor(i / endBodyGeometrySteps)))]);
+			girthMorphTargets2.push(startGeometry.vertices[(endBodyGeometrySteps * (Math.floor(i / endBodyGeometrySteps)))]);
+		}
+
+		for (let i = matureGeometry.endBodyGeometry.vertices.length; i < endGeometry.vertices.length; i++) {
+
+			let j = i - matureGeometry.endBodyGeometry.vertices.length;
+
+			morphTargets.push(immatureGeometry.endTipGeometry.vertices[j]);
+			girthMorphTargets2.push(immatureGeometry.startTipGeometry.vertices[j]);
+		}
+
+		endGeometry.addMorphTarget('End', morphTargets);
+		endGeometry.addMorphTarget('MatureStart', girthMorphTargets);
+		endGeometry.addMorphTarget('Start', girthMorphTargets2);
+
+		return endGeometry;
 	}
 }

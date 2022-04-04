@@ -194,8 +194,6 @@ export default class Flowers extends Entity {
 
 		super();
 
-		//const flowerSurface = new ParametricSurface(flowerFunc(0, flowerOpen, f), 0.0, 2.0 * Math.PI, 0.0, 1.0);
-		//const flowerTexture = TextureBuilder.generateFlowerTexture(flowerSurface, 512, 512);
 		const flowerTexture = TextureBuilder.generateFlowerTexture(this.getFlowerColourInfo(), 128, 128);
 		const material = new Material(flowerTexture);
 		material.maps['textureMap'] = flowerTexture;
@@ -223,12 +221,9 @@ export default class Flowers extends Entity {
 
 		this.defaultShader = this.mesh.shaderPrograms['Default'];
 
-		//this.age = 0.0;
 		this.growthRate = 0.1;
 		this.colour = new Vector([0.2, 0.5, 0.0]);
 		this.defaultShader.uniforms['ambientColour'] = this.colour;
-
-		// Experiment
 
 		this.flowers = [];
 		this.removalList = [];
