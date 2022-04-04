@@ -1,6 +1,8 @@
-//const MAX_STEMS = 609;
 const MAX_STEMS = 550;
 const MAX_BRANCHES = 220;
+
+const LEAF_GROWTH_LEVEL = 2;
+const FLOWER_GROWTH_LEVEL = 4;
 
 import Genome, * as Gen from './Genome.js';
 import Vector, { add, zeroVector, upVector } from './Vector.js';
@@ -8,7 +10,8 @@ import { projectToLeafAxis, projectToFlowerAxis, transform } from './Matrix.js';
 import Geometry from './Geometry.js';
 import ShaderBuilder, { ShaderAttribute } from './ShaderBuilder.js'
 import Mesh from './Mesh.js';
-import LSystem, { copyStack, radiusProperties, radiusFunc } from './LSystem.js';
+import LSystem, { copyStack } from './LSystem.js';
+import { radiusProperties, radiusFunc } from './StemBuilder.js';
 import TreeEvent, * as TEvent from './TreeEvent.js'
 import TreeStump from './TreeStump.js';
 import Branch from './Branch.js';
@@ -17,154 +20,11 @@ import Stem from './Stem.js';
 import Leaves from './Leaf.js';
 import Flowers from './Flower.js';
 import { stemIterator } from './StemIterator.js';
-//import DataStore from './DataStore.js';
 
-const treeVertexShader = 
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-attribute vec3 aNormal;
-attribute vec3 aMatureStartVertexPosition;
-attribute vec2 aTexCoord;
-attribute float aBranchIndex;
-attribute vec3 aColourId;
-
-varying vec3 vVertexPosition;
-varying vec3 vNormal;
-varying vec3 vWorldNormal;
-varying vec2 vTexCoord;
-varying vec3 vColourId;
-varying float vBranchAge;
-
-uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-uniform float age;
-uniform float branchAges[${MAX_BRANCHES}];
-
-uniform sampler2D uDataSampler;
-
-void main() {
-
-    float branchAge = branchAges[int(aBranchIndex)];
-    //float branchAge = 0.1;
-
-    vec3 currentPos = aMatureStartVertexPosition + branchAge * (aVertexPosition - aMatureStartVertexPosition);
-
-    gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
-
-    vVertexPosition = vec3(world * vec4(currentPos, 1.0));
-    vNormal = aNormal;
-    vColourId = aColourId;
-    vWorldNormal = vec3(world * vec4(aNormal, 1.0));
-    vTexCoord = aTexCoord;
-    vBranchAge = branchAge;
-}
-`;
-
-const treeFragmentShader = 
-`
-precision mediump float;
-varying vec3 vNormal;
-varying vec3 vVertexPosition;
-varying vec3 vWorldNormal;
-varying vec2 vTexCoord;
-varying float vBranchAge;
-
-varying vec3 vColourId;
-
-uniform vec3 ambientColour;
-uniform vec3 eye;
-
-uniform float age;
-
-uniform samplerCube uCubeSampler;
-uniform sampler2D uTexture;
-
-struct LightSource {
-    float ambient;
-    float diffuse;
-    float specular;
-    float reflectivity; 
-};
-
-uniform LightSource lightSource;
-
-void main() {
-
-    vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-    vec3 worldNorm = (vWorldNormal == vec3(0.0)) ? vec3(0.0) : normalize(vWorldNormal);
-
-    vec3 lightPos = vec3(0.0, -10.0, 10.0);
-    //vec3 lightDir = normalize(lightPos - vVertexPosition);
-    vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
-
-    float ambient = lightSource.ambient;
-    float diffuse = lightSource.diffuse * clamp(dot(worldNorm, lightDir), 0.0, 1.0);
-
-    vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
-    vec3 viewDirection = normalize(vVertexPosition - eye);
-
-    float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0); //<- power was 16
-
-    float light = ambient + diffuse + specular;
-    vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
-    vec3 treeColour = (1.0 - vBranchAge) * ambientColour + vBranchAge * texture2D(uTexture, vTexCoord).rgb;
-
-    float gamma = 2.2;
-
-    vec3 finalColour = light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour);
-    vec3 finalColourCorrected = pow(finalColour, vec3(1.0 / gamma));
-
-    //vec3 finalColourCorrected = vec3(pow(finalColour.r , 0.5), pow(finalColour.g , 0.5), pow(finalColour.b , 0.5));
-
-    gl_FragColor = vec4(finalColour, 1.0);
-
-    //gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * treeColour + (lightSource.reflectivity) * reflectedColour), 1.0); //0.2
-}
-`;
-
-const pickingVertexShader = 
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-attribute vec3 aColourId;
-attribute vec3 aMatureStartVertexPosition;
-
-varying vec3 vVertexPosition;
-varying vec3 vColourId;
-
-uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-uniform float age;
-uniform float branchAges[${MAX_BRANCHES}];
-
-void main() {
-
-    vec3 currentPos = aMatureStartVertexPosition + age * (aVertexPosition - aMatureStartVertexPosition);
-
-    gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
-
-    vVertexPosition = vec3(world * vec4(currentPos, 1.0));
-    vColourId = aColourId;
-}
-`
-
-const pickingFragmentShader =
-`
-precision mediump float;
-varying vec3 vColourId;
-
-void main() {
-    gl_FragColor = vec4(vColourId, 1.0);
-}
-`
-
-const LEAF_GROWTH_LEVEL = 2;
-const FLOWER_GROWTH_LEVEL = 4;
+import treeVertexShader from './Shaders/TreeVertex.glsl';
+import treeFragmentShader from './Shaders/TreeFragment.glsl';
+import pickingVertexShader from './Shaders/TreePickingVertex.glsl';
+import pickingFragmentShader from './Shaders/TreePickingFragment.glsl';
 
 function addHours(date, dh) {
     let dateCopy = new Date();
@@ -172,12 +32,9 @@ function addHours(date, dh) {
     return dateCopy;
 }
 
-
-
 export default class Tree extends Entity {
 
     static count = 0;
-
     static maxAge = 1.0;
 
     constructor(LStringInput) {
@@ -202,7 +59,6 @@ export default class Tree extends Entity {
 
         this.germinationDate = new Date("March 1 2021 00:00:00");
         this.currentDate = new Date("March 1 2021 00:00:00");
-        //this.currentDate = new Date("May 12 2021 00:00:00");
 
         this.branches = new Set();
         this.branchIndices = [];
@@ -210,22 +66,16 @@ export default class Tree extends Entity {
         setStemStates(this.currentDate, this);
 
         const stemMaterial = this.terminalStems[0].terminalStem.stem.getMaterial();
-
-        //const stemMaterial = this.root[0].stem.getMaterial();
         const geometry = new Geometry(false, true, true);
-
-        //geometry.setFaceCulling(true);
 
         geometry.setVertexBufferSize(10800 * 80);
         geometry.setIndexBufferSize(3480 * 80);
 
         this.girthMorphTargets = [];
-
-        //geometry.addBufferAttribute('aMatureStartMorphTarget', 3, geometry.bufferAttributes.bufferLength, this.girthMorphTargets);
         geometry.addMorphTarget('MatureStart', this.girthMorphTargets);
 
 
-        this.mesh = new Mesh(/*treeMaterial*/stemMaterial, geometry);
+        this.mesh = new Mesh(stemMaterial, geometry);
 
         this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('tree_shader', 
                                                         treeVertexShader, 
@@ -261,12 +111,8 @@ export default class Tree extends Entity {
             this.defaultShader.uniforms['branchAges'].push(new Vector([0.0]));
         }
 
-        //this.branchAges = new DataStore();
-        //this.dataStore = this.branchAges;
-
         this.age = 0.0;
         this.growthRate = 0.01;
-        //this.growthRate = 0.03;
 
         this.leaves = new Leaves(this.genome);
         this.addChild(this.leaves);
@@ -286,23 +132,9 @@ export default class Tree extends Entity {
         this.initBranchIndexProperties();
 
         this.events = TEvent.initTreeEvents(this.root, this.genome, this.currentDate, this.germinationDate);
-        /*console.log('autumn: ', this.events.autumn.event);
-        console.log('spring: ', this.events.spring.event);
-        console.log('bloom start: ', this.events.bloomStart.event);
-        console.log('bloom end: ', this.events.bloomEnd.event);*/
-
-        //setStemStates(this.currentDate, this);
 
         setLeafStates(this.currentDate, this);
         setFlowerStates(this.currentDate, this);
-
-        // Experimental
-
-        this.leavesToReplace = [];
-
-        // For testing only
-
-        this.colourStartPositions = new Map();
     }
 
     act(worldTime) {
@@ -314,7 +146,6 @@ export default class Tree extends Entity {
         this.defaultShader.uniforms['age'].components[0] = this.age;
 
         this.currentDate = addHours(this.currentDate, 1);
-        //console.log(this.currentDate);
     }
 
     grow(worldTime) {
@@ -330,7 +161,6 @@ export default class Tree extends Entity {
         this.age = newAge;
 
         this.generateNewStems();
-        //this.addLeavesToNewStems(this.currentDate);
         this.updateLeaves(this.currentDate);
         this.updateFlowers(this.currentDate);
         this.removeOldStumps();
@@ -338,20 +168,10 @@ export default class Tree extends Entity {
 
     growBranches(worldTime) {
 
-        //const newBranchAges = new Float32Array(1024);
-        //newBranchAges.fill(0.0);
-
         for (let branch of this.branches) {
-
             branch.grow(worldTime);
-
-            //console.log(branch.branchId);
-
             this.defaultShader.uniforms['branchAges'][branch.branchId].components[0] = branch.age;
-            //newBranchAges[branch.branchId] = branch.age;
         }
-
-        //this.branchAges.update(newBranchAges);
     }
 
     initStackFrame() {
@@ -377,7 +197,7 @@ export default class Tree extends Entity {
             count: 0,
             depth: 0,
             branch: newBranch,
-            radius: radiusProperties(/*0.15, 0.005,*/ 0.15, 0.01, /*0.01, 0.01,*/ newBranch.branchLength, 0),
+            radius: radiusProperties(0.15, 0.01, newBranch.branchLength, 0),
             nextStems: [],
             prevStem: null,
             connectParent: true,
@@ -463,8 +283,6 @@ export default class Tree extends Entity {
                     branch.setAge(newStem.stackFrame.prevStem.stackFrame.branch.age);
             }
         }
-
-        //console.log('Terminal Stems: ', this.terminalStems.length);
     }
 
     addStumpToStem(currentStem) {
@@ -659,7 +477,6 @@ export default class Tree extends Entity {
         let terminalStemsToRetain = new Set();
 
         // Depth-first search to get all uncut stems
-
         let stack = [...this.root];
 
         while (stack.length > 0) {
@@ -678,28 +495,20 @@ export default class Tree extends Entity {
         }
 
         // Remove all leaves from cut stems
-
         this.purgeLeavesFromCutStems(retainedStems);
 
         // Remove all stumps from cut stems
-
         this.removeStumpsFromCutStems(retainedStems);
 
-
         // Remove all terminal stems
-
         let removedTerminalStems = this.removeTerminalStemsNotInSet(terminalStemsToRetain);
 
         let newGeometry = new Geometry(false, true, true);
 
         let newMorph = [];
         let newColourIds = [];
-        //let retainedBranches = new Set();
         let retainedBranches = this.addRetainedBranches([...terminalStemsToRetain]);
-        //console.log('retained branches:', retainedBranches);
         let newBranchIndices = [];
-
-        //console.log('retained branches: ', this.getRetainedBranches(retainedStems));
 
         newGeometry.addMorphTarget('MatureStart', newMorph);
         newGeometry.addBufferAttribute('aColourId', 3, newGeometry.bufferAttributes.bufferLength, newColourIds);
@@ -708,12 +517,9 @@ export default class Tree extends Entity {
 
         for (let i = 0; i < retainedStems.length; i++) {
 
-            //console.log('r:', retainedStems[i]);
-
             if (retainedStems[i].stackFrame.nextStems.length > 0 && !retainedStems[i].stem.isTerminal) {
 
                 let branch = retainedStems[i].stem.branch;
-
                 let branchId = branch.branchId;
 
                 if (!retainedBranches.has(branch)) {
@@ -838,7 +644,6 @@ export default class Tree extends Entity {
             }
 
             // This should be a function
-
             for (let i = 0; i < /*localRoot.length*/newBranch.length; i++) {
 
                 let newTerminalStem = newBranch[i];
@@ -849,7 +654,6 @@ export default class Tree extends Entity {
         }
 
         this.mesh.geometry.setGeometry(newGeometry);
-
         this.stems = getStemList(this.root);
 
         return;
@@ -909,7 +713,6 @@ export default class Tree extends Entity {
     }
 
     // Maybe refactor? Using iterators a lot
-
     purgeLeavesFromCutStems(retainedStems) {
 
         let retainedStemSet = new Set(retainedStems);
@@ -936,7 +739,6 @@ export default class Tree extends Entity {
         let stumpsToRemove = [];
 
         let retainedStemSet = new Set(retainedStems.map(currentStem => currentStem.stem));
-        //let retainedStemSet = new Set(retainedStems);
 
         for (let i = 0; i < this.stumps.length; i++) {
 
@@ -1112,11 +914,9 @@ export default class Tree extends Entity {
 
 function setStemStates(timeElapsed, tree) {
 
-    //const timeElapsed = Date.now();
     const germinationTick = tree.germinationDate.getTime();
 
     const growthRate = 1.0 / (2 * 86400000);
-    //const timeToGrow = 1.0 / growthRate;
     const timeToGrow = 86400000 * 2;
 
     let stemIt = stemIterator(tree.root);
@@ -1175,8 +975,6 @@ function setStemStates(timeElapsed, tree) {
 
 function setLeafStates(timeElapsed, tree) {
 
-    //const timeElapsed = Date.now();
-    //const timeElapsed = new Date('July 30 2021 00:00:00').getTime();
     const germinationTick = tree.germinationDate.getTime();
 
     const growthRate = 1.0 / (2 * 86400000);
@@ -1224,7 +1022,6 @@ function setLeafStates(timeElapsed, tree) {
 
                     let firstLeafFallTick = firstLeafGrowTick + timeToGrow;
                     let firstLeafDeathAge = (timeElapsed - firstLeafFallTick) * deathRate;
-                    //currentStem.stem.removeLeaves(/*deathRate*/0.5);
                     currentStem.stem.killLeaves(0.5);
 
                     leaves[0].setDeathAge(firstLeafDeathAge);
@@ -1249,11 +1046,8 @@ function setLeafStates(timeElapsed, tree) {
                     timeElapsed >= leafFallTick) {
 
                     let deathAge = (timeElapsed - leafFallTick) * autumnDeathRate;
-
                     let leaves = currentStem.stem.leaves;
-                    //currentStem.stem.removeLeaves(/*autumnDeathRate*/0.01);
                     currentStem.stem.killLeaves(0.01);
-                    //currentStem.stem.purgeLeaves();
 
                     leaves[0].setDeathAge(deathAge);
                     leaves[1].setDeathAge(deathAge);

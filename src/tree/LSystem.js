@@ -4,7 +4,9 @@ import Vector, { add } from './Vector.js';
 import BezierCubic from './BezierCubic.js';
 import BezierLinear from './BezierLinear.js';
 import Branch from './Branch.js';
-import Stem, { stemFunc, crossSection, trunkCrossSection } from './Stem.js';
+//import Stem, { stemFunc, crossSection, trunkCrossSection } from './Stem.js';
+import Stem from './Stem.js';
+import {stemFunc, crossSection, stemTipRadiusFunc, stemTipRadiusFuncEnd, radiusFunc, radiusProperties } from './StemBuilder.js';
 import { rotateFrameVertical, rotateFrameHorizontal, rotateFrameRoll } from './Matrix.js';
 import TreeSeed from './Seed.js';
 
@@ -14,13 +16,13 @@ export default class LSystem {
 		this.stringGenRules = this.initStringGenRules();
 
 		this.LString = this.buildString(inputStr, 4);
-		this.genome = genome;
+		this.genome = genome; // Used for getting the wood type
 
+		// Defines the characters that can generate stems
 		this.buildRules = {
 			'0': (stackFrame) => {
 				return this.generateBranch(stackFrame);
 			},
-
 			'1': (stackFrame) => {
 				return this.generateBranch(stackFrame);
 			},
@@ -34,7 +36,7 @@ export default class LSystem {
 
 		let pos = stackFrame.pos;
 		let axis = stackFrame.axis;
-		let r = stackFrame.radius;
+		let rEnd = stackFrame.radius;
 		let branch = stackFrame.branch;
 		let prevStem = stackFrame.prevStem;
 
@@ -49,38 +51,37 @@ export default class LSystem {
 		let stemTipPath = new BezierLinear(p1, p2);
 		let immatureStemTipPath = new BezierLinear(p0, p3);
 
-		let babyR = radiusProperties(0.001, 0.001, branch.branchLength, 0);
+		let rStart = radiusProperties(0.001, 0.001, branch.branchLength, 0);
 
 		const crossSectionFunc = crossSection;
 
-		// Stem Body
-		let endStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, r),
+		// Construct stem body surface functions
+		let endStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, rEnd),
 														 0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		let startStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, babyR), 
+		let startStemBodySurface = new ParametricSurface(stemFunc(axis, stemPath, radiusFunc, crossSectionFunc, rStart), 
 														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		// Stem Tip
-		let endStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFunc1, crossSectionFunc, r), 
+		// Construct stem tip surface function
+		let endStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFuncEnd, crossSectionFunc, rEnd), 
 														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		let startStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFunc1, crossSectionFunc, babyR), 
+		let startStemTipSurface = new ParametricSurface(stemFunc(axis, stemTipPath, stemTipRadiusFuncEnd, crossSectionFunc, rStart), 
 														0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		let endImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, r), 
+		let endImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, rEnd), 
 															0.0, 1.0, 0.0, 2.0 * Math.PI);
 
-		let startImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, babyR), 
+		let startImmatureStemTipSurface = new ParametricSurface(stemFunc(axis, immatureStemTipPath, stemTipRadiusFunc, crossSectionFunc, rStart), 
 															0.0, 1.0, 0.0, 2.0 * Math.PI);
 
 		let uResolution = 2;
-		//let uTipResolution = 4;
 		let uTipResolution = 3;
 		let vResolution = 16;
-		//let vResolution = 6;
 
 		const stemUVMapping = getMappingByWoodType(this.genome, stackFrame);
 
+		// Construct stem body and tip geometries
 		let endStemBodyGeometry = new ParametricGeometry(endStemBodySurface, uResolution, vResolution, false, true, true, null, stemUVMapping);
 		let startStemBodyGeometry = new ParametricGeometry(startStemBodySurface, uResolution, vResolution, false, true, false, null, stemUVMapping);
 
@@ -90,12 +91,11 @@ export default class LSystem {
 		let endImmatureStemTipGeometry = new ParametricGeometry(endImmatureStemTipSurface, uTipResolution, vResolution, false, true, true, null, stemUVMapping);
 		let startImmatureStemTipGeometry = new ParametricGeometry(startImmatureStemTipSurface, uTipResolution, vResolution, false, true, false, null, stemUVMapping);
 
-		if (/*stackFrame.count != 0*/stackFrame.connectParent && stackFrame.prevStem) {
+
+		// Connect previous stem geometry to current stem geometry (vertices and normals)
+		if (stackFrame.connectParent && stackFrame.prevStem) {
 
 			let prevStemGeometry = prevStem.stem.geometryParts;
-
-			//console.log(prevStemGeometry);
-
 			let offset = uResolution - 1;
 
 			for (let i = 0; i < endStemBodyGeometry.vSteps; i++) {
@@ -110,11 +110,11 @@ export default class LSystem {
 				endImmatureStemTipGeometry.normals[(uTipResolution * i)] = prevEndBody.normals[(uResolution * i) + offset].copy();
 
 				startStemBodyGeometry.vertices[(uResolution * i)] = prevStartBody.vertices[(uResolution * i) + offset].copy();
-
 				startImmatureStemTipGeometry.vertices[(uTipResolution * i)] = prevStartBody.vertices[(uResolution * i) + offset].copy();
 			}
 		}
 
+		// Return main and morph target geometries to be parsed by the stem class
 		return {matureGeometry: {endBodyGeometry: endStemBodyGeometry, startBodyGeometry: startStemBodyGeometry,
 								endTipGeometry: endStemTipGeometry, startTipGeometry: startStemTipGeometry},
 
@@ -124,11 +124,9 @@ export default class LSystem {
 
 	generateBranch(stackFrame) {
 		let newStemGeometry = this.generateStem(stackFrame);
-		//let leafMatrix = this.generateLeaves(stackFrame);
 
 		return {
 			stemGeometry: newStemGeometry,
-			//leafPose: leafMatrix
 		}
 	}
 
@@ -137,7 +135,6 @@ export default class LSystem {
 		let frames = [];
 		let rootStems = [];
 		let stackFrame = copyStack(startStackFrame);
-		//let currentStem = null;
 		let currentStem = startStackFrame.prevStem;
 
 		for (let index = startStackFrame.stringIndex; index < endIndex; index++) {
@@ -147,6 +144,8 @@ export default class LSystem {
 
 			stackFrame.stringIndex = index;
 
+			// Save ancestor stem in stack
+			// Reset stack frame with new branch and smaller starting stem radii
 			if (symbol === '[') {
 
 				frames.push({stem: currentStem, stackFrame: copyStack(stackFrame)});
@@ -161,7 +160,7 @@ export default class LSystem {
 
 				let rStart = 1.2 * radiusFunc(stackFrame.radius, 
 												stackFrame.count);
-				let rEnd = /*0.4*/0.3 * radiusFunc(stackFrame.radius, 
+				let rEnd = 0.3 * radiusFunc(stackFrame.radius, 
 										stackFrame.branch.branchLength - 1);
 
 				let newBranch = new Branch(this.getNoSegmentsInRange(index + 1, 
@@ -177,6 +176,7 @@ export default class LSystem {
 
 			}
 
+			// Retrieve ancestor stem and its properties
 			else if (symbol === ']') {
 
 				let parentStem = frames.pop();
@@ -184,12 +184,14 @@ export default class LSystem {
 				stackFrame = parentStem.stackFrame;
 			}
 
+			// Specified rotation in local x-y plane
 			else if (symbol === '+') {
 
 				rotateFrameVertical(stackFrame.axis, params[1]);
 				rotateFrameHorizontal(stackFrame.axis, params[0]);
 			}
 
+			// Normally distributed rotation in local x-y plane
 			else if (symbol === '*') {
 
 				let variance = params[0];
@@ -212,10 +214,12 @@ export default class LSystem {
 				rotateFrameVertical(stackFrame.axis, params[0]);
 			} 
 
+			// Generate stem
 			else if (symbol !== '0') {
 
 				stackFrame.prevStem = currentStem;
 
+				// Get individual stem geomtries
 				let stemParts = this.buildRules[symbol](stackFrame);
 
 				let meristem = new Stem(this.genome,
@@ -224,7 +228,7 @@ export default class LSystem {
 
 				let newStem = {stem: meristem, stackFrame: copyStack(stackFrame)};
 
-				if (/*!stackFrame.prevStem*/ stackFrame.prevStem == startStackFrame.prevStem) {
+				if (stackFrame.prevStem == startStackFrame.prevStem) {
 					rootStems.push(newStem);
 				}
 				else {
@@ -233,6 +237,7 @@ export default class LSystem {
 
 				currentStem = newStem;
 
+				// Update stack parameters and progress to next symbol
 				stackFrame.count++;
 				stackFrame.radius.shift = stackFrame.count;
 				stackFrame.pos = add(stackFrame.pos, stackFrame.axis.forward.scale(0.03));
@@ -244,6 +249,8 @@ export default class LSystem {
 		return rootStems;
 	}
 
+	// Returns the index of the first symbol belonging to the parent branch
+	// If only 1 branch is present, the final index is returned ( Length(LString) - 1 )
 	skipBranch(index) {
 
 		let parenthesisCount = 1;
@@ -263,6 +270,7 @@ export default class LSystem {
 		return index;
 	}
 
+	// Returns the number of 'stems' that would be generated within a substring of the input string
 	getNoSegmentsInRange(startIndex, endIndex) {
 
 		let segmentCount = 0;
@@ -284,6 +292,56 @@ export default class LSystem {
 		return segmentCount;
 	}
 
+	// For probabilistic L-Systems, returns a random rule from the defined distibution of a given symbol
+	getRandomRule(symbol, params) {
+
+		let randValue = Math.random();
+		let rule = this.stringGenRules[symbol](params);
+		let successor = rule[0];
+
+		for (let i = 0; i < rule.length; i++) {
+			successor = rule[i];
+
+			let probability = successor.probability;
+
+			if (randValue <= probability) {
+
+				return successor.symbols;
+			}
+		}
+
+		return successor.symbols;
+	}
+
+	// Iteratively generates an L-String from an initial start string [depth] times
+	// Rules are replaced with their respective strings each iteration
+	buildString(start, depth) {
+		let inputStr = start;
+		let outputStr = start;
+
+		for (var i = 0; i < depth; i++) {
+
+			outputStr = [];
+
+			for (var s = 0; s < inputStr.length; s++) {
+				var symbol = inputStr[s].symbol;
+				var params = inputStr[s].params;
+
+				if (symbol in this.stringGenRules) {
+					outputStr.push(...this.getRandomRule(symbol, params));
+				}
+				else {
+					outputStr.push(newSymbol(symbol, params));
+				}
+			}
+
+			inputStr = outputStr;
+		}
+
+		return outputStr;
+	}
+
+	// Defines the shape of the bonsai trees
 	initStringGenRules() {
 		const rules = {};
 
@@ -335,52 +393,6 @@ export default class LSystem {
 
 		return rules;
 	}
-
-	getRandomRule(symbol, params) {
-
-		let randValue = Math.random();
-		let rule = this.stringGenRules[symbol](params);
-		let successor = rule[0];
-
-		for (let i = 0; i < rule.length; i++) {
-			successor = rule[i];
-
-			let probability = successor.probability;
-
-			if (randValue <= probability) {
-
-				return successor.symbols;
-			}
-		}
-
-		return successor.symbols;
-	}
-
-	buildString(start, depth) {
-		let inputStr = start;
-		let outputStr = start;
-
-		for (var i = 0; i < depth; i++) {
-
-			outputStr = [];
-
-			for (var s = 0; s < inputStr.length; s++) {
-				var symbol = inputStr[s].symbol;
-				var params = inputStr[s].params;
-
-				if (symbol in this.stringGenRules) {
-					outputStr.push(...this.getRandomRule(symbol, params));
-				}
-				else {
-					outputStr.push(newSymbol(symbol, params));
-				}
-			}
-
-			inputStr = outputStr;
-		}
-
-		return outputStr;
-	}
 }
 
 export function copyStack(stackFrame) {
@@ -426,54 +438,12 @@ export function newSymbol(symbolString, parameters) {
 	}
 }
 
-function newBranch(terminalStemPos, currentLength) {
-	return {
-		index: terminalStemPos,
-		terminalStemLength: currentLength
-	}
-}
-
+// Generate an (approximate) normally distrbuted value with mean and variance
 function randomNormal(mean, variance) {
 	let u = 1.0 - TreeSeed.growth.randomFloat();
 	let v = 1.0 - TreeSeed.growth.randomFloat();
 
 	return mean + (variance * (Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)));
-}
-
-// Move these radius functions to stem
-
-export function radiusProperties(rStart, rEnd, length, shift) {
-
-	return {
-		radiusStart: rStart,
-		radiusEnd: rEnd,
-		branchLength: length,
-		shift: shift
-	}
-}
-
-export function radiusFunc(radius, u) {
-
-	var decayRate;
-
-	if (radius.radiusEnd == radius.radiusStart) {
-		decayRate = 0.0;
-	}
-	else {
-		decayRate = (-1.0 / radius.branchLength) * Math.log((0.9 * radius.radiusEnd) / (radius.radiusStart - radius.radiusEnd));
-	}
-
-	return radius.radiusEnd + (radius.radiusStart - radius.radiusEnd) * Math.exp(-decayRate * (u + radius.shift));
-}
-
-function stemTipRadiusFunc(radius, u) {
-
-	return radiusFunc(radius, 0.0) * (1.0 - u**2);
-}
-
-function stemTipRadiusFunc1(radius, u) {
-
-	return radiusFunc(radius, 1.0) * (1.0 - u**2);
 }
 
 // Only needs to be called once!
@@ -484,11 +454,9 @@ function getMappingByWoodType(genome, stackFrame) {
 	let sMaxUV = 1.0;
 
 	const woodTypeAllele = genome.getGenotype('Wood Type').left.allele;
-	//woodTypeAllele.name = 'Dark Wood';
 
 	if (woodTypeAllele.name == 'Birch') {
 
-		//const wrapFactor = 4;
 		const sWrapTrunk = 8;
 
 		if (stackFrame.branch.level == 0) {

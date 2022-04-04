@@ -1,7 +1,8 @@
 import SegmentSelector from './SegmentSelector.js';
 import { add, cross } from './Vector.js';
 import { transform } from './Matrix.js';
-import { radiusProperties } from './LSystem.js';
+//import { radiusProperties } from './LSystem.js';
+import { radiusProperties } from './StemBuilder.js';
 import BezierCubic from './BezierCubic.js';
 import Vector, { upVector } from './Vector.js';
 import { testIntersections } from './BoundingQuad.js';

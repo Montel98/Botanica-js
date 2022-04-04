@@ -11,114 +11,8 @@ import ShaderBuilder from './ShaderBuilder.js';
 import * as TextureBuilder from './TextureBuilder.js';
 import Entity from './Entity.js';
 
-const flowerVertexShader = 
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-attribute vec3 aNormal;
-attribute mat4 offset;
-
-attribute vec3 aStartVertexPosition;
-attribute vec3 aStartNormal;
-
-attribute vec3 aMidVertexPosition;
-attribute vec3 aMidNormal;
-//attribute vec3 aColour;
-
-attribute vec2 aTexCoord;
-
-attribute float aAge;
-
-//uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-varying vec3 vVertexPosition;
-varying vec3 vNormal;
-//varying vec3 vColour;
-
-varying vec2 vTexCoord;
-
-//uniform float age;
-
-void main() {
-
-	float threshold = 0.5;
-	float factor = 1.0 / threshold;
-
-	vec3 aStartVertexPosScaled = 0.2 * aStartVertexPosition;
-
-	vec3 v1 = ((1.0 - factor * aAge) * aStartVertexPosScaled) + factor * aAge * aMidVertexPosition;
-
-	float x = factor * (aAge - threshold);
-
-	float ageScaled = ( 2.0 / ( 1.0 + exp(-10.0 * x) ) ) - 1.0;
-	//vec3 v2 = ((1.0 - factor * (aAge - threshold)) * aMidVertexPosition) + (factor * (aAge - threshold) * aVertexPosition);
-	vec3 v2 = ((1.0 - ageScaled) * aMidVertexPosition) + (ageScaled * aVertexPosition); 
-
-	vec3 currentPos = mix(v1, v2, step(threshold, aAge));
-
-	vec3 n1 = ((1.0 - factor * aAge) * aStartNormal) + factor * aAge * aMidNormal;
-	//vec3 n2 = ((1.0 - factor * (aAge - threshold)) * aMidNormal) + (factor * (aAge - threshold) * aNormal);
-	vec3 n2 = ((1.0 - ageScaled) * aMidNormal) + (ageScaled * aNormal); 
-
-	vec3 currentNormal = mix(n1, n2, step(threshold, aAge));
-
-	gl_Position = perspective * camera * offset * vec4(currentPos, 1.0);
-
-	vVertexPosition = currentPos;
-	vNormal = currentNormal;
-	//vColour = aColour;
-	vTexCoord = aTexCoord;
-}
-`
-
-const flowerFragmentShader = 
-`
-precision mediump float;
-
-varying vec3 vVertexPosition;
-varying vec3 vNormal;
-varying vec3 vColour;
-
-varying vec2 vTexCoord;
-
-uniform float age;
-uniform vec3 ambientColour;
-uniform vec3 eye;
-
-uniform sampler2D uTexture;
-
-void main() {
-
-	vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-	vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
-
-	float ambient = 0.2;
-	float diffuse = 0.6 * clamp(dot(norm, lightDir), 0.0, 1.0);
-
-	vec3 reflected = lightDir - 2.0 * dot(norm, lightDir) * norm;
-	vec3 viewDirection = normalize(vVertexPosition - eye);
-
-	float specular = 0.6 * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0);
-	float light = ambient + diffuse + specular;
-
-	vec3 textureColour = texture2D(uTexture, vTexCoord).rgb;
-
-	//gl_FragColor = vec4(light * vColour, 1.0); 
-	//gl_FragColor = vec4(light * textureColour, 1.0);
-
-    float gamma = 2.2;
-
-    //vec3 finalColour = vec3(1.0) - exp(-1.0 * light * textureColour);
-    //vec3 hdrColour = light * textureColour;
-    vec3 hdrColour = vec3(1.0) - exp(-0.8 * 0.5 * light * textureColour);
-
-    vec3 finalColour = pow(hdrColour, vec3(1.0 / gamma));
-
-    gl_FragColor = vec4(finalColour, 1.0);
-}
-`
+import flowerVertexShader from './Shaders/FlowerVertex.glsl';
+import flowerFragmentShader from './Shaders/FlowerFragment.glsl';
 
 // 0.3 + 0.5a + 0.2b
 
@@ -153,20 +47,10 @@ const flowerClosed = new BezierCubic(new Vector([0.0, 0.0]),
 								new Vector([0.0, 1.0]),
 								new Vector([0.0, 1.8]));
 
-/*const budHalfOpened = new BezierCubic(new Vector([0.0, 0.0]),
-									new Vector([0.0, 0.5]),
-									new Vector([0.25, 1.25]),
-									new Vector([0.75, 1.75]));*/
-
 const budHalfOpened = new BezierCubic(new Vector([0.0, 0.0]),
 									new Vector([0.75, 0.5]),
 									new Vector([0.25, 1.25]),
 									new Vector([0.75, 1.75]));
-
-/*const budOpened = new BezierCubic(new Vector([0.0, 0.0]),
-									new Vector([0.5, 0.5]),
-									new Vector([1.0, 0.5]),
-									new Vector([1.5, 0.0]));*/
 
 const budOpened = new BezierCubic(new Vector([0.0, 0.0]),
 									new Vector([0.5, 0.5]),
@@ -177,9 +61,6 @@ const flowerStemPath = new BezierCubic(new Vector([0.0, 0.0, 0.0]),
 									new Vector([0.9, 0.0, 0.3]),
 									new Vector([1.2, 0.0, 0.9]),
 									new Vector([1.6, 0.0, 1.8]));
-
-//const flowerMapping = {sMin: 0.52, sMax: 0.98, tMin: 0.0, tMax: 1.0};
-//const flowerStemMapping = {sMin: 0.02, sMax: 0.48, tMin: 0.0, tMax: 1.0};
 
 const flowerMapping = {sMin: 0.01, sMax: 0.49, tMin: 0.0, tMax: 1.0};
 
@@ -273,13 +154,6 @@ const filamentFunc = (angle, points) => {
 
 
 	const bezierPointsRotated = points.map(point => transform(point, rotate3Z(angle)));
-
-	/*const pathBase = new BezierCubic(new Vector([0.0, 0.0, 0.0]),
-								new Vector([0.02, 0.0, 0.4]),
-								new Vector([0.2, 0.0, 0.9]),
-								new Vector([0.5, 0.0, 1.2])
-	);*/
-
 	const path = new BezierCubic(...bezierPointsRotated);
 
 	return flowerStemFunc(path, 0.03);
@@ -372,12 +246,7 @@ export default class Flowers extends Entity {
 
 	getFlowerColourInfo() {
 		//const randomIndex = Math.floor(Object.keys(FlowerColours).length * Math.random());
-
 		const randomIndex = 0;
-		//const randomIndex = 1;
-		//const randomIndex = 2;
-		//const randomIndex = 3;
-
 		return FlowerColours[randomIndex];
 	}
 
@@ -409,9 +278,6 @@ export default class Flowers extends Entity {
 	generateGeometry(genome) {
 
 		let shapeAllele = genome.getGenotype('Flower Shape').left.allele;
-
-		//console.log('FLOWER ALLELE: ', genome.getGenotype('Flower Shape'));
-
 		let gene = genome.getGene('Flower Shape');
 
 		let halfGeneLength = 0.5 * (gene.sequenceEnd - gene.sequenceStart + 1);
@@ -419,19 +285,8 @@ export default class Flowers extends Entity {
         let magnitudeA = shapeAllele.geneticCode & (2**halfGeneLength - 1);
         let magnitudeB = (shapeAllele.geneticCode & ((2**halfGeneLength - 1) << halfGeneLength)) >> halfGeneLength;
 
-        //console.log('Mag A:', magnitudeA, 'Mag B:', magnitudeB);
-
         magnitudeA = 3;
         magnitudeB = 6;
-
-        //magnitudeA = 8;
-        //magnitudeB = 8;
-
-        //magnitudeA = 5;
-        //magnitudeB = 10;
-
-        //magnitudeA = 12;
-        //magnitudeB = 12;
 
         let mainTerm = new FourierTerm(0.0, /*0.6*/0.45, 0.5 * magnitudeA, 2.0);
         let outerTerm = new FourierTerm(0.0, /*0.4*/0.3, 0.5 * magnitudeB, 2.0);

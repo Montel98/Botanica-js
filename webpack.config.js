@@ -25,13 +25,6 @@ module.exports = {
 				test: /\.(png|svg|jpg|jpeg|gif)$/i,
 				type: "asset",
 				parser: { dataUrlCondition: { maxSize: 30000 } },
-				/*use: [
-					{
-						//loader: 'url-loader',
-
-						options: { limit: 30000 } // Include image in file if size under 30kb
-					},
-				]*/
 			},
 			{
 				test: /\.(js|jsx)$/,
@@ -43,6 +36,13 @@ module.exports = {
 						plugins: ['@babel/plugin-transform-runtime'],
 					}
 				}
+			},
+			{
+			    test: /\.(frag|vert|glsl)$/,
+			    use: { 
+			        loader: 'glsl-shader-loader',
+			        options: {}  
+			    }
 			},
 		],
 	},

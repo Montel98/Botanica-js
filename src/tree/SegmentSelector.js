@@ -6,10 +6,9 @@ import { identityMatrix } from './Matrix.js';
 import Material from './Material.js';
 import ShaderBuilder, { ShaderAttribute } from './ShaderBuilder.js';
 import Vector, { add } from './Vector.js';
-import { radiusProperties, radiusFunc } from './LSystem.js';
 import Entity from './Entity.js';
 import BezierCubic from './BezierCubic.js';
-import { stemFunc, crossSection, trunkCrossSection } from './Stem.js';
+import { stemFunc, crossSection, radiusProperties, radiusFunc } from './StemBuilder.js';
 
 const selectorVertexShader = 
 `
@@ -107,14 +106,7 @@ export default class SegmentSelector extends Entity {
 										stackFrame.branch.branchLength,
 										stackFrame.radius.shift /*- 1*/);
 
-		var crossSectionFunc;
-
-		if (stackFrame.branch.level > 0) {
-			crossSectionFunc = crossSection;
-		}
-		else {
-			crossSectionFunc = trunkCrossSection;
-		}
+		const crossSectionFunc = crossSection;
 
 		let startSurface = new ParametricSurface(stemFunc(stackFrame.axis, path, radiusFunc, crossSectionFunc, radiusStart),
 											height - 0.5 * this.width,

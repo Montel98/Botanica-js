@@ -8,160 +8,10 @@ import { identityMatrix } from './Matrix.js';
 import ShaderBuilder, { ShaderAttribute } from './ShaderBuilder.js';
 import BezierCubic from './BezierCubic.js';
 import Entity from './Entity.js';
+//import { trunkCrossSection, crossSection, stemFunc } from './StemBuilder.js';
 
-const stemVertexShader = 
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-attribute vec3 aNormal;
-attribute vec3 aEndVertexPosition;
-attribute vec3 aMatureStartVertexPosition;
-attribute vec3 aStartVertexPosition;
-attribute vec2 aTexCoord;
-
-varying vec3 vVertexPosition;
-varying vec3 vNormal;
-varying vec3 vWorldNormal;
-varying vec2 vTexCoord;
-
-uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-uniform float du;
-uniform float age;
-
-void main() {
-
-	//vec3 currentGirthPos = aMorphTarget2 + age * (aVertexPosition - aMorphTarget2);
-	//vec3 currentGirthPos2 = aMorphTarget3 + age * (aMorphTarget - aMorphTarget3);
-
-	vec3 currentGirthPos = aMatureStartVertexPosition + age * (aVertexPosition - aMatureStartVertexPosition);
-	vec3 currentGirthPos2 = aStartVertexPosition + age * (aEndVertexPosition - aStartVertexPosition);
-
-	vec3 currentPos = currentGirthPos2 + du * (currentGirthPos - currentGirthPos2);
-
-	gl_Position = perspective * camera * world * vec4(currentPos, 1.0);
-
-	vVertexPosition = vec3(world * vec4(currentPos, 1.0));
-	vNormal = aNormal;
-	vWorldNormal = vec3(world * vec4(aNormal, 1.0));
-	vTexCoord = aTexCoord;
-}
-`;
-
-const stemFragmentShader = 
-`
-precision mediump float;
-varying vec3 vNormal;
-varying vec3 vVertexPosition;
-varying vec3 vWorldNormal;
-varying vec2 vTexCoord;
-
-uniform vec3 ambientColour;
-uniform vec3 eye;
-
-uniform samplerCube uCubeSampler;
-uniform sampler2D uTexture;
-
-uniform float age;
-
-struct LightSource {
-    float ambient;
-    float diffuse;
-    float specular;
-    float reflectivity; 
-};
-
-uniform LightSource lightSource;
-
-void main() {
-	vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-	vec3 worldNorm = (vWorldNormal == vec3(0.0)) ? vec3(0.0) : normalize(vWorldNormal);
-
-	vec3 lightPos = vec3(0.0, -10.0, 10.0);
-	//vec3 lightDir = normalize(lightPos - vVertexPosition);
-	vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
-
-	float ambient = lightSource.ambient;
-	float diffuse = lightSource.diffuse * clamp(dot(worldNorm, lightDir), 0.0, 1.0);
-
-	vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
-	vec3 viewDirection = normalize(vVertexPosition - eye);
-
-	//float specular = 0.7 * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0);
-    float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0); //<- power was 16
-
-	float light = ambient + diffuse + specular;
-	vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
-
-	vec3 stemColour = (1.0 - age) * ambientColour + age * texture2D(uTexture, vTexCoord).rgb;
-
-	//gl_FragColor = vec4(light * (0.7 * ambientColour + 0.3 * reflectedColour), 1.0); //0.2
-	//gl_FragColor = vec4(light * ambientColour, 1.0); 
-    //gl_FragColor = light * ((1.0 - age) * vec4(ambientColour, 1.0) + age * texture2D(uTexture, vTexCoord));
-
-    gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * stemColour + (lightSource.reflectivity) * reflectedColour), 1.0); //0.2
-    //gl_FragColor = vec4(light * stemColour, 1.0); //0.2
-}
-`;
-
-
-const bezier = new BezierCubic(new Vector([0.0, 0.0, 0.0]), 
-					new Vector([0.0, 0.0, 0.2]), 
-					new Vector([0.0, 0.0, 0.4]), 
-					new Vector([0.0, 0.0, 0.6]));
-
-export const trunkCrossSection = (radius, u, v, axis) => {
-
-	let position = add(axis.left.scale(radius * Math.cos(v)), axis.up.scale(radius * Math.sin(v)));
-
-	//let base = 0.4 * Math.exp(-u) * ( (Math.sin(0.5*(v - 1))**150) + (Math.sin(0.5*(v - 2))**150) + (Math.sin(0.5*(v - 5))**150) + (Math.sin(0.5*(v - 3.5))**150) );
-	let base = 0;
-	position = position.scale(0.9 + (0.1 * (Math.cos(3 * v) ** 2.0)) + base);
-
-	return position;
-}
-
-export const crossSection = (radius, u, v, axis) => {
-
-	let position = add(axis.left.scale(radius * Math.cos(v)), axis.up.scale(radius * Math.sin(v)));
-	position = position.scale(0.9 + (0.1 * Math.cos(3 * v) ** 2.0));
-
-	return position;
-}
-
-export const stemFunc = (axis, path, radiusFunc, crossSectionFunc, radiusProperties) => {
-
-	return {
-
-		path: path,
-
-		r(u) {
-			return radiusFunc(radiusProperties, u);
-		},
-
-		aux(u, v) {
-
-			this.bezierPoint = path.eval(u);
-			this.bezierGradient = path.derivative(u);
-
-			this.crossSectionPoint = crossSectionFunc(this.r(u), radiusProperties.shift, v, axis);
-		},
-
-		x(u, v) {
-			return this.bezierPoint.components[0] + this.crossSectionPoint.components[0];
-		},
-
-		y(u, v) {
-			return this.bezierPoint.components[1] + this.crossSectionPoint.components[1];
-		},
-
-		z(u, v) {
-			return this.bezierPoint.components[2] + this.crossSectionPoint.components[2];
-		}
-	}
-}
+import stemVertexShader from './Shaders/StemVertex.glsl';
+import stemFragmentShader from './Shaders/StemFragment.glsl';
 
 export default class Stem extends Entity {
 
@@ -176,7 +26,6 @@ export default class Stem extends Entity {
 
 		super();
 
-		//this.worldMatrix = translate(-0.2, -0.2, 0);
 		this.worldMatrix = identityMatrix;
 
 		this.colour = new Vector([0.25, 0.18, 0.12]);
@@ -190,10 +39,8 @@ export default class Stem extends Entity {
 
 		this.stemLength = 0.0;
 		this.growthRate = 2.0 / 3; // Growth Rate in units/second
-		//this.growthRate = 2.0;
 
 		// Merge stem tip and body
-
 		this.geometryParts = {matureGeometry: matureGeometry,
 								immatureGeometry: immatureGeometry};
 
@@ -270,7 +117,6 @@ export default class Stem extends Entity {
 		endGeometry.setIndexBufferSize(1323*305);
 
 		Stem.stemCount++;
-		//console.log('stems:', Stem.stemCount);
 	}
 
 	act(worldTime) {
@@ -295,6 +141,7 @@ export default class Stem extends Entity {
 	}
 
 	isMaxHeight() {
+
 		return this.stemLength == Stem.terminalLength;
 	}
 
@@ -318,6 +165,7 @@ export default class Stem extends Entity {
 		this.leaves.push(...leafIndices);
 	}
 
+	// Makes all leaves on stem go through 'death' process
 	killLeaves(deathRate=/*0.05*/0.15) {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
@@ -332,6 +180,8 @@ export default class Stem extends Entity {
 		this.leaves = [];
 	}
 
+
+	// Instantly Removes all leaves on stem without going through 'death' process
 	purgeLeaves() {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
@@ -340,10 +190,10 @@ export default class Stem extends Entity {
 			leaf.purge();
 		}
 
-		//this.leaves = [];
 		this.removeLeaves();
 	}
 
+	// Makes all flowers on stem go through 'death' process
 	removeFlowers() {
 
 		for (let flowerIndex = 0; flowerIndex < this.flowers.length; flowerIndex++) {
@@ -355,6 +205,7 @@ export default class Stem extends Entity {
 		this.flowers = [];
 	}
 
+	// Instantly Removes all flowers on stem without going through 'death' process
 	purgeFlowers() {
 
 		for (let flowerIndex = 0; flowerIndex < this.flowers.length; flowerIndex++) {
@@ -423,8 +274,4 @@ export default class Stem extends Entity {
 
 		return stemMaterial;
 	}
-}
-
-function meristemGeometry(treeLevel) {
-
 }
