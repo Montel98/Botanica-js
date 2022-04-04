@@ -69,14 +69,21 @@ export default class LSystem {
 
 				let prevStem = stackFrame.prevStem;
 
-				let rStart = 1.2 * radiusFunc(stackFrame.radius, 
-												stackFrame.count);
-				let rEnd = 0.3 * radiusFunc(stackFrame.radius, 
-										stackFrame.branch.branchLength - 1);
+				let rStart = 1.2 * radiusFunc(
+					stackFrame.radius, 
+					stackFrame.count
+				);
+				let rEnd = 0.3 * radiusFunc(
+					stackFrame.radius, 
+					stackFrame.branch.branchLength - 1
+				);
 
-				let newBranch = new Branch(this.getNoSegmentsInRange(index + 1, 
-										this.skipBranch(index) + 1),
-										stackFrame.branch.level + 1);
+				let newBranch = new Branch(
+					this.getNoSegmentsInRange(
+					index + 1, 
+					this.skipBranch(index) + 1
+					),
+					stackFrame.branch.level + 1);
 
 				stackFrame.branch = newBranch;
 				stackFrame.radius = radiusProperties(rStart, rEnd, newBranch.branchLength, 0);
@@ -256,50 +263,52 @@ export default class LSystem {
 	initStringGenRules() {
 		const rules = {};
 
-		rules['0'] = (params) => {
-						return [{ symbols: [ 	
-						newSymbol('+', [0.0, Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('[', []),
-						newSymbol('+', [Math.PI / 6.0, 0.0]),
-						newSymbol('0', []),
-						newSymbol(']', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('[', []),
-						newSymbol('+', [-Math.PI / 6.0, 0.0]),
-						newSymbol('0', []),
-						newSymbol(']', []),
-						newSymbol('*', [Math.PI / 16]),
-						newSymbol('1', []),
-						newSymbol('[', [true]),
-						newSymbol('h', [(Math.PI / 5) + ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
-						newSymbol('1', []),							
-						newSymbol(']', []),
-						newSymbol('[', [true]),
-						newSymbol('h', [-(Math.PI / 5) - ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
-						newSymbol('1', []),
-						newSymbol(']', [])], probability: 1.0 }];
+		rules['0'] = (params) => 
+		{
+			return [{ symbols: [ 	
+			newSymbol('+', [0.0, Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('[', []),
+			newSymbol('+', [Math.PI / 6.0, 0.0]),
+			newSymbol('0', []),
+			newSymbol(']', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('[', []),
+			newSymbol('+', [-Math.PI / 6.0, 0.0]),
+			newSymbol('0', []),
+			newSymbol(']', []),
+			newSymbol('*', [Math.PI / 16]),
+			newSymbol('1', []),
+			newSymbol('[', [true]),
+			newSymbol('h', [(Math.PI / 5) + ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
+			newSymbol('1', []),							
+			newSymbol(']', []),
+			newSymbol('[', [true]),
+			newSymbol('h', [-(Math.PI / 5) - ((2.0 * (TreeSeed.growth.randomFloat() * (Math.PI / 8))) - (Math.PI / 4))]),
+			newSymbol('1', []),
+			newSymbol(']', [])], probability: 1.0 }];
 		};
 
-		rules['4'] = (params) => {
-						return [{ symbols: [ 	
-						newSymbol('[', [true]),
-						newSymbol('+', [Math.PI / 6.0, 0.0]),
-						newSymbol('0', []),
-						newSymbol(']', []),
-						newSymbol('[', [true]),
-						newSymbol('+', [-Math.PI / 6.0, 0.0]),
-						newSymbol('0', []),
-						newSymbol(']', [])], probability: 1.0 }];
+		rules['4'] = (params) => 
+		{
+			return [{ symbols: [ 	
+			newSymbol('[', [true]),
+			newSymbol('+', [Math.PI / 6.0, 0.0]),
+			newSymbol('0', []),
+			newSymbol(']', []),
+			newSymbol('[', [true]),
+			newSymbol('+', [-Math.PI / 6.0, 0.0]),
+			newSymbol('0', []),
+			newSymbol(']', [])], probability: 1.0 }];
 		};
 
 		return rules;
@@ -319,10 +328,12 @@ export function copyStack(stackFrame) {
 		}
 		else if (param == 'radius') {
 			let r = stackFrame.radius;
-			stackFrameCopy['radius'] = radiusProperties(r.radiusStart, 
-														r.radiusEnd,
-														r.branchLength,
-														r.shift);
+			stackFrameCopy['radius'] = radiusProperties(
+				r.radiusStart, 
+				r.radiusEnd,
+				r.branchLength,
+				r.shift
+			);
 		}
 		else if (param == 'nextStems') {
 			stackFrameCopy['nextStems'] = [...stackFrame.nextStems];

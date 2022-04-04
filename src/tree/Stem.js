@@ -37,8 +37,10 @@ export default class Stem extends Entity {
 		this.growthRate = 2.0 / 3; // Growth Rate in units/second
 
 		// Merge stem tip and body
-		this.geometryParts = {matureGeometry: matureGeometry,
-								immatureGeometry: immatureGeometry};
+		this.geometryParts = {
+			matureGeometry: matureGeometry,
+			immatureGeometry: immatureGeometry
+		};
 
 		const geometry = this.initStemGeometry(matureGeometry, immatureGeometry);
 
@@ -72,17 +74,7 @@ export default class Stem extends Entity {
 		this.flowers = [];
 		this.leaves = [];
 
-		// Buffer Test
-
-		if (Stem.stemCount >= 305) {
-			geometry.useBufferByName('stemBuffer2');
-		}
-		else {
-			geometry.useBufferByName('stemBuffer1');
-		}
-
-		geometry.setVertexBufferSize(6528*305);
-		geometry.setIndexBufferSize(1323*305);
+		this.setBufferProperties(geometry);
 
 		Stem.stemCount++;
 	}
@@ -242,6 +234,8 @@ export default class Stem extends Entity {
 		return stemMaterial;
 	}
 
+	// Builds the final stem geometry from the given parts
+	// Merges the tip and body, and adds all morph targets
 	initStemGeometry(matureGeometry, immatureGeometry) {
 
 		let endGeometry = mergeGeometry([matureGeometry.endBodyGeometry, matureGeometry.endTipGeometry]);
@@ -272,5 +266,18 @@ export default class Stem extends Entity {
 		endGeometry.addMorphTarget('Start', girthMorphTargets2);
 
 		return endGeometry;
+	}
+
+	setBufferProperties(geometry) {
+
+		if (Stem.stemCount >= 305) {
+			geometry.useBufferByName('stemBuffer2');
+		}
+		else {
+			geometry.useBufferByName('stemBuffer1');
+		}
+
+		geometry.setVertexBufferSize(6528*305);
+		geometry.setIndexBufferSize(1323*305);
 	}
 }

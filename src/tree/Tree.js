@@ -235,11 +235,12 @@ export default class Tree extends Entity {
 
         this.addBoundingGeometry(terminalStem, packedColourId);
 
-        stem.postStemGeometry.addBufferAttribute('aColourId',
-                                                        3,
-                                                        stem.postStemGeometry.bufferAttributes.bufferLength,
-                                                        stemColourIds,
-                                                        );
+        stem.postStemGeometry.addBufferAttribute(
+            'aColourId',
+            3,
+            stem.postStemGeometry.bufferAttributes.bufferLength,
+            stemColourIds,
+        );
 
         // Add reference to branch ages
 
@@ -250,11 +251,12 @@ export default class Tree extends Entity {
             branchIndices.push(new Vector([stem.branch.branchId]));
         }
 
-        stem.postStemGeometry.addBufferAttribute('aBranchIndex', 
-                                        1,  
-                                        stem.postStemGeometry.bufferAttributes.bufferLength,
-                                        branchIndices,
-                                        );
+        stem.postStemGeometry.addBufferAttribute(
+            'aBranchIndex', 
+            1,  
+            stem.postStemGeometry.bufferAttributes.bufferLength,
+            branchIndices,
+        );
 
         this.mesh.geometry.addGeometry(stem.postStemGeometry);
     }
