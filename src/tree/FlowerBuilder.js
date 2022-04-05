@@ -5,25 +5,12 @@ import { FourierTerm, FourierSeries } from './FourierSeries.js';
 import BezierCubic from './BezierCubic.js';
 import { identityMatrix, transform, multiply, rotate3Z, rotate4Z, scale } from './Matrix.js';
 
-const termBud = new FourierTerm(0.0, 0.85, 2.0, 2.0);
-const termBud2 = new FourierTerm(0.0, 0.05, 2.0, 200.0);
+// Define all paths describing the flower shapes, only used internally by the FlowerBuilder
+const budMidTermA = new FourierTerm(0.0, 0.85, 2.0, 2.0);
+const budMidTermB = new FourierTerm(0.0, 0.05, 2.0, 200.0);
 
-const f2 = new FourierSeries(1.0, []); // Bud Closed
-const f3 = new FourierSeries(0.1, [termBud, termBud2]); // Bud Mid
-
-const openPos = new BezierCubic(
-	new Vector([0.0, 0.0]), 
-	new Vector([1.0, 1.0]), 
-	new Vector([1.0, 0.0]), 
-	new Vector([2.0, 0.0])
-);
-
-const openPos2 = new BezierCubic(
-	new Vector([0.0, 0.0]), 
-	new Vector([1.0, 1.0]), 
-	new Vector([1.0, 1.0]), 
-	new Vector([0.0, 2.0])
-);
+const budClosedXY = new FourierSeries(1.0, []); // Bud Closed
+const budMidXY = new FourierSeries(0.1, [budMidTermA, budMidTermB]); // Bud Mid
 
 const flowerOpen = new BezierCubic(
 	new Vector([0.0, 0.0]), 
@@ -67,9 +54,27 @@ const flowerStemPath = new BezierCubic(
 	new Vector([1.6, 0.0, 1.8])
 );
 
+const filamentPointsEnd = [
+	new Vector([0.0, 0.0, 0.0]),
+	new Vector([0.02, 0.0, 0.4]),
+	new Vector([0.4, 0.0, 0.6]),
+	new Vector([0.5, 0.0, 1.25])
+];
+
+const filamentPointsStart = [
+	new Vector([0.0, 0.0, 0.0]),
+	new Vector([0.14, 0.0, 0.4]),
+	new Vector([0.2, 0.0, 1.0]),
+	new Vector([0.03, 0.0, 1])
+];
+
 const flowerStemMapping = {sMin: 0.51, sMax: 0.74, tMin: 0.0, tMax: 1.0};
 const antherMapping = {sMin: 0.76, sMax: 0.99, tMin: 0.0, tMax: 1.0};
 
+
+// Defines the flower petal geoemtry as a function g(u, v)
+// u is an angle in radius, v is a distance, g is a 3D vector
+// dTheta is an angle offset, useful for overlapping petals in future
 const flowerFunc = (dTheta, petalSideProfile, petalTopProfile) => {
 	return {
 		aux(u, v) {
@@ -104,6 +109,8 @@ const flowerFunc = (dTheta, petalSideProfile, petalTopProfile) => {
 	}
 }
 
+// Defines the flower stem geometry as a function g(u, v)
+// Modelled as a 3D bezier curve with a decreasing radius
 const flowerStemFunc = (path, radiusStart) => {
 	return {
 
@@ -138,28 +145,16 @@ const flowerStemFunc = (path, radiusStart) => {
 	}
 }
 
-const filamentPointsEnd = [
-	new Vector([0.0, 0.0, 0.0]),
-	new Vector([0.02, 0.0, 0.4]),
-	new Vector([0.4, 0.0, 0.6]),
-	new Vector([0.5, 0.0, 1.25])
-];
+// Models filament as a 3D bezier path similar to the flower stem
+const filamentFunc = (angleZ, points) => {
 
-const filamentPointsStart = [
-	new Vector([0.0, 0.0, 0.0]),
-	new Vector([0.14, 0.0, 0.4]),
-	new Vector([0.2, 0.0, 1.0]),
-	new Vector([0.03, 0.0, 1])
-];
-
-const filamentFunc = (angle, points) => {
-
-	const bezierPointsRotated = points.map(point => transform(point, rotate3Z(angle)));
+	const bezierPointsRotated = points.map(point => transform(point, rotate3Z(angleZ)));
 	const path = new BezierCubic(...bezierPointsRotated);
 
 	return flowerStemFunc(path, 0.03);
 }
 
+// Models anther as a concave 2D bezier cross section rotated about the z axis
 const antherFunc = () => {
 
 	const crossSectionXZ = new BezierCubic(
@@ -244,9 +239,9 @@ function generateAntherGeometry(angleX, angleZ) {
 
 function generateBudGeometry() {
 
-	const budSurfaceStart = new ParametricSurface(flowerFunc(0, budClosed, f2), 0.0, 2.0 * Math.PI, 0.0, 1.0);
-	const budSurfaceMid = new ParametricSurface(flowerFunc(0, budHalfOpened, f3), 0.0, 2.0 * Math.PI, 0.0, 1.0);
-	const budSurfaceEnd = new ParametricSurface(flowerFunc(0, budOpened, f3), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+	const budSurfaceStart = new ParametricSurface(flowerFunc(0, budClosed, budClosedXY), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+	const budSurfaceMid = new ParametricSurface(flowerFunc(0, budHalfOpened, budMidXY), 0.0, 2.0 * Math.PI, 0.0, 1.0);
+	const budSurfaceEnd = new ParametricSurface(flowerFunc(0, budOpened, budMidXY), 0.0, 2.0 * Math.PI, 0.0, 1.0);
 
 	const budGeometryStart = new ParametricGeometry(budSurfaceStart, 256, 8, true, true, true, null, flowerStemMapping);
 	const budGeometryMid = new ParametricGeometry(budSurfaceMid, 256, 8, true, true, true, null, flowerStemMapping);

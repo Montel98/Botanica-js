@@ -21,21 +21,25 @@ export default class Entity {
 		childEntity.parent = this;
 	}
 
+	// Linear search on entity to remove
+	// If no match is found, no changes are made
 	removeChild(childEntity) {
 		for (let i = 0; i < this.children.length; i++) {
 			if (this.children[i] == childEntity) {
 				
 				const child = this.children[i];
-				//child.mesh.geometry.destroyGeometry();
 				this.children.splice(i, 1);
 			}
 		}
 	}
 
+	// Overridable generic act() behaviour, called by controller to update entity state
 	act(worldTime) {
 
 	}
 
+	// Sets the world matrix, multiplied by parent matrix if it exists
+	// To be called by the controller before rendering, not advisable to call prematurely
 	updatePose() {
 
 		if (this.parent) {

@@ -332,6 +332,7 @@ export default class Leaves extends Entity {
 		return geneTable.patterns[patternId];
 	}
 
+	// Adds leaf instance to instanced mesh and inserts corresponding age / death age / pose attributes
 	addLeaf(poseMatrix, xAngle, zAngle, parentStem) {
 
 		let newLeaf = new Leaf(poseMatrix, xAngle, zAngle, parentStem);
@@ -448,6 +449,7 @@ class Leaf {
 	}
 }
 
+// Get the minimum value in a list
 function min(list) {
 	let currentMin = 100000;
 
@@ -460,6 +462,7 @@ function min(list) {
 	return currentMin;
 }
 
+// Get the maximum value in a list
 function max(list) {
 	let currentMax = -100000;
 
@@ -472,6 +475,9 @@ function max(list) {
 	return currentMax;
 }
 
+// Leaves have their own unique texture mapping
+// This is due to leaf geometry being generated as a function of angle and distance
+// Will not be needed when leaf geometry is refactored as a 'grid' of vertices
 function leafTextureMapping(geometry) {
 
 	const stMap = new Array(geometry.uSteps * geometry.vSteps);

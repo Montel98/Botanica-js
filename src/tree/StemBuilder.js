@@ -144,6 +144,8 @@ export function generateStemGeometries(genome, stackFrame) {
 
 
 	// Connect previous stem geometry to current stem geometry (vertices and normals)
+	// endImmatureStemBody and startImmatureStemBody have been ignored as they are equal to the base 'ring' vertices of the stem body
+	// Logic has been delegated to stem class itself, perhaps refactor
 	if (stackFrame.connectParent && stackFrame.prevStem) {
 
 		let prevStemGeometry = prevStem.stem.geometryParts;
@@ -166,6 +168,8 @@ export function generateStemGeometries(genome, stackFrame) {
 	}
 
 	// Return main and morph target geometries to be parsed by the stem class
+	// Segmented to be merged and assembled in the stem class
+	// A seperate copy of stem body like this is required by the tree and segment selector classes
 	return {matureGeometry: {endBodyGeometry: endStemBodyGeometry, startBodyGeometry: startStemBodyGeometry,
 							endTipGeometry: endStemTipGeometry, startTipGeometry: startStemTipGeometry},
 

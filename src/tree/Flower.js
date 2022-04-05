@@ -27,23 +27,25 @@ export default class Flowers extends Entity {
 
 		this.ages = [];
 
-		//const geometry = this.generateGeometry(genome);
 		const geometry = generateFlowerGeometry(genome);
 
 		this.mesh = new InstancedMesh(material, geometry, 0);
 		this.mesh.setInstanceBufferSize(80000);
 
-		this.mesh.addInstanceBufferAttribute('aAge',
-											1,
-											this.mesh.instanceBufferAttributes.bufferLength,
-											this.ages
-											);
+		this.mesh.addInstanceBufferAttribute(
+			'aAge',
+			1,
+			this.mesh.instanceBufferAttributes.bufferLength,
+			this.ages
+		);
 
-		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('flower_shader',
-														flowerVertexShader,
-														flowerFragmentShader,
-														{},
-														[]));
+		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader(
+			'flower_shader',
+			flowerVertexShader,
+			flowerFragmentShader,
+			{},
+			[])
+		);
 
 		this.worldMatrix = identityMatrix;
 
@@ -70,6 +72,7 @@ export default class Flowers extends Entity {
 		return FlowerColours[randomIndex];
 	}
 
+	// Adds flower instance to instanced mesh and inserts corresponding age/pose attributes
 	addFlower(pose, zAngle, parentStem) {
 
 		let newFlower = new Flower(pose, zAngle, parentStem);
@@ -81,15 +84,12 @@ export default class Flowers extends Entity {
 		return newFlower;
 	}
 
+	// Updates pose and age states of all flower instances
 	updateFlowers(worldTime) {
 
 		for (let flowerIndex = 0; flowerIndex < this.flowers.length; flowerIndex++) {
 
 			let flower = this.flowers[flowerIndex];
-
-			if (flower.isDestroyed) {
-
-			}
 
 			flower.grow(worldTime);
 
@@ -97,23 +97,23 @@ export default class Flowers extends Entity {
 			this.ages[flowerIndex] = flower.age;
 
 			if (flower.isDestroyed) {
-				
 				this.remove(flowerIndex);
 			}
 		}
 	}
 
+	// Marks a flower instance by index for removal
 	remove(flowerIndex) {
 		this.removalList.push(flowerIndex);
 	}
 
+	// Removes any flower instances marked for removal
 	removeDeadFlowers() {
 
 		while (this.removalList.length > 0) {
 
 			let flowerIndex = this.removalList.pop();
 			this.mesh.removeInstance(flowerIndex);
-
 			this.flowers.splice(flowerIndex, 1);
 		}
 	}
@@ -134,7 +134,7 @@ class Flower {
 		this.isDestroyed = false;
 		this.isDying = false;
 
-		this.poseMatrix = multiply(poseMatrix, multiply(scale(0.012, 0.012, 0.012), rotate4Z(/*Math.random() * Math.PI * 2.0*/zAngle)));
+		this.poseMatrix = multiply(poseMatrix, multiply(scale(0.012, 0.012, 0.012), rotate4Z(zAngle)));
 	}
 
 	grow(worldTime) {
@@ -172,6 +172,8 @@ function FlowerColour(hueA, hueB, hueC, antherHue, threshold) {
 	}
 }
 
+// Possible flower colour combinations
+// Colour components are in the range [0, 255]
 const FlowerColours = {
 	'0': FlowerColour(new Vector([255, 204, 0]), new Vector([102, 0, 51]), new Vector([255, 255, 255]), new Vector([204, 153, 0]), 0.25),
 	'1': FlowerColour(new Vector([255, 204, 0]), new Vector([75, 0, 130]), new Vector([123, 104, 238]), new Vector([204, 153, 0]), 0.25),

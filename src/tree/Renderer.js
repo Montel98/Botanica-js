@@ -2,6 +2,10 @@ var gl, ext, oes_vao_ext, oes_tf_ext, oes_tf_linear_ext, oes_thf_ext, oes_thf_li
 
 import { PlaneEntity } from './PrimitiveShapes.js';
 import ShaderBuilder from './ShaderBuilder.js';
+import BufferManager from './BufferManager.js';
+
+import quadVertexShader from './Shaders/QuadVertex.glsl';
+import quadFragmentShader from './Shaders/QuadFragment.glsl';
 
 const GL_UNSIGNED_SHORT_SIZE = 2;
 const GL_FLOAT_SIZE = 4;
@@ -13,10 +17,6 @@ const textureUnitMap = {
 	'dataStore': 3
 }
 
-var namedBuffers = {};
-
-var buffers = new WeakMap();
-
 export default class Renderer {
 	
 	constructor(canvas) {
@@ -24,13 +24,12 @@ export default class Renderer {
 
 		this.viewportWidth = canvas.width;
 		this.viewportHeight = canvas.height;
-
-		this.batchedBuffers = [];
+		
+		this.bufferManager = new BufferManager();
 
 		gl = canvas.getContext("webgl");
 
     	if (gl == null) {
-
         	alert('Unable to initialiaze WebGL. Your browser or machine may not support it.');
     	}
 
@@ -41,103 +40,17 @@ export default class Renderer {
     	//this.floatFrameBuffer = this.initFrameBuffer(gl.UNSIGNED_BYTE);
 
     	//this.HDRFrameBuffer = this.initHDRFrameBuffer();
-    	this.drawPassStates = [{frameBuffer: /*this.floatFrameBuffer*/null, shaderName: "Default"},
-    							{frameBuffer: this.frameBuffer, shaderName: "Picking"},
-    							/*{frameBuffer: null, shaderName: "Default"}*/];
+    	this.drawPassStates = [
+    	{frameBuffer: null, shaderName: "Default"},
+    	{frameBuffer: this.frameBuffer, shaderName: "Picking"},
+    	];
 
     	//this.quad = this.initQuad();
-    	//console.log('quad: ', this.quad);
 	}
 
-	/* (for each frame buffer)
-	batchedRendering()
-		bindShaders()
-		updateUniforms()
-		render()
-
-	normalRendering()
-	*/
-
-	reWriteBuffer(/*buffer*/ entity) {
-
-		//let newIndexBuffer = new Uint16Array(buffer.indexBuffer.size);
-		//let newVertexBuffer = new Float32Array(buffer.vertexBuffer.size);
-
-		let geometry = entity.mesh.geometry;
-
-		let newIndexBuffer = new Uint16Array(geometry.indexBuffer);
-		let newVertexBuffer = new Float32Array(geometry.vertexBuffer);
-
-		let indexBufferIndex = 0;
-		let vertexBufferIndex = 0;
-
-		/*for (let entity of buffer.entities) {
-
-			for (let i = 0; i < entity.indexBuffer.length; i++) {
-				newIndexBuffer[indexBufferIndex] = entity.indexBuffer[i];
-				indexBufferIndex++;
-			}
-
-			for (let i = 0; i < entity.vertexBuffer.length; i++) {
-				newVertexBuffer[vertexBufferIndex] = entity.vertexBuffer[i];
-				vertexBufferIndex++;
-			}
-		}*/
-
-		//oes_vao_ext.bindVertexArrayOES(buffer.vao);
-		oes_vao_ext.bindVertexArrayOES(geometry.bufferAttributes.bufferID.VertexArrayLoc);
-
-		gl.bufferData(gl.ARRAY_BUFFER, newVertexBuffer, gl.STATIC_DRAW);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, newIndexBuffer, gl.STATIC_DRAW);
-
-		oes_vao_ext.bindVertexArrayOES(null);
-	}
-
-	setBuffers() {
-
-		const mesh = entity.mesh;
-		const geometry = mesh.geometry;
-		const material = mesh.material;
-
-		const camera = scene.camera;
-
-		const programLoc = shaderProgram.programID;
-
-		let bufferName = geometry.bufferAttributes.bufferName;
-
-		if (!geometry.bufferAttributes.bufferID) {
-
-			if (bufferName != "") {
-
-				if (!(bufferName in namedBuffers)) {
-
-					namedBuffers[bufferName] = this.initBuffers(geometry, shaderProgram);
-					geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
-				}
-				else {
-					geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
-				}
-			}
-			else {
-
-				geometry.bufferAttributes.bufferID = this.initBuffers(geometry, shaderProgram);
-			}
-
-			mapEntityToBuffer(entity, geometry.bufferAttributes.bufferID);
-
-			let buffers = geometry.bufferAttributes.buffers;
-			let bufferInfo = getBufferInfoById(geometry.bufferAttributes.bufferID);
-		}
-
-        if (mesh.isInstanced) {
-
-			if (!mesh.instanceBufferAttributes.bufferID) {
-
-				mesh.instanceBufferAttributes.bufferID = this.initInstanceBuffer(mesh, shaderProgram);
-			}
-		}
-	}
-
+	// Binds buffer objects and texture objects if they already exist
+	// Creates a new buffer for a geometry object requiring a unique buffer
+	// Updates existing buffer if geometry is in shared buffer
 	setBuffersAndAttributes(entity, scene, shaderProgram) {
 
 		const mesh = entity.mesh;
@@ -148,13 +61,7 @@ export default class Renderer {
 
 		const programLoc = shaderProgram.programID;
 
-		//this.updateUniforms(camera, programLoc, entity);
-
 		this.bindTextures(programLoc, material);
-
-		/*if (entity.dataStore) {
-			this.bindDataStore(programLoc, entity.dataStore);
-		}*/
 
 		if (scene.background) {
 			this.bindCubeMapTexture(programLoc, scene.background);
@@ -166,14 +73,14 @@ export default class Renderer {
 
 			if (bufferName != "") {
 
-				if (!(bufferName in namedBuffers)) {
+				if (!this.bufferManager.bufferExists(bufferName)) {
 
-					namedBuffers[bufferName] = this.initBuffers(geometry, shaderProgram);
-					geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
+					this.bufferManager.addBufferIdAlias(bufferName, this.initBuffers(geometry, shaderProgram));
+					geometry.bufferAttributes.bufferID = this.bufferManager.getBufferIdByName(bufferName);
 				}
 				else {
 
-					geometry.bufferAttributes.bufferID = namedBuffers[bufferName];
+					geometry.bufferAttributes.bufferID = this.bufferManager.getBufferIdByName(bufferName);
 					geometry.addGeometryEvent(0, 0);
 				}
 			}
@@ -183,13 +90,10 @@ export default class Renderer {
 			}
 
 			let buffers = geometry.bufferAttributes.buffers;
-			let bufferInfo = getBufferInfoById(geometry.bufferAttributes.bufferID);
+			let bufferInfo = this.bufferManager.getBufferInfoById(geometry.bufferAttributes.bufferID);
 
 			buffers.vertexBuffer.index = bufferInfo.vertexBuffer.occupiedIndexes; 
 			buffers.indexBuffer.index = bufferInfo.indexBuffer.occupiedIndexes;
-
-			//bufferInfo.entities.add(geometry);
-			//console.log(bufferInfo);
 		}
 
 		gl.disable(gl.CULL_FACE);
@@ -208,9 +112,10 @@ export default class Renderer {
 		}
 	}
 
+	// Binds appropriate uniforms and buffers before rendering
 	renderEntity(entity, scene, drawPassState) {
 
-		this.resizeViewport();
+		this.resizeViewport(); // Required to draw correctly on window resize
 
 		const mesh = entity.mesh;
 		const geometry = mesh.geometry;
@@ -274,6 +179,8 @@ export default class Renderer {
 		//this.renderQuad(scene);
 	}
 
+	// Special case, renders scene to quad in a seperate frame buffer
+	// Useful for post-processing effects
 	renderQuad(scene) {
 
 		gl.activeTexture(gl.TEXTURE4);
@@ -291,22 +198,7 @@ export default class Renderer {
 		return programType in entity.mesh.shaderPrograms;
 	}
 
-	/*bindDataStore(programLoc, dataStore) {
-
-		let textureLoc = dataStore.texture.textureID;
-
-		if (textureLoc == -1) {
-			dataStore.texture.textureID = this.initTexture(dataStore.texture);
-			dataStore.flagAsUpdated();
-		}
-		else if (dataStore.hasChanged) {
-			this.updateTexture(dataStore.texture);
-			dataStore.flagAsUpdated();
-		}
-
-		this.bindTexture(programLoc, dataStore.texture, 'dataStore');
-	}*/
-
+	// Binds given textures in texture map if they exist, creates new texture for material if they don't
 	bindTextures(programLoc, material) {
 
 		for (let mapping in material.maps) {
@@ -317,16 +209,13 @@ export default class Renderer {
 				material.maps[mapping].textureID = this.initTexture(material.maps[mapping]);
 			}
 
-			//this.bindTexture(programLoc, material.maps[mapping].textureID, mapping);
 			this.bindTexture(programLoc, material.maps[mapping], mapping);
 		}
 	}
 
-	bindTexture(programLoc, /*textureID,*/texture, mapping) {
+	bindTexture(programLoc, texture, mapping) {
 
 		let unit = textureUnitMap[mapping];
-
-		//console.log('unit: ', unit);
 
 		// Affect given unit
 		gl.activeTexture(gl['TEXTURE' + unit]);
@@ -334,10 +223,8 @@ export default class Renderer {
 		// Bind entity's texture(s) for drawing
 		gl.bindTexture(gl.TEXTURE_2D, texture.textureID);
 
-		//console.log(gl.getUniformLocation(programLoc, /*'uSampler'*/texture.textureName), texture.textureName);
-
 		// Tell shader we bound texture to unit
-		gl.uniform1i(gl.getUniformLocation(programLoc, /*'uSampler'*/texture.textureName), unit);
+		gl.uniform1i(gl.getUniformLocation(programLoc, texture.textureName), unit);
 	}
 
 	bindCubeMapTexture(programLoc, cubeMap) {
@@ -349,10 +236,6 @@ export default class Renderer {
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap.textureID);
 
 		let uniformLoc = gl.getUniformLocation(programLoc, 'uCubeSampler');
-
-		/*if (uniformLoc) {
-			gl.uniform1i(gl.getUniformLocation(programLoc, 'uCubeSampler'), unit);
-		}*/
 
 		gl.uniform1i(gl.getUniformLocation(programLoc, 'uCubeSampler'), unit);
 	}
@@ -444,14 +327,12 @@ export default class Renderer {
 
 	updateBuffers(geometry) {
 
-		//console.log(geometry, [...geometry.modifiedGeometryEvents]);
-
 		// Bind mesh's vertex array object
 		oes_vao_ext.bindVertexArrayOES(geometry.bufferAttributes.bufferID.VertexArrayLoc);
 
 		let geometryEvent = geometry.modifiedGeometryEvents.pop();
 		let buffers = geometry.bufferAttributes.buffers;
-		let bufferInfo = getBufferInfoById(geometry.bufferAttributes.bufferID);
+		let bufferInfo = this.bufferManager.getBufferInfoById(geometry.bufferAttributes.bufferID);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, geometry.bufferAttributes.bufferID.vertexBufferLoc);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.bufferAttributes.bufferID.indexBufferLoc);
@@ -459,27 +340,23 @@ export default class Renderer {
 		let vertexBufferIndex = geometryEvent.vertexBufferIndex;
 		let indexBufferIndex = geometryEvent.indexBufferIndex;
 
+		// Perform a rewrite of entire geometry from base indices
 		if (geometryEvent.vertexBufferIndex == -9 && geometryEvent.indexBufferIndex == -9) {
-			//console.log('heck yeah2');
 			vertexBufferIndex = 0;
 			indexBufferIndex = 0;
 		}
 
-		let newVertexBufferData = geometry.vertexBuffer.slice(/*geometryEvent.vertexBufferIndex*/vertexBufferIndex);
-
-		//console.log('vb Index!!!: ', /*geometryEvent.vertexBufferIndex*/vertexBufferIndex);
+		let newVertexBufferData = geometry.vertexBuffer.slice(vertexBufferIndex);
 
 		gl.bufferSubData(gl.ARRAY_BUFFER, 
-							(buffers.vertexBuffer.index + /*geometryEvent.vertexBufferIndex*/vertexBufferIndex) * GL_FLOAT_SIZE, 
+							(buffers.vertexBuffer.index + vertexBufferIndex) * GL_FLOAT_SIZE, 
 							new Float32Array(newVertexBufferData)
 							);
 
-		let newIndexBufferData = geometry.indexBuffer.slice(/*geometryEvent.indexBufferIndex*/indexBufferIndex);
+		let newIndexBufferData = geometry.indexBuffer.slice(indexBufferIndex);
 
 		// Offset index buffer values if entity shares a buffer
-
 		if (geometryEvent.vertexBufferIndex == -9 && geometryEvent.indexBufferIndex == -9) {
-			//console.log('don\'t need this!');
 
 			for (let index = 0; index < newIndexBufferData.length; index++) {
 
@@ -498,54 +375,41 @@ export default class Renderer {
 			bufferInfo.indexCount += geometry.vertices.length;
 		}
 
-		gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER,
-							(buffers.indexBuffer.index + /*geometryEvent.indexBufferIndex*/indexBufferIndex) * GL_UNSIGNED_SHORT_SIZE,
-							new Uint16Array(newIndexBufferData)
-							);
+		gl.bufferSubData(
+			gl.ELEMENT_ARRAY_BUFFER,
+			(buffers.indexBuffer.index + indexBufferIndex) * GL_UNSIGNED_SHORT_SIZE,
+			new Uint16Array(newIndexBufferData)
+		);
 
 		if (buffers.vertexBuffer.index != 0) {
 
-			//console.log(geometryEvent);
-
-			if (geometryEvent.vertexBufferIndex == -9 && geometryEvent.indexBufferIndex == -9) {
-				//console.log('heck yeah');
-			}
-			else {
+			// Assume buffer store is to be appended 
+			if (!(geometryEvent.vertexBufferIndex == -9 && geometryEvent.indexBufferIndex == -9)) {
 				bufferInfo.indexBuffer.occupiedIndexes += newIndexBufferData.length;
 				bufferInfo.vertexBuffer.occupiedIndexes += newVertexBufferData.length;
 			}
 		}
+		// Was a rewrite (of same size), so no new indices are required
 		else {
-			//console.log('hello...');
 			bufferInfo.indexBuffer.occupiedIndexes = newIndexBufferData.length;
 			bufferInfo.vertexBuffer.occupiedIndexes = newVertexBufferData.length;
-
-			// TEST, MIGHT BE WRONG
-
-			//bufferInfo.indexCount = geometry.vertices.length;
 		}
-
-				//console.log('base: ', geometry.bufferAttributes.baseIndexBufferIndex);
 
 		oes_vao_ext.bindVertexArrayOES(null);
 	}
 
+	// For now, rewrites entire instance buffer (required for tree application)
 	updateInstanceBuffer(instancedMesh) {
 
 		oes_vao_ext.bindVertexArrayOES(instancedMesh.geometry.bufferAttributes.bufferID.VertexArrayLoc);
 
-		//let instanceEvent = instancedMesh.modifiedInstanceEvents.pop();
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, instancedMesh.instanceBufferAttributes.bufferID);
 
-		/*gl.bufferSubData(gl.ARRAY_BUFFER,
-						instanceEvent.instanceBufferIndex * GL_FLOAT_SIZE,
-						new Float32Array(instancedMesh.worldMatrices[instanceEvent.bufferDataIndex].components.flat())
-						);*/
-		gl.bufferSubData(gl.ARRAY_BUFFER,
-						0,
-						new Float32Array(instancedMesh.mergeAttributes())
-						);
+		gl.bufferSubData(
+			gl.ARRAY_BUFFER,
+			0,
+			new Float32Array(instancedMesh.mergeAttributes())
+		);
 
 		oes_vao_ext.bindVertexArrayOES(null);
 	}
@@ -570,20 +434,8 @@ export default class Renderer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 
-	calcBufferSize(buffer, initialbufferData) {
-
-		var bufferSize;
-
-		if (buffer.size <= 0) {
-			bufferSize = initialbufferData.length;
-		}
-		else {
-			bufferSize = buffer.size;
-		}
-
-		return bufferSize;
-	}
-
+	// Creates new buffer equal to size of vertex data if no size is specified
+	// If size is specified, buffer is initialised with that size
 	initBuffer(buffer, bufferData) {
 
 		// Create handle to buffer object
@@ -602,8 +454,6 @@ export default class Renderer {
 
 	    gl.bindBuffer(bufferTarget, bufferObject);
 
-	    // Pass positions to WebGL to create buffer object's data store
-
 	    var newBufferData, bufferSize;
 
 	    if (buffer.size <= 0) {
@@ -617,14 +467,17 @@ export default class Renderer {
 
 	    gl.bufferData(bufferTarget, bufferSize, gl.STATIC_DRAW);
 
-	    gl.bufferSubData(bufferTarget, 
-	    				/*buffer.offset*/ 0,
-	    				(buffer.isIndexBuffer ? new Uint16Array(newBufferData) : new Float32Array(newBufferData))
-	    				);
+	    gl.bufferSubData(
+	    	bufferTarget, 
+	    	/*buffer.offset*/ 0,
+	    	(buffer.isIndexBuffer ? new Uint16Array(newBufferData) : new Float32Array(newBufferData))
+	    );
 
 	    return bufferObject;
 	}
 
+	// Creates vertex array object, vertex buffer object and element buffer object for geometry
+	// Buffers are intialised with vertex data specified in geometry
 	initBuffers(geometry, program) {
 
 		// Create handle to vertex array object
@@ -643,7 +496,7 @@ export default class Renderer {
 	        indexBufferLoc: IBO
 	    };
 
-	    addBuffer(bufferLocations, geometry.vertexBuffer.length, 
+	    this.bufferManager.addBuffer(bufferLocations, geometry.vertexBuffer.length, 
 	    		geometry.indexBuffer.length, geometry.vertices.length);
 
 	   	geometry.setBufferLocation(bufferLocations);
@@ -656,9 +509,6 @@ export default class Renderer {
 	initInstanceBuffer(instancedMesh, shaderProgram) {
 
 		oes_vao_ext.bindVertexArrayOES(instancedMesh.geometry.bufferAttributes.bufferID.VertexArrayLoc);
-
-		/*let matrixBuffer = instancedMesh.worldMatrices.map(matrices => matrices.components.flat())
-							.flat();*/
 
 		let instanceBuffer = instancedMesh.mergeAttributes();
 
@@ -690,21 +540,20 @@ export default class Renderer {
 	    for (let attribName in bufferAttributes.attributes) {
 
 	    	let attrib = bufferAttributes.attributes[attribName];
-	    	//console.log(attribName);
-	    	//let baseAttribLocation = gl.getAttribLocation(program, attribName);
 	    	let baseAttribLocation = attrib.meta[0].index;
-	    	//console.log(baseAttribLocation);
 
 	    	for (let i = 0; i < attrib.meta.length; i++) {
 
 	    		const attribLocation = baseAttribLocation + i;
 
-		    	gl.vertexAttribPointer(attribLocation, 
-		    							attrib.meta[i].attribLength, 
-		    							gl.FLOAT, 
-		    							false, 
-		    							bufferAttributes.bufferLength * GL_FLOAT_SIZE, 
-		    							attrib.meta[i].offset * GL_FLOAT_SIZE);
+		    	gl.vertexAttribPointer(
+		    		attribLocation, 
+		    		attrib.meta[i].attribLength, 
+		    		gl.FLOAT, 
+		    		false, 
+		    		bufferAttributes.bufferLength * GL_FLOAT_SIZE, 
+		    		attrib.meta[i].offset * GL_FLOAT_SIZE
+		    	);
 
 		    	gl.enableVertexAttribArray(attribLocation);
 
@@ -733,9 +582,9 @@ export default class Renderer {
 		const srcFormat = gl.RGBA;
 		const internalFormat = gl.RGBA;
 
-		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, /*gl.UNSIGNED_BYTE*/getTextureType(texture.type), texture.textureBuffer);
+		gl.texImage2D(target, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, getTextureType(texture.type), texture.textureBuffer);
 
-		gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, /*gl.LINEAR*/getInterpolation(texture.interpolation));
+		gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, getInterpolation(texture.interpolation));
 
 		if (texture.imgSrc != "") {
 
@@ -744,7 +593,6 @@ export default class Renderer {
 			image.crossOrigin = '';
 
 			image.addEventListener('load', function() {
-				//console.log('Done!');
 				gl.bindTexture(target, textureID);
 				gl.texImage2D(target, level, internalFormat, srcFormat, gl.UNSIGNED_BYTE, image);
 				gl.generateMipmap(target);
@@ -752,13 +600,6 @@ export default class Renderer {
 				gl.texParameteri(target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			});
 		}
-		/*else {
-				gl.bindTexture(gl.TEXTURE_2D, textureID);
-				gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, texture.width, texture.height, border, gl.RGBA, gl.UNSIGNED_BYTE, texture.bufferData);
-				gl.generateMipmap(gl.TEXTURE_2D);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-		}*/
 
 		gl.bindTexture(target, null);
 
@@ -767,20 +608,20 @@ export default class Renderer {
 
 	updateTexture(texture) {
 
-		//console.log(texture.width, texture.height);
-
 		gl.bindTexture(gl.TEXTURE_2D, texture.textureID);
 
 		console.log(texture.textureBuffer);
-		gl.texSubImage2D(gl.TEXTURE_2D, 
-							0, 
-							0, 
-							0, 
-							texture.width, 
-							texture.height,
-							gl.RGBA,
-							getTextureType(texture.type),
-							texture.textureBuffer);
+		gl.texSubImage2D(
+			gl.TEXTURE_2D, 
+			0, 
+			0, 
+			0, 
+			texture.width, 
+			texture.height,
+			gl.RGBA,
+			getTextureType(texture.type),
+			texture.textureBuffer
+		);
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
@@ -851,7 +692,6 @@ export default class Renderer {
 	initShaderProgram(mesh, vsSource, fsSource) {
 
 	    // Create handles to shader objects
-
 	    const vertexShader = this.loadShader(gl.VERTEX_SHADER, vsSource);
 	    const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fsSource);
 
@@ -927,8 +767,6 @@ export default class Renderer {
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-		console.log('frameBuffer: ', frameBuffer);
-
 		return frameBuffer;
 	}
 
@@ -963,9 +801,11 @@ export default class Renderer {
 
 	initQuad() {
 
-    	const quadShader = ShaderBuilder.customShader('default', 
-    												quadVertexShader, 
-    												quadFragmentShader, {}, []);
+    	const quadShader = ShaderBuilder.customShader(
+    		'default', 
+    		quadVertexShader, 
+    		quadFragmentShader, {}, []
+    	);
     	const quad = new PlaneEntity(quadShader);
 
     	return quad;
@@ -1040,39 +880,6 @@ export default class Renderer {
 	}
 }
 
-function addBuffer(bufferId, vertexBufferLength, indexBufferLength, indexCount) {
-
-	let newBuffer = {
-		vao: null,
-		vertexBuffer: {vbo: null, occupiedIndexes: 0, elementSize: 4, size: vertexBufferLength},
-		indexBuffer: {ibo: null, occupiedIndexes: 0, elementSize: 2, size: indexBufferLength},
-		indexCount: indexCount,
-		entities: new Map(),
-		newEntities: []
-	};
-
-	buffers.set(bufferId, newBuffer);
-
-	return newBuffer;
-}
-
-function getBufferInfoById(bufferId) {
-
-	return buffers.get(bufferId);
-}
-
-function mapEntityToBuffer(buffer, entity) {
-
-	let geometry = entity.mesh.geometry;
-
-	let vertexBufferLength = bufferInfo.vertexBuffer.occupiedIndexes;
-	let indexBufferLength = bufferInfo.indexBuffer.occupiedIndexes;
-
-	bufferInfo.entities.set(entity, {indexBufferStart: indexBufferLength,
-							vertexBufferStart: vertexBufferLength
-						});
-}
-
 function getInterpolation(interpolation) {
 
 	if (interpolation == 'Linear') {
@@ -1092,49 +899,3 @@ function getTextureType(type) {
 		return gl.UNSIGNED_BYTE;
 	}
 }
-
-const quadVertexShader = 
-`
-precision mediump float;
-
-attribute vec3 aVertexPosition;
-attribute vec2 aTexCoord;
-
-varying vec2 vTexCoord;
-
-void main() {
-
-	gl_Position = vec4(aVertexPosition, 1.0);
-
-	vTexCoord = aTexCoord;
-}
-`;
-const quadFragmentShader = 
-`
-precision mediump float;
-
-varying vec2 vTexCoord;
-
-uniform sampler2D hdrBuffer;
-
-void main() {
-
-    float gamma = 2.2;
-
-    //vec3 finalColour = pow(texture2D(hdrBuffer, vTexCoords).rgb, vec3(1.0 / gamma));
-    //vec3 finalColour = texture2D(hdrBuffer, vTexCoords).rgba;
-    vec4 finalColour = texture2D(hdrBuffer, vTexCoord);
-
-    float average = 0.2126 * finalColour.r + 0.7152 * finalColour.g + 0.0722 * finalColour.b;
-    //gl_FragColor = vec4(average, average, average, 1.0);
-    //gl_FragColor = finalColour;
-	//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-
-	float exposure = 0.8;
-    vec3 hdrColour = vec3(1.0) - exp(-exposure * finalColour.rgb);
-
-    vec3 gammaColour = pow(hdrColour, vec3(1.0 / gamma));
-
-    gl_FragColor = vec4(gammaColour, finalColour.a);
-} 
-`;

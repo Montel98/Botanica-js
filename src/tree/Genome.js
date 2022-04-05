@@ -14,11 +14,6 @@ export class GeneticSequence {
 		this.chromosomeLength = 32;
 	}
 
-	/*getFullSequence() {
-
-		return this.sequence.toString(2);
-	}*/
-
 	getAllele(geneName) {
 
 		const chromosomeNo = Genes[geneName].chromosome;
@@ -36,53 +31,6 @@ export class GeneticSequence {
 		return unknownAllele;
 	}
 
-	/*mutate() {
-
-		let validPositions = this.getValidPositions();
-
-		let randomPosition = Math.random() * validPositions.length;
-
-		this.mutateAux(randomPosition);
-	}
-
-	mutateAux(position) {
-
-		let isolatedBit = this.sequence & (1 << position); // Isolate bit to change
-
-		let settingMask = ~isolatedBit & (1 << position);
-
-		let clearingMask = ~(1 << position);
-
-		this.sequence = (this.sequence & clearingMask) | settingMask;
-
-	}*/
-
-	// Enumarated list of positions in the sequence where a bit negation leads to a valid state
-
-	/*getValidPositions() {
-
-		const oldSequence = this.sequence;
-
-		let validPositions = [];
-
-		for (let gene in Genes) {
-
-			for (let pos = Genes[gene].sequenceStart; pos <= Genes[gene].sequenceEnd; pos++) {
-
-				this.mutateAux(pos);
-
-				if (this.isValidAlleleSequence(gene)) {
-
-					validPositions.push(pos);
-				}
-			}
-		}
-
-		this.sequence = oldSequence;
-
-		return validPositions;
-	}*/
-
 	isValidAlleleSequence(geneName) {
 
 		return this.getAllele(geneName) == unknownAllele;
@@ -91,7 +39,6 @@ export class GeneticSequence {
 }
 
 // Generates a random valid genetic sequence
-
 export function randomGeneticSequence() {
 
 	let alleleMasks = [];
@@ -284,50 +231,6 @@ const floweringSeasonAlleles = {
 	'5': Allele(5, 0.06, 1.0, 'November-December'),
 };
 
-/*function generateLeafShapeAlleles() {
-
-	const leafShapeAlleles = {};
-
-	for (let i = 0; i <= 16; i++) {
-
-		for (let j = 0; j < i; j++) {
-
-			let mainBodyCode = i;
-			let auxBodyCode = j << 4;
-
-			let geneticCode = mainBodyCode | auxBodyCode;
-
-			leafShapeAlleles[geneticCode] = Allele(geneticCode, 1.0, 1.0, "");
-		}
-	}
-
-	return leafShapeAlleles;
-}*/
-
-/*function generateLeafShapes() {
-
-	const leafShapes = {};
-
-	for (let i = 1; i <= 12; i++) {
-
-		leafShapes[i] = [];
-
-		for (let j = i + 1; j <= 12; j++) {
-
-			//let mainBodyCode = i;
-			//let auxBodyCode = j << 4;
-
-			//let geneticCode = mainBodyCode | auxBodyCode;
-
-			//leafShapeAlleles[geneticCode] = Allele(geneticCode, 1.0, 1.0, "");
-
-			leafShapes[i].push(j);
-		}
-	}
-
-	return leafShapes;
-}*/
-
 function generateLeafShapes() {
 
 	const leafShapes = {};
@@ -421,8 +324,6 @@ function flowerLeafDistribution(validShapeFunc, probabilityFunc) {
 	const mainBodyOutcomes = Object.keys(validShapes);
 	const mainBodyProbabilities = probabilityFunc(mainBodyOutcomes);
 
-	//let probs = [];
-
 	for (let mainOutcome in validShapes) {
 
 		let outerBodyOutcomes = validShapes[mainOutcome];
@@ -441,63 +342,20 @@ function flowerLeafDistribution(validShapeFunc, probabilityFunc) {
 			alleles[geneticCode] = Allele(geneticCode, probability, 1.0, "");
 		}
 	}
-	//console.log('sum: ', probabilities);
 
 	return alleles;
 }
-
-/*function leafDistrubution() {
-
-	let validShapes = generateLeafShapes();
-
-	const mainBodyOutcomes = [0,1,2,3,4,5,6,7,8,9,10,11,12];
-	const mainBodyProbabilities = leafProbabilities(mainBodyOutcomes);
-
-	let probs = [];
-
-	for (let mainOutcome in validShapes) {
-
-		let outerBodyOutcomes = validShapes[mainOutcome];
-		let outerBodyProbabilities = leafProbabilities(outerBodyOutcomes);
-
-		let prob = 0;
-
-		for (let outcome = 0; outcome < outerBodyOutcomes.length; outcome++) {
-
-			let outerOutcome = outerBodyOutcomes[outcome];
-			let probability = outerBodyProbabilities[outerOutcome] * mainBodyProbabilities[mainOutcome];
-
-			prob+=probability;
-			probs.push(probability);
-		}
-	}
-
-	return probs
-}*/
-
-//console.log('valid outcomes: ', generateFlowerShapes());
-//console.log('expected:', flowerLeafDistribution());
-//console.log('actual:', getRandomFlower());
-//console.log('valid positions: ', Object.keys(generateLeafShapeAlleles2()).length);
-//console.log('Flower Alleles: ', flowerLeafDistribution(generateFlowerShapes, flowerLeafProbabilities));
 
 const unknownAllele = Allele(0, 0.0, 0.0, 'Unknown');
 
 function getRandomAlleleFromGene(geneName) {
 
 	let gene = Genes[geneName];
-	//let alleles = flowerLeafDistribution(generateFlowerShapes, flowerLeafProbabilities);
 	let alleles = gene.alleles;
-
-	//console.log('allelessss', alleles);
 
 	let sum = 0;
 
-	//let randomVal = Math.random();
 	const randomVal = TreeSeed.traits();
-	//console.log(TreeSeed, randomVal);
-
-	//console.log('randomVal: ', randomVal);
 
 	for (let geneticCode in alleles) {
 
@@ -505,7 +363,6 @@ function getRandomAlleleFromGene(geneName) {
 		sum += probability;
 
 		if (randomVal < sum) {
-			//fconsole.log('chosen allele: ', alleles[geneticCode]);
 			return alleles[geneticCode];
 		}
 	}
@@ -522,21 +379,3 @@ const Genes = {
 	'Flower Colour': Gene(5, 0,  27, 29),
 	'Flowering Season': Gene(6, 1, 0, 2, floweringSeasonAlleles)
 }
-
-//console.log(getRandomAlleleFromGene(Genes['Leaf Colour']));
-//console.log('Leaves: ', Object.keys(flowerLeafDistribution(generateLeafShapes, flowerLeafProbabilities)).length);
-
-function bla() {
-	let total = 0;
-	let leafDist = flowerLeafDistribution(generateLeafShapes, leafProbabilities);
-	//console.log(leafDist);
-	for (let i in leafDist) {
-		total += leafDist[i].frequency;
-	}
-
-	//console.log('probabilities: ', leafDist);
-}
-
-/*for (let geneName in Genes) {
-	console.log(geneName, Object.keys(Genes[geneName].alleles).length);
-}*/

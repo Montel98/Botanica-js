@@ -6,6 +6,7 @@ export default class Camera {
 		this.origin = eye;
 		this.centre = centre;
 
+		// Required to define the camera matrix
 		this.vertical = up.normalize();
 		this.direction = subtract(eye, centre).normalize();
 		this.left = cross(this.vertical, this.direction).normalize();
@@ -15,6 +16,7 @@ export default class Camera {
 
 	}
 
+	// Rotate horizontally with respect to current axis
 	rotateHorizontal(angle) {
 
 		let rot = rotate3Z(angle);
@@ -24,6 +26,7 @@ export default class Camera {
 		//this.left = cross(this.vertical, this.direction).normalize();
 	}
 
+	// Rotate vertically with respect to current axis
 	rotateVertical(angle) {
 		
 		let f = this.direction.scale(Math.cos(angle));
@@ -48,16 +51,18 @@ export default class Camera {
 
 	getCameraMatrices(canvas) {
 
-		return {camera: lookAt(this.origin, this.direction, this.left, this.vertical),
-				perspective: perspective(Math.PI * 0.25, this.zNear, this.zFar, /*canvas.scrollWidth / canvas.scrollHeight*/canvas.width / canvas.height)
-			}
+		return {
+			camera: lookAt(this.origin, this.direction, this.left, this.vertical),
+			perspective: perspective(Math.PI * 0.25, this.zNear, this.zFar, canvas.width / canvas.height)
+		}
 	}
 
 	getInverseCameraMatrices(canvas) {
 
-		return {camera: inverseLookAt(this.origin, this.direction, this.left, this.vertical),
-				perspective: inversePerspective(Math.PI * 0.25, this.zNear, this.zFar, /*canvas.scrollWidth / canvas.scrollHeight*/ canvas.width / canvas.height)
-			}
+		return {
+			camera: inverseLookAt(this.origin, this.direction, this.left, this.vertical),
+			perspective: inversePerspective(Math.PI * 0.25, this.zNear, this.zFar, canvas.width / canvas.height)
+		}
 	}
 
 	getCameraPosition() {

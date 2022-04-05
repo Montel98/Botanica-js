@@ -41,6 +41,7 @@ export default class LSystem {
 		}
 	}
 
+	// Creates a tree of stems and returns the root node
 	generateStems(startStackFrame, endIndex) {
 
 		let frames = [];
@@ -55,7 +56,7 @@ export default class LSystem {
 
 			stackFrame.stringIndex = index;
 
-			// Save ancestor stem in stack
+			// Save ancestor stem on stack
 			// Reset stack frame with new branch and smaller starting stem radii
 			if (symbol === '[') {
 
