@@ -24,7 +24,7 @@ export default class Renderer {
 
 		this.viewportWidth = canvas.width;
 		this.viewportHeight = canvas.height;
-		
+
 		this.bufferManager = new BufferManager();
 
 		gl = canvas.getContext("webgl");
@@ -299,8 +299,6 @@ export default class Renderer {
 			}
 			else {
 
-				//console.log('uniform Data:', uniformData);
-
 				uniformSize = uniformData[0].noRows;
 
 				const arrayUniformData = [];
@@ -320,7 +318,6 @@ export default class Renderer {
 
 			const lightingTerm = lightingUniforms[name];
 			const uniformLoc = gl.getUniformLocation(program, `lightSource.${name}`);
-			//console.log(uniformLoc);
 			gl.uniform1f(uniformLoc, lightingTerm);
 		}
 	}
@@ -609,8 +606,6 @@ export default class Renderer {
 	updateTexture(texture) {
 
 		gl.bindTexture(gl.TEXTURE_2D, texture.textureID);
-
-		console.log(texture.textureBuffer);
 		gl.texSubImage2D(
 			gl.TEXTURE_2D, 
 			0, 

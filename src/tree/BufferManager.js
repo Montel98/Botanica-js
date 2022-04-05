@@ -1,3 +1,6 @@
+
+// Keeps track of buffers created and the number of indices utilised
+// Allows buffers to have an alias (for geometries sharing buffers)
 export default class BufferManager {
 
 	constructor() {

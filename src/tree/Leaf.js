@@ -17,34 +17,35 @@ import leafFragmentShader from './Shaders/LeafFragment.glsl';
 const geneTable = {
 
 	colours: {
-				'0': {rgb: [0.0, 0.0, 0.4], reflectivity: 0.0}, // Midnight blue
-				'1': {rgb: /*[0.6, 0.6, 0.4]*/[0.15, 0.15, 0.06], reflectivity: 0.0}, // Murky Green
-				'2': {rgb: [0.8, 0.0, 0.6], reflectivity: 0.0}, // Fuschia
-				'3': {rgb: [1.0, 0.4, 0.0], reflectivity: 0.0}, // Orange
-				'4': {rgb: /*[1.0, 0.8, 1.0]*/[0.8, 0.3, 0.8], reflectivity: 0.0}, // Blossom
-				'5': {rgb: [1.0, 1.0, 1.0], reflectivity: 0.0}, // White
-				'6': {rgb: [0.8, 0.0, 0.0], reflectivity: 0.0}, // Fiery Red
-				'7': {rgb: [0.0, 0.4, 0.15], reflectivity: 0.0}, // Verdant Green
-				'8': {rgb: /*[0.1, 1.0, 0.8]*/[0.01, 0.8, 0.61], reflectivity:  0.0}, // Aqua Green
-				'9': {rgb: [0.8, 0.6, 0.0], reflectivity: 0.0}, // Mustard Brown
-				'10': {rgb: [0.75, 0.75, 0.75], reflectivity: 0.3}, // Silver
-				'11': {rgb: [/*0.83, 0.68, 0.21*//*0.66*/0.83, 0.42, 0.03], reflectivity: 0.5}, // Gold
-				'12': {rgb: [1.0, 0.85, 0.72], reflectivity: 0.0}, // Peach
-				'13': {rgb: [0.6, 0.6, 0.6], reflectivity: 0.0}, // Grey
-				'14': {rgb: /*[0.8, 1.0, 0.2]*/[0.6, 0.8, 0.03], reflectivity: 0.0}, // Lime Yellow
-				'15': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Trippy
-				'16': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Hypnosis
-				'17': {rgb: [/*0.87, 0.75, 0.72*/0.73, 0.53, 0.48], reflectivity: 0.3}, // Rose Gold
+		'0': {rgb: [0.0, 0.0, 0.4], reflectivity: 0.0}, // Midnight blue
+		'1': {rgb: /*[0.6, 0.6, 0.4]*/[0.15, 0.15, 0.06], reflectivity: 0.0}, // Murky Green
+		'2': {rgb: [0.8, 0.0, 0.6], reflectivity: 0.0}, // Fuschia
+		'3': {rgb: [1.0, 0.4, 0.0], reflectivity: 0.0}, // Orange
+		'4': {rgb: /*[1.0, 0.8, 1.0]*/[0.8, 0.3, 0.8], reflectivity: 0.0}, // Blossom
+		'5': {rgb: [1.0, 1.0, 1.0], reflectivity: 0.0}, // White
+		'6': {rgb: [0.8, 0.0, 0.0], reflectivity: 0.0}, // Fiery Red
+		'7': {rgb: [0.0, 0.4, 0.15], reflectivity: 0.0}, // Verdant Green
+		'8': {rgb: /*[0.1, 1.0, 0.8]*/[0.01, 0.8, 0.61], reflectivity:  0.0}, // Aqua Green
+		'9': {rgb: [0.8, 0.6, 0.0], reflectivity: 0.0}, // Mustard Brown
+		'10': {rgb: [0.75, 0.75, 0.75], reflectivity: 0.3}, // Silver
+		'11': {rgb: [/*0.83, 0.68, 0.21*//*0.66*/0.83, 0.42, 0.03], reflectivity: 0.5}, // Gold
+		'12': {rgb: [1.0, 0.85, 0.72], reflectivity: 0.0}, // Peach
+		'13': {rgb: [0.6, 0.6, 0.6], reflectivity: 0.0}, // Grey
+		'14': {rgb: /*[0.8, 1.0, 0.2]*/[0.6, 0.8, 0.03], reflectivity: 0.0}, // Lime Yellow
+		'15': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Trippy
+		'16': {rgb: [1.0, 1.0, 0.6], reflectivity: 0.0}, // Hypnosis
+		'17': {rgb: [/*0.87, 0.75, 0.72*/0.73, 0.53, 0.48], reflectivity: 0.3}, // Rose Gold
 	},
 
 	patterns: {
-				'0': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
-				'1': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
-				'2': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
-				'3': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null}
+		'0': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
+		'1': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
+		'2': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null},
+		'3': {textureFunc: TextureBuilder.generateRadialLeafTexture, mapping: null}
 	}
 }
 
+// XY morph target leaf profiles
 const leafProfileStart = (x) => {
 	return -0.4 * x;
 }
@@ -57,6 +58,11 @@ const leafProfileEnd = (x) => {
 	return x ** 2.0;
 }
 
+
+// Defines leaf surface as a function g(u, v)
+// Where u is an angle in radians, v is a distance
+// foldFactor determines the 'bumpiness' magnitude of leaf surface
+// foldFrequency determines the frequency of bumps
 const leafFunc = (fourier, foldFactor, foldFrequency, profileFunc, vMax) => { 
 	return {
 		aux(u, v) {
@@ -77,6 +83,7 @@ const leafFunc = (fourier, foldFactor, foldFrequency, profileFunc, vMax) => {
 	}
 }
 
+// Defines leaf stem as a 3D bezier curve with decreasing radius over length u
 const leafStemFunc = (path) => {
 	return {
 
@@ -111,10 +118,6 @@ const leafStemFunc = (path) => {
 		}
 	}
 }
-
-//const leafTexture = generateLeafTexture2(512, 512, 4);
-
-// Test instancing:
 
 export default class Leaves extends Entity {
 
@@ -193,6 +196,8 @@ export default class Leaves extends Entity {
 
 	}
 
+	// Adds leaves instances to instanced mesh and projects orientation to that of parent stem
+	// Leaves are equally spaced and form a circle around the stem
 	addLeaves(noLeaves, xAngle, poseMatrix, parentStem) {
 
 		let leaves = [];
@@ -208,6 +213,7 @@ export default class Leaves extends Entity {
 		return leaves;
 	}
 
+	// Removes any leaf instances marked for removal
 	removeDeadLeaves() {
 
 		while (this.removalList.length > 0) {
@@ -228,6 +234,7 @@ export default class Leaves extends Entity {
 		this.shaderUniforms['t'].components[0] = (Date.now() / 1000) - this.startTime;
 	}
 
+	// Updates pose, age and death age states of all leaf instances
 	updateLeaves(worldTime) {
 
 		for (let leafIndex = 0; leafIndex < this.leaves.length; leafIndex++) {
@@ -252,6 +259,7 @@ export default class Leaves extends Entity {
 		}
 	}
 
+	// Marks a leaf instance by index for removal
 	remove(leafIndex) {
 		this.removalList.push(leafIndex);
 
@@ -351,7 +359,6 @@ class Leaf {
 
 	static startRad = 0.001;
 	static growthRate = 0.5;
-	//static growthRate = 1.5;
 	static maxAge = 1.0;
 
 	constructor(poseMatrix, xAngle, zAngle, parentStem) {

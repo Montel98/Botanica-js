@@ -1,37 +1,10 @@
 import SegmentSelector from './SegmentSelector.js';
 import { add, cross } from './Vector.js';
 import { transform } from './Matrix.js';
-//import { radiusProperties } from './LSystem.js';
 import { radiusProperties } from './StemBuilder.js';
 import BezierCubic from './BezierCubic.js';
 import Vector, { upVector } from './Vector.js';
-import { testIntersections } from './BoundingQuad.js';
-
-const rayVertexShader =
-
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-
-uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-void main() {
-
-    gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);
-}
-`;
-
-const rayFragmentShader =
-`
-precision mediump float;
-
-void main() {
-    gl_FragColor = vec4(1.0);
-}
-
-`;
+import { testIntersections } from './Intersection.js';
 
 export default class Controller {
 

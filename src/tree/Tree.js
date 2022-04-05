@@ -174,6 +174,8 @@ export default class Tree extends Entity {
         }
     }
 
+    // The initial stem parameters for the root of the tree
+    // To be passed to the L-System
     initStackFrame() {
 
         const startIndex = 0;
@@ -235,14 +237,13 @@ export default class Tree extends Entity {
 
         this.addBoundingGeometry(terminalStem, packedColourId);
 
+        // ColourIds on each stem for colour picking
         stem.postStemGeometry.addBufferAttribute(
             'aColourId',
             3,
             stem.postStemGeometry.bufferAttributes.bufferLength,
             stemColourIds,
         );
-
-        // Add reference to branch ages
 
         let branchIndices = [];
 
@@ -251,6 +252,7 @@ export default class Tree extends Entity {
             branchIndices.push(new Vector([stem.branch.branchId]));
         }
 
+        // Branch indices to control girth (age) of each branch
         stem.postStemGeometry.addBufferAttribute(
             'aBranchIndex', 
             1,  
@@ -298,8 +300,7 @@ export default class Tree extends Entity {
         this.addChild(stump);
     }
 
-
-    // Currently causes a (small) memory leak, use with caution
+    // Currently causes a (small) memory leak as buffer is not overwritten yet, use with caution
     removeStump(stump) {
 
         for (let i = 0; i < this.stumps.length; i++) {
@@ -344,6 +345,9 @@ export default class Tree extends Entity {
 
     }
 
+
+    // Old terminal stems are removed once fully grown
+    // Replaced by new terminal stems that are the children nodes of the old stem
     generateNewStems() {
 
         let newStems = [];
@@ -368,9 +372,6 @@ export default class Tree extends Entity {
                         //this.hide(terminalStem.stem);
 
                         this.terminalStems.splice(i, 1);
-
-                        // Experimental
-
                         terminalStem.stem.isTerminal = false;
                     }
 
@@ -471,6 +472,8 @@ export default class Tree extends Entity {
                                         };
     }
 
+    // Removes all stems that are children of a given stem
+    // TODO: Split logic into smaller methods
     removeChildrenFromStem(stem) {
 
         let children = [stem];
@@ -645,8 +648,7 @@ export default class Tree extends Entity {
                 newStems[i].stem.mesh.geometry = oldStems[i].stem.mesh.geometry;
             }
 
-            // This should be a function
-            for (let i = 0; i < /*localRoot.length*/newBranch.length; i++) {
+            for (let i = 0; i < newBranch.length; i++) {
 
                 let newTerminalStem = newBranch[i];
                 this.addTerminalStem(newTerminalStem);
@@ -657,13 +659,9 @@ export default class Tree extends Entity {
 
         this.mesh.geometry.setGeometry(newGeometry);
         this.stems = getStemList(this.root);
-
-        return;
     }
 
-    // Move somewhere else, just testing:
-    // Find where deepest branch starts
-
+    // Finds the first stem of a branch
     getBranchStartIndex(LString, stringIndex) {
 
         let index = stringIndex;
@@ -714,7 +712,6 @@ export default class Tree extends Entity {
         return removedStems;
     }
 
-    // Maybe refactor? Using iterators a lot
     purgeLeavesFromCutStems(retainedStems) {
 
         let retainedStemSet = new Set(retainedStems);

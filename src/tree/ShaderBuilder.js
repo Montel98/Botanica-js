@@ -1,5 +1,3 @@
-//vec3(0.6, 0.4, 0.0) <- Gold Colour
-
 const _NORMAL_MAP = 1;
 const _TEXTURE_MAP = 2;
 const _INSTANCING = 4;
@@ -13,89 +11,93 @@ const mapIndex = {
 
 function shaderProgramDefault(useInstancing) {
 
-	const vertexInit = 	`
-						//precision mediump float;
-						attribute vec3 aVertexPosition;
-						attribute vec3 aNormal;
-						attribute vec2 aTexCoord;
+	const vertexInit = 	
+	`
+	//precision mediump float;
+	attribute vec3 aVertexPosition;
+	attribute vec3 aNormal;
+	attribute vec2 aTexCoord;
 
-						uniform mat4 world;
-						uniform mat4 camera;
-						uniform mat4 perspective;
+	uniform mat4 world;
+	uniform mat4 camera;
+	uniform mat4 perspective;
 
-						varying vec3 vNormal;
-						varying vec3 vVertexPosition;
-						varying vec3 vWorldNormal;
-						varying vec2 vTexCoord;
+	varying vec3 vNormal;
+	varying vec3 vVertexPosition;
+	varying vec3 vWorldNormal;
+	varying vec2 vTexCoord;
 
-						${useInstancing ? `attribute mat4 offset;` : ``}`;
+	${useInstancing ? `attribute mat4 offset;` : ``}`;
 
-	const vertexMain = 	`
-						void main() {
+	const vertexMain = 	
+	`
+	void main() {
 
-						${useInstancing ? `	gl_Position = perspective * camera * offset * vec4(aVertexPosition, 1.0);
-											vVertexPosition = vec3(offset * vec4(aVertexPosition, 1.0));` :
-										`	gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);
-											vVertexPosition = vec3(world * vec4(aVertexPosition, 1.0));`}
-							vNormal = aNormal;
-							vWorldNormal = vec3(world * vec4(aNormal, 1.0));
-							vTexCoord = aTexCoord;
-						}
-						`;
+	${useInstancing ? `	gl_Position = perspective * camera * offset * vec4(aVertexPosition, 1.0);
+						vVertexPosition = vec3(offset * vec4(aVertexPosition, 1.0));` :
+					`	gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);
+						vVertexPosition = vec3(world * vec4(aVertexPosition, 1.0));`}
+		vNormal = aNormal;
+		vWorldNormal = vec3(world * vec4(aNormal, 1.0));
+		vTexCoord = aTexCoord;
+	}
+	`;
 
-	const fragmentInit = `
-						precision mediump float;
-						varying vec3 vNormal;
-						varying vec3 vWorldNormal;
-						varying vec2 vTexCoord;
+	const fragmentInit = 
+	`
+	precision mediump float;
+	varying vec3 vNormal;
+	varying vec3 vWorldNormal;
+	varying vec2 vTexCoord;
 
-						varying vec3 vVertexPosition;
+	varying vec3 vVertexPosition;
 
-						uniform vec3 ambientColour;
-						uniform vec3 eye;
+	uniform vec3 ambientColour;
+	uniform vec3 eye;
 
-						uniform samplerCube uCubeSampler;
-						uniform sampler2D uTexture;
+	uniform samplerCube uCubeSampler;
+	uniform sampler2D uTexture;
 
-						struct LightSource {
-							float ambient;
-							float diffuse;
-							float specular;
-							float reflectivity; 
-						};
+	struct LightSource {
+		float ambient;
+		float diffuse;
+		float specular;
+		float reflectivity; 
+	};
 
-						uniform LightSource lightSource;
+	uniform LightSource lightSource;
 
-						`;
+	`;
 
-	const fragmentMain = `
-						void main() {
-							vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-							vec3 worldNorm = (vWorldNormal == vec3(0.0)) ? vec3(0.0) : normalize(vWorldNormal);
+	const fragmentMain = 
+	`
+	void main() {
+		vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
+		vec3 worldNorm = (vWorldNormal == vec3(0.0)) ? vec3(0.0) : normalize(vWorldNormal);
 
-							vec3 lightPos = vec3(0.0, -10.0, 10.0);
-							//vec3 lightDir = normalize(lightPos - vVertexPosition);
-							vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
+		vec3 lightPos = vec3(0.0, -10.0, 10.0);
+		//vec3 lightDir = normalize(lightPos - vVertexPosition);
+		vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
 
-							float ambient = lightSource.ambient;
-							float diffuse = lightSource.diffuse * clamp(dot(worldNorm, lightDir), 0.0, 1.0);
+		float ambient = lightSource.ambient;
+		float diffuse = lightSource.diffuse * clamp(dot(worldNorm, lightDir), 0.0, 1.0);
 
-							vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
-							vec3 viewDirection = normalize(vVertexPosition - eye);
+		vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
+		vec3 viewDirection = normalize(vVertexPosition - eye);
 
-							float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0);
+		float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 4.0);
 
-							float light = ambient + diffuse + specular;
+		float light = ambient + diffuse + specular;
 
-							vec3 potColour = texture2D(uTexture, vTexCoord).rgb;
+		vec3 potColour = texture2D(uTexture, vTexCoord).rgb;
 
-							vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
+		vec3 reflectedColour = vec3(textureCube(uCubeSampler, reflected));
 
-							//gl_FragColor = vec4(light * potColour, 1.0);
+		//gl_FragColor = vec4(light * potColour, 1.0);
 
-							gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * potColour + (lightSource.reflectivity * reflectedColour)), 1.0);
-						}
-						`;
+		gl_FragColor = vec4(light * ((1.0 - lightSource.reflectivity) * potColour + (lightSource.reflectivity * reflectedColour)), 1.0);
+	}
+	`;
 
 	let attribNames = [ShaderAttribute('aVertexPosition', 1), ShaderAttribute('aNormal', 1)];
 
@@ -108,36 +110,37 @@ function shaderProgramDefault(useInstancing) {
 		}*/
 
 	return {
-			vertexShader: `${vertexInit}${vertexMain}`, 
-			fragmentShader: `${fragmentInit}${fragmentMain}`
-			};
+		vertexShader: `${vertexInit}${vertexMain}`, 
+		fragmentShader: `${fragmentInit}${fragmentMain}`
+		};
 }
 
 const codeLines = {
 
-	_TEXTURE_MAP: {
-					vertexShader: 
-								{
-									init: `
-										attribute vec2 aTexCoord;
-										varying vec2 vTexCoord;
-										`,
-									main: `
-										vTexCoord = aTexCoord;
-										`
-								},
+	_TEXTURE_MAP: 
+	{
+	vertexShader: 
+				{
+					init: `
+						attribute vec2 aTexCoord;
+						varying vec2 vTexCoord;
+						`,
+					main: `
+						vTexCoord = aTexCoord;
+						`
+				},
 
-					fragmentShader: 
-								{
-									init: `
-										varying vec2 vTexCoord;
-										`,
-									main:`
-										vec4 material = texture2D(uTexture, vTexCoord);
-										gl_FragColor = vec4(light * material.rgb, 1.0);
-										`
-								}
-					},
+	fragmentShader: 
+				{
+					init: `
+						varying vec2 vTexCoord;
+						`,
+					main:`
+						vec4 material = texture2D(uTexture, vTexCoord);
+						gl_FragColor = vec4(light * material.rgb, 1.0);
+						`
+				}
+	},
 
 	_NORMAL_MAP: {vertexShader: {init: ``, main: ``}, fragmentShader: {init: ``, main: ``}}
 };
@@ -173,11 +176,14 @@ class ShaderBuilder {
 
 		let shaderInfo = shaderProgramDefault(useInstancing);
 
-		this.shaders[shaderKey] = {shaderSource: {vertexShaderSrc: shaderInfo.vertexShader,
-												fragmentShaderSrc: shaderInfo.fragmentShader},
-									programID: -1,
-									uniforms: {}
-								};
+		this.shaders[shaderKey] = {
+			shaderSource: {
+				vertexShaderSrc: shaderInfo.vertexShader,
+				fragmentShaderSrc: shaderInfo.fragmentShader
+			},
+			programID: -1,
+			uniforms: {}
+		};
 
 		return this.shaders[shaderKey];
 	}
@@ -198,17 +204,6 @@ class ShaderBuilder {
 
 				}, ``);
 	}
-
-	/*buildShaderProgram(textureMaps, useInstancing) {
-
-		let vertexShader = this.buildShader('vertexShader', textureMaps, useInstancing);
-		let fragmentShader = this.buildShader('fragmentShader', textureMaps, useInstancing);
-
-		return {
-			vertexShaderSrc: vertexShader,
-			fragmentShaderSrc: fragmentShader
-		}
-	}*/
 
 	customShader(name, vertexShaderSource, fragmentShaderSource, uniformsInfo, attributeNames) {
 
@@ -239,8 +234,6 @@ class ShaderBuilder {
 
 		customShaders[name] = newShader;
 
-		//console.log(newShader.attributeLocations);
-
 		return newShader;
 	}
 
@@ -262,8 +255,6 @@ class ShaderBuilder {
 
 			let attributeName = attributeNames[i].name;
 			let span = attributeNames[i].span;
-
-			//console.log(attributeName);
 
 			if (attributeName in this.globalAttributeLocationTable) {
 
@@ -304,8 +295,6 @@ class ShaderBuilder {
 				}
 			}
 		}
-
-		//console.log(attributeLocations);
 
 		return attributeLocations;
 	}
