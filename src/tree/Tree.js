@@ -51,10 +51,7 @@ export default class Tree extends Entity {
 
         const stackFrame = this.initStackFrame();
 
-        let newStems = this.LSystem.generateStems(stackFrame, this.LSystem.LString.length);
-
-        this.root = newStems;
-
+        this.root = this.LSystem.generateStems(stackFrame, this.LSystem.LString.length);
         this.stems = getStemList(this.root);
 
         this.germinationDate = new Date("March 1 2021 00:00:00");
@@ -65,38 +62,7 @@ export default class Tree extends Entity {
 
         setStemStates(this.currentDate, this);
 
-        const stemMaterial = this.terminalStems[0].terminalStem.stem.getMaterial();
-        const geometry = new Geometry(false, true, true);
-
-        geometry.setVertexBufferSize(10800 * 80);
-        geometry.setIndexBufferSize(3480 * 80);
-
-        this.girthMorphTargets = [];
-        geometry.addMorphTarget('MatureStart', this.girthMorphTargets);
-
-
-        this.mesh = new Mesh(stemMaterial, geometry);
-
-        this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('tree_shader', 
-                                                        treeVertexShader, 
-                                                        treeFragmentShader, 
-                                                        {'age': new Vector([0.0])},
-                                                        [ShaderAttribute('aVertexPosition', 1),
-                                                        ShaderAttribute('aNormal', 1),
-                                                        ShaderAttribute('aMorphTarget2', 1),
-                                                        ShaderAttribute('aColourId', 1)]
-                                                        )
-        );
-
-        this.mesh.setShaderProgram('Picking', ShaderBuilder.customShader('picking_shader',
-                                                        pickingVertexShader,
-                                                        pickingFragmentShader, 
-                                                        this.mesh.shaderPrograms['Default'].uniforms,
-                                                        [ShaderAttribute('aVertexPosition', 1), 
-                                                        ShaderAttribute('aMorphTarget2', 1),
-                                                        ShaderAttribute('aColourId', 1)]
-                                                        ) /*this.mesh.shaderPrograms['Default']*/
-        );
+        this.mesh = this.initMesh(this.terminalStems[0].terminalStem.stem.getMaterial());
 
         this.defaultShader = this.mesh.shaderPrograms['Default'];
 
@@ -105,7 +71,7 @@ export default class Tree extends Entity {
         this.currentColour = this.colourStart;
 
         this.defaultShader.uniforms['ambientColour'] = this.currentColour;
-        this.defaultShader.uniforms['branchAges'] = [];// new Array(620).fill(new Vector([0]));
+        this.defaultShader.uniforms['branchAges'] = [];
 
         for (let i = 0; i < MAX_BRANCHES; i++) {
             this.defaultShader.uniforms['branchAges'].push(new Vector([0.0]));
@@ -121,11 +87,8 @@ export default class Tree extends Entity {
         this.addChild(this.flowers);
 
         this.stumps = [];
-
-        this.maturedStems = [];
         this.colourIds = [];
         this.segmentTags = {};
-
         this.boundingGeometry = [];
 
         this.initColourPickingProperties();
@@ -135,6 +98,38 @@ export default class Tree extends Entity {
 
         setLeafStates(this.currentDate, this);
         setFlowerStates(this.currentDate, this);
+    }
+
+    initMesh(stemMaterial) {
+
+        const geometry = new Geometry(false, true, true);
+        geometry.setVertexBufferSize(10800 * 80);
+        geometry.setIndexBufferSize(3480 * 80);
+
+        const girthMorphTargets = [];
+        geometry.addMorphTarget('MatureStart', girthMorphTargets);
+
+        const mesh = new Mesh(stemMaterial, geometry);
+
+        mesh.setShaderProgram('Default', ShaderBuilder.customShader(
+            'tree_shader', 
+            treeVertexShader, 
+            treeFragmentShader, 
+            {'age': new Vector([0.0])},
+            []
+            )
+        );
+
+        mesh.setShaderProgram('Picking', ShaderBuilder.customShader(
+            'picking_shader',
+            pickingVertexShader,
+            pickingFragmentShader, 
+            mesh.shaderPrograms['Default'].uniforms,
+            []
+            )
+        );
+
+        return mesh;
     }
 
     act(worldTime) {
@@ -340,11 +335,6 @@ export default class Tree extends Entity {
             this.removeStump(stumpToRemove);
         }
     }
-
-    removeTerminalStem() {
-
-    }
-
 
     // Old terminal stems are removed once fully grown
     // Replaced by new terminal stems that are the children nodes of the old stem
@@ -1119,6 +1109,5 @@ function getStemList(root) {
         it = stemIt.next();
 
     }
-
     return stems;
 }

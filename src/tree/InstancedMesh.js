@@ -84,6 +84,10 @@ export default class InstancedMesh extends Mesh {
 		this.instanceBufferAttributes.bufferLength += length;
 	}
 
+	getInstanceBufferAttribute(name) {
+		return this.instanceBufferAttributes.attributes[name];
+	}
+
     mergeAttributes() {
 
 	    let buffer = [];
