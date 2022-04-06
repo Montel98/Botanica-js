@@ -4,13 +4,10 @@ import {add, subtract, dot, zeroVector2D} from './Vector.js';
 import FastSimplexNoise from './FastSimplexNoise.js';
 import * as Texture from './Texture.js';
 
-const rowMax = 32;
-const colMax = 32;
-
-//const rowMax = 8;
-//const colMax = 8;
-
 export function generateSoilTexture(width, height, noChannels) {
+
+	const rowMax = 32;
+	const colMax = 32;
 
 	let buffer = new Uint8Array(width * height * noChannels);
 
@@ -21,8 +18,6 @@ export function generateSoilTexture(width, height, noChannels) {
 	var xNorm, yNorm;
 
 	let index = 0;
-
-	let testAngles = [5 * Math.PI / 6, 4 * Math.PI / 6, 3 * Math.PI / 6, 2 * Math.PI / 6, -5 * Math.PI / 6, -4 * Math.PI / 6, -3 * Math.PI / 6, -2 * Math.PI / 6, 0.01 + Math.PI];
 
 	let points = [];
 
@@ -55,8 +50,6 @@ export function generateSoilTexture(width, height, noChannels) {
 
 
 			let pixelColour = 255 * (1.0 - step(1.0, d));
-			//let pixelColour = 80 + (175 * (1.0 - step(0.5, d)));
-
 
 			buffer[index] = pixelColour;
 			buffer[index + 1] = pixelColour;
@@ -76,10 +69,6 @@ export function generateLeafTexture(width, height, noChannels) {
 	const colMax = 8;
 
 	let points = [];
-
-	/*for (let i = 0; i < 40; i++) {
-		points.push({'location': new Vector([2.0 * Math.random() - 1.0, 2.0 * Math.random() - 1.0]), 'radius': 0.08 - (0.04 * Math.random())});
-	}*/
 
 	for (let x = 0; x < rowMax; x++) {
 
@@ -113,13 +102,7 @@ export function generateLeafTexture(width, height, noChannels) {
 
 		for (let x = 0; x < width; x++) {
 
-			//let pixelColour = 80;
-			//let pixelColour = 220;
-
 			xNorm = x / (width - 1);
-
-			//currentPos.components[0] = 2.0 * xNorm - 1.0;
-			//currentPos.components[1] = 2.0 * yNorm - 1.0;
 
 			currentPos.components[0] = xNorm;
 			currentPos.components[1] = yNorm;
@@ -131,29 +114,9 @@ export function generateLeafTexture(width, height, noChannels) {
 			midLine.components[0] = xNorm;
 			let midDist = subtract(currentPos, midLine).magnitude();
 
-			//console.log('mid dist:', midDist);
-
-			//console.log(dist);
-
-			//let pixelColour = 120 + 135 * (1.0 - step(0.003, dist)); <- super bright!
-			//let pixelColour = 120 + 60 * (1.0 - step(0.003, dist));
-
 			let offset = (1 + noise.get2DNoise(xNorm, yNorm));
 
 			let pixelColour = 50 + (140 * (1.0 - step(0.003, dist))) + (40 * offset);
-
-			//let pixelColour = 120 + clamp(0, 135, 135 * ((1.0 - step(0.003, dist)) + (1.0 - step(0.02, midDist))));
-			//let pixelColour = 120 + 60 * offset;
-			//let pixelColour = 120 + 135 * (1.0 - step(0.01, midDist));
-
-			/*for (let i  = 0; i < points.length; i++) {
-
-				let d = subtract(currentPos, points[i].location).magnitude();
-				pixelColour -= (100 * (1.0 - step(points[i].radius, d)));
-			}*/
-
-			//pixelColour = clamp(0, 255, pixelColour);
-
 
 			buffer[index] = pixelColour;
 			buffer[index + 1] = pixelColour;
@@ -253,8 +216,6 @@ export function generateRadialLeafTexture(width, height, noChannels) {
 			buffer[index + 1] = baseColour.components[1];
 			buffer[index + 2] = baseColour.components[2];
 			buffer[index + 3] = 255;
-
-			//console.log(baseColour.components);
 
 			index += 4;
 		}
@@ -380,8 +341,6 @@ export function generateBirchTexture(width, height) {
 	let noise = new FastSimplexNoise({frequency: 2.0, octaves: 8});
 	let points = generatePoints(rows, columns);
 
-	//console.log(points);
-
 	let index = 0;
 
 	for (let x = 0; x < width; x++) {
@@ -394,31 +353,8 @@ export function generateBirchTexture(width, height) {
 
 			let angle = 2.0 * Math.PI * xNorm;
 
-			/*let n = 0;
-			let amp = 1;
-			let ampSum = 0;
-			let freq = 1;
-
-			for (let octave = 0; octave < noOctaves; octave++) {
-
-				n += amp * noise.noise3D(freq * Math.cos(angle), freq * Math.sin(angle), freq * noColumns * yNorm);
-				amp /= 2;
-				freq *= 2;
-				ampSum += amp;
-
-			}*/
-
 			let offset = 1 + noise.get3DNoise(Math.cos(angle), Math.sin(angle), columns * yNorm);
 			let distance = closestPointFrom(xNorm + 0.05 * offset, noSegments * (yNorm + 0.005 * offset), points);
-
-			//let offset = 1 + noise.noise3D(freq * Math.cos(angle), freq * Math.sin(angle), freq * noColumns * yNorm);
-			/*let d1 = smoothStep(0.0, 0.02, distance)
-            let d2 = smoothStep(0.02, 0.04, distance)
-            let d3 = smoothStep(0.04, 0.1, distance)*/
-
-            /*let d1 = smoothStep(0.0, 0.01, distance)
-            let d2 = smoothStep(0.01, 0.03, distance)
-            let d3 = smoothStep(0.03, 0.06, distance)*/
 
             let d1 = smoothStep(0.0, 0.0025, distance)
             let d2 = smoothStep(0.0025, 0.0075, distance)
@@ -442,16 +378,15 @@ export function generateBirchTexture(width, height) {
 
 export function generateGradientWoodTexture(baseColour, bodyColour, width, height) {
 
+	const rowMax = 32;
+	const colMax = 32;
+
 	let buffer = new Uint8Array(width * height * 4);
 	let noise = new FastSimplexNoise({frequency: 2.0, octaves: 2});
 
 	let noRows = rowMax;
 	let noColumns = colMax;
 	let points = generatePoints(32, 32);
-
-	//for (let p = 0; p < pointsRaw.length; p++) {
-	//	points.push(new Vector(pointsRaw[p]));
-	//}
 
 	for (let x = 0; x < rowMax; x++) {
 
@@ -511,10 +446,6 @@ export function generatePotTexture(width, height) {
 			let yNorm = y / (height - 1);
 
 			const beige = new Vector([0.96, 0.96, 0.86]); //<- this one
-			//const beige = new Vector([0.66, 0.66, 0.52]);
-			//const beige = new Vector([0.9, 0.9, 0.7]);
-			//const green = new Vector([0.5, 0.5, 0.2]); <- this one
-			//const green = new Vector([0.46, 0.46, 0.27]);
 			const green = new Vector([0.5, 0.4, 0.2]);
 
 			const darkDarkBrown = new Vector([0.4, 0.2, 0.15]);
@@ -528,13 +459,7 @@ export function generatePotTexture(width, height) {
 
 			let topHalf = subtract(add(beige.scale(1 - s2), green.scale(s2)), baseColour);
 
-			//baseColour *= step(0.5, yNorm);
 			baseColour = add(baseColour, topHalf.scale(step(0.5, yNorm)));
-
-			//let noise2D = noise.get2DNoise(xNorm * 200, yNorm * 200);
-
-			//let subValue = 0.7 * smoothStep(0.5, 0.75, noise2D);
-			//baseColour = subtract(baseColour, new Vector([subValue, subValue, subValue]));
 
 			// Use half of the 'canvas'
 			baseColour = baseColour.scale(1.0 - step(0.5, xNorm));
@@ -826,6 +751,9 @@ function clamp(start, end, x) {
 }
 
 function closestPoint(pos, points) {
+
+	const rowMax = 32;
+	const colMax = 32;
 
 	let row = Math.floor(pos.components[0]);
 	let col = Math.floor(pos.components[1]);

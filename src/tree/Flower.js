@@ -8,7 +8,7 @@ import { identityMatrix, transform, multiply, rotate3Z, rotate4Z, scale } from '
 import ShaderBuilder from './ShaderBuilder.js';
 import * as TextureBuilder from './TextureBuilder.js';
 import Entity from './Entity.js';
-import { generateFlowerGeometry } from './FlowerBuilder.js';
+import * as FlowerBuilder from './FlowerBuilder.js';
 
 import flowerVertexShader from './Shaders/FlowerVertex.glsl';
 import flowerFragmentShader from './Shaders/FlowerFragment.glsl';
@@ -21,31 +21,7 @@ export default class Flowers extends Entity {
 
 		super();
 
-		const flowerTexture = TextureBuilder.generateFlowerTexture(this.getFlowerColourInfo(), 128, 128);
-		const material = new Material(flowerTexture);
-		material.maps['textureMap'] = flowerTexture;
-
-		this.ages = [];
-
-		const geometry = generateFlowerGeometry(genome);
-
-		this.mesh = new InstancedMesh(material, geometry, 0);
-		this.mesh.setInstanceBufferSize(80000);
-
-		this.mesh.addInstanceBufferAttribute(
-			'aAge',
-			1,
-			this.mesh.instanceBufferAttributes.bufferLength,
-			this.ages
-		);
-
-		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader(
-			'flower_shader',
-			flowerVertexShader,
-			flowerFragmentShader,
-			{},
-			[])
-		);
+		this.mesh = this.initMesh(genome);
 
 		this.worldMatrix = identityMatrix;
 
@@ -57,6 +33,37 @@ export default class Flowers extends Entity {
 
 		this.flowers = [];
 		this.removalList = [];
+	}
+
+	initMesh(genome) {
+
+		const flowerTexture = TextureBuilder.generateFlowerTexture(this.getFlowerColourInfo(), 128, 128);
+		const material = new Material(flowerTexture);
+		material.maps['textureMap'] = flowerTexture;
+
+		const ages = [];
+
+		const geometry = FlowerBuilder.generateFlowerGeometry(genome);
+
+		const mesh = new InstancedMesh(material, geometry, 0);
+		mesh.setInstanceBufferSize(80000);
+
+		mesh.addInstanceBufferAttribute(
+			'aAge',
+			1,
+			mesh.instanceBufferAttributes.bufferLength,
+			ages
+		);
+
+		mesh.setShaderProgram('Default', ShaderBuilder.customShader(
+			'flower_shader',
+			flowerVertexShader,
+			flowerFragmentShader,
+			{},
+			[])
+		);
+
+		return mesh;
 	}
 
 	act(worldTime) {
@@ -76,7 +83,7 @@ export default class Flowers extends Entity {
 	addFlower(pose, zAngle, parentStem) {
 
 		let newFlower = new Flower(pose, zAngle, parentStem);
-		this.ages.push(newFlower.age);
+		//this.ages.push(newFlower.age);
 
 		this.mesh.addInstance(pose, {'aAge': newFlower.age});
 		this.flowers.push(newFlower);
@@ -94,7 +101,8 @@ export default class Flowers extends Entity {
 			flower.grow(worldTime);
 
 			this.mesh.localMatrices[flowerIndex] = flower.getCurrentPose();
-			this.ages[flowerIndex] = flower.age;
+			//this.ages[flowerIndex] = flower.age;
+			this.mesh.getInstanceBufferAttribute('aAge').bufferData[flowerIndex] = flower.age;
 
 			if (flower.isDestroyed) {
 				this.remove(flowerIndex);

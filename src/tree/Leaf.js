@@ -52,8 +52,8 @@ export default class Leaves extends Entity {
 
 		const material = new Material(leafTexture);
 		material.maps['textureMap'] = leafTexture;
-        material.setPhongComponents(0.2, 0.6, 1.5);
-        material.setReflectivity(colourInfo.reflectivity);
+		material.setPhongComponents(0.2, 0.6, 1.5);
+		material.setReflectivity(colourInfo.reflectivity);
 
 		const geometry = LeafBuilder.generateGeometry(genome, patternInfo.mapping);
 		const ages = [];
@@ -233,7 +233,7 @@ class Leaf {
 	    	}
 		}
 
-    	let stem = this.parentStem.stem;
+		let stem = this.parentStem.stem;
     	let radius = Leaf.startRad + (stem.postStemGeometry.surface.functions.r(1.0) - Leaf.startRad) * stem.branch.age;
     	let growthDir = this.parentStem.stackFrame.axis.forward.scale(0.03 * stem.stemLength);
 
@@ -244,10 +244,11 @@ class Leaf {
 		let windAngle = 0.03 * Math.PI * 2.0 * ((0.5 * Math.cos(Math.PI * t / 5) * Math.cos(Math.PI * t / 5) * Math.cos(Math.PI * 3 * t / 5) * Math.cos(Math.PI * x)) + (Math.sin(Math.PI * x) * 0.1));
 		let w = windAngle;
 
-		let basePose = new Matrix([[Math.cos(w)*Math.cos(z) + Math.sin(w)*Math.sin(x)*Math.sin(z), Math.cos(x)*Math.sin(z), Math.cos(w)*Math.sin(x)*Math.sin(z) - Math.cos(z)*Math.sin(w), 0],
-								[-Math.cos(w)*Math.sin(z) + Math.cos(z)*Math.sin(w)*Math.sin(x), Math.cos(x)*Math.cos(z), Math.cos(w)*Math.cos(z)*Math.sin(x) + Math.sin(w)*Math.sin(z), 0],
-								[Math.cos(x)*Math.sin(w), -Math.sin(x), Math.cos(w)*Math.cos(x), 0],
-								[Math.cos(w)*Math.cos(z)*radius, radius*Math.sin(z), -Math.cos(z)*radius*Math.sin(w), 1]]);
+		let basePose = new Matrix(
+			[[Math.cos(w)*Math.cos(z) + Math.sin(w)*Math.sin(x)*Math.sin(z), Math.cos(x)*Math.sin(z), Math.cos(w)*Math.sin(x)*Math.sin(z) - Math.cos(z)*Math.sin(w), 0],
+			[-Math.cos(w)*Math.sin(z) + Math.cos(z)*Math.sin(w)*Math.sin(x), Math.cos(x)*Math.cos(z), Math.cos(w)*Math.cos(z)*Math.sin(x) + Math.sin(w)*Math.sin(z), 0],
+			[Math.cos(x)*Math.sin(w), -Math.sin(x), Math.cos(w)*Math.cos(x), 0],
+			[Math.cos(w)*Math.cos(z)*radius, radius*Math.sin(z), -Math.cos(z)*radius*Math.sin(w), 1]]);
 
     	this.localPose = multiply(translate(...growthDir.components), multiply(this.basePose.poseMatrix, basePose));
 
@@ -327,7 +328,7 @@ function leafTextureMapping(geometry) {
 	const stMap = new Array(geometry.uSteps * geometry.vSteps);
 
 	const deltaU = (geometry.surface.uMax - geometry.surface.uMin) / (geometry.uSteps - 1);
-    const deltaV = (geometry.surface.vMax - geometry.surface.vMin) / (geometry.vSteps - 1);
+	const deltaV = (geometry.surface.vMax - geometry.surface.vMin) / (geometry.vSteps - 1);
 
     let u = 0;
     let v = 0;

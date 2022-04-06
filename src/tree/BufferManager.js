@@ -9,7 +9,6 @@ export default class BufferManager {
 	}
 
 	addBuffer(bufferId, vertexBufferLength, indexBufferLength, indexCount) {
-
 		let newBuffer = {
 			vao: null,
 			vertexBuffer: {vbo: null, occupiedIndexes: 0, elementSize: 4, size: vertexBufferLength},
@@ -41,7 +40,6 @@ export default class BufferManager {
 	}
 
 	mapEntityToBuffer(buffer, entity) {
-
 		let geometry = entity.mesh.geometry;
 
 		let vertexBufferLength = bufferInfo.vertexBuffer.occupiedIndexes;
