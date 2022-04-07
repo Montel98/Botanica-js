@@ -6,11 +6,6 @@ class GeneticSequence {
 		this.chromosomeLength = 32;
 	}
 
-	/*getFullSequence() {
-
-		return this.sequence.toString(2);
-	}*/
-
 	getAllele(geneName) {
 
 		const chromosomeNo = Genes[geneName].chromosome;
@@ -45,8 +40,6 @@ function randomGeneticSequence(generator) {
 
 	for (let geneName in Genes) {
 
-		//console.log(geneName);
-
 		const chromosomeNo = Genes[geneName].chromosome;
 
 		const geneLength = Genes[geneName].sequenceEnd - Genes[geneName].sequenceStart + 1;
@@ -59,9 +52,6 @@ function randomGeneticSequence(generator) {
 		if (noAlleles > 0) {
 
 			let randomAllele = getRandomAlleleFromGene(generator, geneName);
-
-			//console.log('random: ', randomAllele);
-
 			let alleleMask = randomAllele.geneticCode << offset;
 
 			chromosomes[chromosomeNo] |= alleleMask;
@@ -180,55 +170,6 @@ const Gene = (Id, chromosomeNo, start, end, alleleList={}) => {
 	}
 }
 
-const leafColourAlleles = {'0': Allele(0, 0.03, 1.0, 'Midnight Blue'), 
-							'1': Allele(1, 0.18, 1.0, 'Murky Green'),
-							'2': Allele(2, 0.05, 1.0, 'Fuschia'),
-							'3': Allele(3, 0.04, 1.0, 'Sunset Orange'),
-							'4': Allele(4, 0.08, 1.0, 'Blossom'),
-							'5': Allele(5, 0.05, 1.0, 'White'),
-							'6': Allele(6, 0.05, 1.0, 'Fiery Red'),
-							'7': Allele(7, 0.2, 1.0, 'Verdant Green'),
-							'8': Allele(8, 0.05, 1.0, 'Aqua Green'),
-							'9': Allele(9, 0.05, 1.0, 'Mustard Brown'),
-							'10': Allele(10, 0.015, 1.0, 'Silver'),
-							'11': Allele(11, 0.01, 1.0, 'Gold'),
-							'12': Allele(12, 0.047, 1.0, 'Peach'),
-							'13': Allele(13, 0.03, 1.0, 'Charcoal Grey'),
-							'14': Allele(14, 0.1, 1.0, 'Lime Yellow'),
-							'15': Allele(15, 0.003, 1.0, 'Trippy'),
-							'16': Allele(16, 0.005, 1.0, 'Hypnosis'),
-							'17': Allele(17, 0.01, 1.0, 'Rose Gold')
-						};
-
-const leafPatternAlleles = {'0': Allele(0, 0.3, 1.0, 'Radial'),
-								'1': Allele(1, 0.08, 1.0, 'Spotted'),
-								'2': Allele(2, 0.22, 1.0, 'Cellular'),
-								'3': Allele(3, 0.4, 1.0, 'Normal')
-						};
-
-const floweringAlleles = {
-	'0': Allele(0, 0.75, 0.1, 'Not Flowering'),
-	'1': Allele(1, 0.25, 1.0, 'Flowering')
-};
-
-const woodTypeAlleles = {
-	'0': Allele(0, 0.38, 1.0, 'Light Wood'),
-	'1': Allele(1, 0.35, 1.0, 'Dark Wood'),
-	'2': Allele(2, 0.21, 1.0, 'Birch'),
-	'3': Allele(3, 0.03, 1.0, 'Silver'),
-	'4': Allele(4, 0.02, 1.0, 'Gold'),
-	'5': Allele(5, 0.01, 1.0, 'Rose Gold')
-};
-
-const floweringSeasonAlleles = {
-	'0': Allele(0, 0.04, 1.0, 'January-February'),
-	'1': Allele(1, 0.28, 1.0, 'March-April'),
-	'2': Allele(2, 0.32, 1.0, 'May-June'),
-	'3': Allele(3, 0.2, 1.0, 'July-August'),
-	'4': Allele(4, 0.1, 1.0, 'September-October'),
-	'5': Allele(5, 0.06, 1.0, 'November-December'),
-};
-
 function generateLeafShapes() {
 
 	const leafShapes = {};
@@ -259,8 +200,6 @@ const leafMassFunc = (x) => { return 10 * (x + 1) * Math.exp(-0.5 * (x + 1)) };
 
 
 function flowerLeafProbabilities(outcomes, probabilityMassFunc) {
-
-	//const probabilityMassFunc = (x) => { return 0.8 + Math.exp(-0.2 * (x - 18)) };
 
 	let totalWeight = 0;
 	let probabilities = {};
@@ -293,8 +232,6 @@ function generateFlowerShapes() {
 			let mainBody = i;
 			let outerBody = j;
 
-			//let probability = pMainBody[i - 3] * pOuterBody[j - i];
-
 			if (i % 2 == 1) {
 
 				if (j % i == 0) {
@@ -322,8 +259,6 @@ function flowerLeafDistribution(validShapeFunc, probabilityFunc) {
 	const mainBodyOutcomes = Object.keys(validShapes);
 	const mainBodyProbabilities = probabilityFunc(mainBodyOutcomes);
 
-	//let probs = [];
-
 	for (let mainOutcome in validShapes) {
 
 		let outerBodyOutcomes = validShapes[mainOutcome];
@@ -342,7 +277,6 @@ function flowerLeafDistribution(validShapeFunc, probabilityFunc) {
 			alleles[geneticCode] = Allele(geneticCode, probability, 1.0, geneticCode.toString());
 		}
 	}
-	//console.log('sum: ', probabilities);
 
 	return alleles;
 }
@@ -352,17 +286,9 @@ const unknownAllele = Allele(0, 0.0, 0.0, 'Unknown');
 function getRandomAlleleFromGene(generator, geneName) {
 
 	let gene = Genes[geneName];
-	//let alleles = flowerLeafDistribution(generateFlowerShapes, flowerLeafProbabilities);
 	let alleles = gene.alleles;
-
-	//console.log('allelessss', alleles);
-
 	let sum = 0;
-
-	//let randomVal = Math.random();
 	const randomVal = generator();
-
-	//console.log('randomVal: ', randomVal);
 
 	for (let geneticCode in alleles) {
 
@@ -370,13 +296,63 @@ function getRandomAlleleFromGene(generator, geneName) {
 		sum += probability;
 
 		if (randomVal < sum) {
-			//fconsole.log('chosen allele: ', alleles[geneticCode]);
 			return alleles[geneticCode];
 		}
 	}
 
 	return unknownAllele;
 }
+
+const leafColourAlleles = {
+	'0': Allele(0, 0.03, 1.0, 'Midnight Blue'), 
+	'1': Allele(1, 0.18, 1.0, 'Murky Green'),
+	'2': Allele(2, 0.05, 1.0, 'Fuschia'),
+	'3': Allele(3, 0.04, 1.0, 'Sunset Orange'),
+	'4': Allele(4, 0.08, 1.0, 'Blossom'),
+	'5': Allele(5, 0.05, 1.0, 'White'),
+	'6': Allele(6, 0.05, 1.0, 'Fiery Red'),
+	'7': Allele(7, 0.2, 1.0, 'Verdant Green'),
+	'8': Allele(8, 0.05, 1.0, 'Aqua Green'),
+	'9': Allele(9, 0.05, 1.0, 'Mustard Brown'),
+	'10': Allele(10, 0.015, 1.0, 'Silver'),
+	'11': Allele(11, 0.01, 1.0, 'Gold'),
+	'12': Allele(12, 0.047, 1.0, 'Peach'),
+	'13': Allele(13, 0.03, 1.0, 'Charcoal Grey'),
+	'14': Allele(14, 0.1, 1.0, 'Lime Yellow'),
+	'15': Allele(15, 0.003, 1.0, 'Trippy'),
+	'16': Allele(16, 0.005, 1.0, 'Hypnosis'),
+	'17': Allele(17, 0.01, 1.0, 'Rose Gold')
+};
+
+const leafPatternAlleles = {
+	'0': Allele(0, 0.3, 1.0, 'Radial'),
+	'1': Allele(1, 0.08, 1.0, 'Spotted'),
+	'2': Allele(2, 0.22, 1.0, 'Cellular'),
+	'3': Allele(3, 0.4, 1.0, 'Normal')
+};
+
+const floweringAlleles = {
+	'0': Allele(0, 0.75, 0.1, 'Not Flowering'),
+	'1': Allele(1, 0.25, 1.0, 'Flowering')
+};
+
+const woodTypeAlleles = {
+	'0': Allele(0, 0.38, 1.0, 'Light Wood'),
+	'1': Allele(1, 0.35, 1.0, 'Dark Wood'),
+	'2': Allele(2, 0.21, 1.0, 'Birch'),
+	'3': Allele(3, 0.03, 1.0, 'Silver'),
+	'4': Allele(4, 0.02, 1.0, 'Gold'),
+	'5': Allele(5, 0.01, 1.0, 'Rose Gold')
+};
+
+const floweringSeasonAlleles = {
+	'0': Allele(0, 0.04, 1.0, 'January-February'),
+	'1': Allele(1, 0.28, 1.0, 'March-April'),
+	'2': Allele(2, 0.32, 1.0, 'May-June'),
+	'3': Allele(3, 0.2, 1.0, 'July-August'),
+	'4': Allele(4, 0.1, 1.0, 'September-October'),
+	'5': Allele(5, 0.06, 1.0, 'November-December'),
+};
 
 const Genes = {
 	'Leaf Colour': Gene(0, 0, 0, 4, leafColourAlleles),
