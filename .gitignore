@@ -1,6 +1,6 @@
 node_modules/
 backend/keys/
-backend/pinata_keys.txt
+backend/pinata_keys
 test.html
 src/tree/Bloom.js
 src/tree/DataStore.js

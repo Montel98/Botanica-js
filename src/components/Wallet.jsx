@@ -197,7 +197,7 @@ export default class Wallet extends React.Component {
             <div id="walletContainer">
                 {/*<div id="wallet" onClick={this.connectWallet}>*/}
                 <div id="wallet">
-                    <a>Connect Wallet</a>
+                    <a>Connect Nami</a>
                 </div>
                 {/*<div id="redeem" onClick={this.redeem}>
                     <a>Redeem </a>

@@ -12,8 +12,12 @@ function generateTreeMetadata(seed) {
 	traitsGen();
 
 	const sequence = genome.randomGeneticSequence(traitsGen);
-	const traits = Object.keys(genome.Genes).map(geneName => {return {gene: geneName, 
-															allele: sequence.getAllele(geneName).name}});
+	const traits = Object.keys(genome.Genes).map(geneName => {
+		return {
+			gene: geneName, 
+			allele: sequence.getAllele(geneName).name
+		}
+	});
 
 	//console.log(traits);
 

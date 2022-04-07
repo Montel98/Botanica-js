@@ -14,7 +14,7 @@ const accessorSymbol = "125c0aa0d0990f3e03353da5e767549b40471725b2e383f5a7491da9
 const NFTSymbol = "12f7d58909d223cde4f706dc5344962f20c050d976362cd7ee1a015c";
 
 const baseURI = "https://cardano-testnet.blockfrost.io/api/v0";
-const key = "testnetXPpfHIVWjGcto1hHxom0DqSjDAWrppyN";
+const key = "";
 
 const ASSET_SYMBOL_LENGTH = 56;
 
@@ -80,28 +80,10 @@ class Minter {
 			);
 	}
 
-	/*addOutput(address, value, datum=null) {
-
-		const output = this.makeOutput(address, value, datum);
-		this.builder.add_output(output);
-
-	}*/
-
 	addOutput(output) {
 		this.outputs.add(output);
 		this.builder.add_output(output);
 	}
-
-	/*makeOutput(address, value, datum=null) {
-
-		const output = Loader.Cardano.TransactionOutput.new(address, value);
-
-		if (datum) {
-			output.set_data_hash(Loader.Cardano.hash_plutus_data(datum));
-		}
-
-		return output;
-	}*/
 
 	addRedeemer(redeemer) {
 		this.redeemers.add(redeemer);

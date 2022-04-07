@@ -3,7 +3,7 @@
 https://user-images.githubusercontent.com/40472971/162130434-786dcc68-be9e-452b-b784-c4d67fa315b6.mp4
 
 ## About
-Bonsai trees procedurally generated using probabilitic L-Systems that can bloom and drop leaves depending on the time of year. The tree geometry is also dynamic - branches can be pruned and new shoots will grow. This is the online Javascript variant.
+Bonsai trees procedurally generated using probabilitic L-Systems. The can grow, bloom and drop leaves depending on the time of year. The tree geometry is also dynamic - branches can be pruned and new shoots will grow. This is the online Javascript variant.
 
 The source code consists of the following:
 * Renderer *(WebGL)*

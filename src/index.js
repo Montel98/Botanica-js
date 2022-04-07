@@ -11,8 +11,7 @@ import Accordion from './components/Accordion.jsx';
 
 import treeAutumn from './images/bonsaiAutumn.png';
 import treeSummer from './images/bonsaiSummer.png';
-import twitterLogo from './images/twitterLogo.png';
-import discordLogo from './images/discordLogo.png';
+import githubLogo from './images/githubLogo.png';
 import chromosome from './images/chromosome.svg';
 import treePruned from './images/treePruned.png';
 import navigationIcon from './images/menu-icon.png';
@@ -104,9 +103,6 @@ function Navigation(props) {
                         <a href="#chromosomeContainer"><div class={props.className}>Genome</div></a>
                     </li>
                     <li>
-                        <a href="#roadmapContainer"><div class={props.className}>Roadmap</div></a>
-                    </li>
-                    <li>
                         <a href="#faq"><div class={props.className}>FAQ</div></a>
                     </li>
                 </ul>
@@ -123,22 +119,8 @@ function TopText() {
                 Maintainable 3D trees growing in real time.
             </div>
             <div class="topTextLower">
-                Botanica is a collection of dynamic and unique Alonzo-era NF(Trees), adding a splash of green to the Cardano ecosystem.<br /><br />No images, no external models, 100% code!
+                Botanica is a WebGL project with dynamic, procedurally generated trees that change throughout the year.
             </div>
-        </div>
-    );
-}
-
-function MintInfo() {
-
-    return (
-        <div id="mintInfo">
-            <p>
-            Why will minting be split into 2 transactions?<br />
-            Cardano currently allows a total transaction size under 16KB. Reliably squeezing the ability to both mint and remint (e.g. to prune the tree) proved tricky. To circumvent this limitation, minting is split into 2 one-time transactions. Transaction 1 will mint an 'accessor' NFT which allows you to redeem the tree in transaction 2. In transaction 2, your accessor token is sent to a burn address where it is provably irrecoverable.
-            When minting, please ensure you have at least 2 ADA on top of the 38 ADA minting price. This is to cover the 1.6 ADA required when sending tokens between addresses, as well as the standard transaction fees.
-            </p>
-            {/*<img class="featureImage" src={TreeImage} alt="Tree in Autumn" />*/}
         </div>
     );
 }
@@ -153,8 +135,6 @@ function GrowthBox(props) {
                 <img src={growthLapse} class="bla" />
             </div>
             <div class="featureBody">
-                {/*<div class="featureTitle">Real-Time Growth</div>*/}
-                <div class="featureTextSmall">*Available on release</div>
                 <div class="featureText">Patience is a virtue: from a fragile sapling to a mature tree, your tree will continuously grow in front of your eyes. Each tree has a unique growth pattern.<br /><br />Growth time aligns with approximately 6 weeks of the calendar year.</div>
             </div>
         </div>
@@ -174,8 +154,6 @@ function SeasonBox(props) {
             />
             </div>
             <div class="featureBody">
-                {/*<div class="featureTitle">Seasons</div>*/}
-                <div class="featureTextSmall">*Available on release</div>
                 <div class="featureText">The appearance of the trees is constantly changing. They go through the autumn and flower blooming seasons of the hemisphere they reside (Northern or Southern) - no year is ever the same!</div>
             </div>
         </div>
@@ -193,9 +171,7 @@ function PruningBox(props) {
             <img src={treePruned} class="bla" />
             </div>
             <div class="featureBody">
-                {/*<div class="featureTitle">Pruning</div>*/}
-                <div class="featureTextSmall">*Available shortly after release (see roadmap)</div>
-                <div class="featureText">Thanks to the power of Plutus smart contracts, you will be able to gradually modify the appearance of a tree to your liking, all while still maintaining the same policy ID. <br /><br />Specific regions can be cut, spawning a new shoot to grow in a random, different direction.</div>
+                <div class="featureText">Once the tree has matured, you are able to gradually modify the appearance of a tree to your liking. <br /><br />Specific regions can be cut, spawning a new shoot to grow in a random, different direction.</div>
             </div>
         </div>
         );
@@ -205,13 +181,8 @@ function SocialLinks(props) {
     return (
         <div class="socialLink">
             <div class="twitter">
-                <a href={"https://twitter.com/BotanicaTrees"}>
-                    <img src={twitterLogo} />
-                </a>
-            </div>
-            <div class="discord">
-                <a>
-                    <img src={discordLogo} />
+                <a href={"https://github.com/Montel98/Botanica-js"}>
+                    <img src={githubLogo} />
                 </a>
             </div>
         </div>
@@ -231,63 +202,9 @@ function Footer(props) {
     return (
         <div id="socialLinkFooter">
             <div class="twitter">
-                <a href={"https://twitter.com/BotanicaTrees"}>
-                    <img src={twitterLogo} />
+                <a href={"https://github.com/Montel98/Botanica-js"}>
+                    <img src={githubLogo} />
                 </a>
-            </div>
-            <div class="discord">
-                <img src={discordLogo} />
-            </div>
-        </div>
-    );
-}
-
-function Roadmap(props) {
-
-    return (
-        <div id="roadmap">
-            <div class="roadmapQuarter">
-                <div class="roadmapQuarterHeader">Q3 2021<br/>(Prototyping Phase)</div>
-                {/*<div class="roadmapMonthHeader">July</div>
-                <div class="roadmapContents">
-                    <ul>
-                        <li>Idea inception / Brainstorming {' \u2713'}</li>
-                    </ul>
-                </div>*/}
-                <div class="roadmapMonthHeader">September</div>
-                <div class="roadmapContents">
-                    <ul>
-                        <li>Lightweight WebGL engine development and tree generation prototyping {' \u2713'}</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="roadmapQuarter">
-                <div class="roadmapQuarterHeader">Q4 2021<br/>(Development Phase)</div>
-                <div class="roadmapMonthHeader">October - November</div>
-                <div class="roadmapContents">
-                    <ul>
-                        <li>Main development of tree generation algorithm, growth and season mechanisms {' \u2713'}</li>
-                    </ul>
-                </div>
-                <div class="roadmapMonthHeader">December</div>
-                <div class="roadmapContents">
-                    <ul>
-                        <li>Integration of Plutus Smart Contracts {' \u2713'}</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="roadmapQuarter">
-                <div class="roadmapQuarterHeader">Q1/Q2 2022<br/>(Testing / Marketing / Add-On Phase)</div>
-                <div class="roadmapContents"></div>
-                <div class="roadmapContents">
-                    <ul>
-                        <li>Testing and final tweaks</li>
-                        <li>Main Release (Date TBA)</li>
-                        <li>Pruning extension release - Ability to view and modify trees directly on the site via wallet signing</li>
-                        <li>Website upgrades - Ability to view genetic traits directly on site, compare genetic similarity to other trees etc.</li>
-                        <li>Potential plans for implementing genetic mutations</li>
-                    </ul>
-                </div>
             </div>
         </div>
     );
@@ -327,14 +244,8 @@ ReactDOM.render(
             <div id="chromosomeTitle">Genome</div>
                 <Genome />
         </div>
-        <div id="roadmapContainer">
-            <div id="roadmapTitle">Current Task Milestones & Roadmap</div>
-            <div id="roadmapText">While we feel that in its current state this project offers something fresh and unique to the space, ultimately the community decides its future. There are ideas for additional features (besides pruning) we would like to add after release, contingent on community interest in the project. Please note that the roadmap is not exhaustive and is subject to change, though <span style={{"font-weight": "bold"}}>realistic</span> goals in the near-mid term have been detailed.</div>
-            <Roadmap />
-        </div>
         <div id="faq">
             <div id="faqTitle">FAQ</div>
-            <div id="faqText">The release date, total supply and mint price are to be announced in the near future.</div>
             <Accordion />
         </div>
         <div id="footer">

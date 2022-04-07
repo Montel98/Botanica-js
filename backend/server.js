@@ -8,7 +8,7 @@ const sslRedirect = require('heroku-ssl-redirect').default;
 const tree = require('./TreeBuilder.js');
 
 const app = express();
-const pinata = pinataSDK('e973504b541abcbb8a06', '6b4b48713b6f20863c966bf0c7c47c8b3c4caea78c4a8028e5294d1aa7411f88');
+const pinata = pinataSDK('', '');
 
 const host = '0.0.0.0';
 const port = process.env.PORT || 3000;
@@ -91,8 +91,10 @@ app.post('/submit/:userAddress', async (req, res) => {
 
 		try {
 
-			const hash = await Wallet.signAndSubmit(req.body.vKeyWitnesses,
-													req.body.transaction);
+			const hash = await Wallet.signAndSubmit(
+				req.body.vKeyWitnesses,
+				req.body.transaction
+			);
 
 			res.send({txHash: hash});
 		}
@@ -146,19 +148,6 @@ async function pinNFT(relativePath) {
 
 	pinata.pinFileToIPFS(fileStream);
 }
-
-/*async function isPinned(treeNo) {
-
-	const pins = await pinata.pinList({status:'pinned', 
-											pageLimit: 100,
-											{
-												keyvalues: {count: {value: treeNo, op: eq}}
-											}
-										}
-									);
-
-	console.log('pins: ', pins.rows.map(pin => pin.metadata));
-}*/
 
 function randomInt(intMax) {
 
