@@ -10,67 +10,9 @@ import FastSimplexNoise from './FastSimplexNoise.js';
 import Entity from './Entity.js';
 import { identityMatrix } from './Matrix.js';
 
-const soilVertexShader = 
-`
-precision mediump float;
-attribute vec3 aVertexPosition;
-attribute vec3 aNormal;
-//attribute vec2 aTexCoord;
+import soilVertexShader from './Shaders/SoilVertex.glsl'; 
+import soilFragmentShader from './Shaders/SoilFragment.glsl';
 
-varying vec3 vVertexPosition;
-varying vec3 vNormal;
-varying vec3 vWorldNormal;
-
-uniform mat4 world;
-uniform mat4 camera;
-uniform mat4 perspective;
-
-void main() {
-
-    gl_Position = perspective * camera * world * vec4(aVertexPosition, 1.0);
-
-    vVertexPosition = vec3(world * vec4(aVertexPosition, 1.0));
-    vNormal = aNormal;
-    vWorldNormal = vec3(world * vec4(aNormal, 1.0));
-}
-`;
-
-const soilFragmentShader = 
-`
-precision mediump float;
-varying vec3 vNormal;
-varying vec3 vVertexPosition;
-varying vec3 vWorldNormal;
-//varying vec2 vTexCoord;
-
-uniform vec3 ambientColour;
-uniform vec3 eye;
-
-struct LightSource {
-	float ambient;
-	float diffuse;
-	float specular;
-	float reflectivity; 
-};
-
-uniform LightSource lightSource;
-
-void main() {
-    vec3 norm = (vNormal == vec3(0.0)) ? vec3(0.0) : normalize(vNormal);
-	vec3 worldNorm = (vWorldNormal == vec3(0.0)) ? vec3(0.0) : normalize(vWorldNormal);
-
-    vec3 lightDir = normalize(vec3(0.0, -1.0, 1.0));
-    float ambient = lightSource.ambient;
-    float diffuse = lightSource.diffuse * clamp(dot(worldNorm, lightDir), 0.0, 1.0);
-
-    vec3 reflected = lightDir - 2.0 * dot(worldNorm, lightDir) * worldNorm;
-    vec3 viewDirection = normalize(vVertexPosition - eye);
-    float specular = lightSource.specular * pow(clamp(dot(reflected, viewDirection), 0.0, 1.0), 2.0);
-    float light = ambient + diffuse + specular;
-
-    gl_FragColor = vec4(light * ambientColour, 1.0); //0.2
-}
-`;
 
 const bezierPot = new BezierCubic(new Vector([0.0, 0.0, 0.0]),
 								new Vector([0.4, 0.0, 0.0]),
@@ -604,21 +546,14 @@ export default class Pot extends Entity {
 
 		const material = this.getRandomPotStyle(1);
 
-		//console.log('widePotGeometry:', widePotGeometry);
-
 		this.mesh = new Mesh(material, geometry);
 		this.worldMatrix = identityMatrix;
 
-		//this.colour = new Vector([0.15, 0.15, 0.4]); // Dark blue
-		//this.colour = new Vector([0.0, 0.55, 0.55]); // Dark teal
-		//this.colour = new Vector([0.83, 0.68, 0.21]); // Gold
 		this.colour = new Vector([1.0, 1.0, 1.0]);
 		//this.colour = new Vector([Math.random(), Math.random(), Math.random()]);
 
 		this.defaultShader = this.mesh.shaderPrograms['Default'];
-
 		this.defaultShader.uniforms['ambientColour'] = this.colour;
-
 		this.addChild(new Soil(1));
 	}
 
@@ -730,11 +665,12 @@ class Soil extends Entity {
 		this.mesh = new Mesh(material, geometry);
 		this.colour = new Vector([0.6, 0.3, 0]);
 
-		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader('soil_shader', 
-														soilVertexShader, 
-														soilFragmentShader, {},
-														[]
-														)
+		this.mesh.setShaderProgram('Default', ShaderBuilder.customShader(
+			'soil_shader', 
+			soilVertexShader, 
+			soilFragmentShader, {},
+			[]
+			)
 		);
 
 		this.defaultShader = this.mesh.shaderPrograms['Default'];
